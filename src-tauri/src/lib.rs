@@ -1,6 +1,6 @@
 mod connect_ssh;
 
-use connect_ssh::execute_ssh;
+use connect_ssh::{execute_ssh, run_script};
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -14,7 +14,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             greet,
-            execute_ssh
+            execute_ssh,
+            run_script
             ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

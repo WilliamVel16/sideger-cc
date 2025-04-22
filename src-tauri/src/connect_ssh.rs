@@ -1,6 +1,7 @@
+use dotenv::dotenv;
 use openssh::{KnownHosts, SessionBuilder};
 use serde::Deserialize;
-use dotenv::dotenv;
+use std::process::Command;
 
 //#[derive(Deserialize)]
 #[derive(Debug, Deserialize)]
@@ -25,11 +26,47 @@ pub async fn execute_ssh(req: MySSHRequest) -> Result<String, String> {
 
     match session {
         Ok(session) => {
-            match session.command(&req.command).output().await {
+            match session
+                .command("sh")
+                .arg("-c")
+                .arg(&req.command)
+                .output()
+                .await
+            {
                 Ok(output) => Ok(String::from_utf8_lossy(&output.stdout).to_string()),
                 Err(err) => Err(format!("Error running command: {}", err)),
             }
         }
         Err(err) => Err(format!("Couldn't connect via SSH to {}: {}", req.host, err)),
+    }
+}
+
+#[tauri::command]
+pub fn run_script() -> Result<String, String> {
+    let script_path = std::env::current_dir()
+        .unwrap()
+        .join("src/scripts/run_containers.sh");
+
+    println!("path: {}", script_path.display());
+
+    if !script_path.exists() {
+        return Err(format!(
+            "Script not found at path: {}",
+            script_path.display()
+        ));
+    }
+
+    let output = Command::new("bash")
+        .arg(script_path)
+        .output()
+        .map_err(|err| format!("Failed to execute script: {}", err))?;
+
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    } else {
+        Err(format!(
+            "Script failed:\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        ))
     }
 }
