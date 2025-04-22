@@ -1,23 +1,21 @@
-use axum::{Router, extract::Json, routing::post};
 use openssh::{KnownHosts, SessionBuilder};
 use serde::Deserialize;
-use std::{env, net::SocketAddr};
-use tokio::net::TcpListener;
 use dotenv::dotenv;
 
-#[derive(Deserialize)]
-struct SSHRequest {
+//#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
+pub struct MySSHRequest {
     host: String,
     username: String,
     command: String,
 }
 
-async fn run_ssh(Json(req): Json<SSHRequest>) -> Result<String, String> {
+#[tauri::command]
+pub async fn execute_ssh(req: MySSHRequest) -> Result<String, String> {
     dotenv().ok();
-
+    println!("back receives: {}", req.command);
     let ssh_url = format!("{}@{}", req.username, req.host);
-    let key_path = env::var("SSH_KEY").expect("SSH_KEY env var not set");
-    //println!("path ssh: {}", &key_path);
+    let key_path = std::env::var("SSH_KEY").expect("SSH_KEY env var not set");
 
     let session = SessionBuilder::default()
         .known_hosts_check(KnownHosts::Accept)
@@ -32,16 +30,6 @@ async fn run_ssh(Json(req): Json<SSHRequest>) -> Result<String, String> {
                 Err(err) => Err(format!("Error running command: {}", err)),
             }
         }
-        Err(err) => Err(format!("didn't can connect by SSH to: {}: {}", req.host, err)),
-    }        
-}
-
-pub async fn connection_ssh() {
-    let app = Router::new().route("/ssh", post(run_ssh));
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    let listener = TcpListener::bind(addr).await.unwrap();
-    println!("Server running at {}", addr);
-    axum::serve(listener, app.into_make_service())
-        .await
-        .unwrap();
+        Err(err) => Err(format!("Couldn't connect via SSH to {}: {}", req.host, err)),
+    }
 }
