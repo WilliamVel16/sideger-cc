@@ -42,7 +42,7 @@ pub async fn execute_ssh(req: MySSHRequest) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub fn run_script() -> Result<String, String> {
+pub fn run_containers() -> Result<String, String> {
     let script_path = std::env::current_dir()
         .unwrap()
         .join("src/scripts/run_containers.sh");
@@ -59,7 +59,67 @@ pub fn run_script() -> Result<String, String> {
     let output = Command::new("bash")
         .arg(script_path)
         .output()
-        .map_err(|err| format!("Failed to execute script: {}", err))?;
+        .map_err(|err| format!("Failed to execute script containers: {}", err))?;
+
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    } else {
+        Err(format!(
+            "Script failed:\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        ))
+    }
+}
+
+#[tauri::command]
+pub fn start_ssh_connection() -> Result<String, String> {
+    let script_path = std::env::current_dir()
+        .unwrap()
+        .join("src/scripts/ssh_connection.sh");
+
+    println!("path: {}", script_path.display());
+
+    if !script_path.exists() {
+        return Err(format!(
+            "Script not found at path: {}",
+            script_path.display()
+        ));
+    }
+
+    let output = Command::new("bash")
+        .arg(script_path)
+        .output()
+        .map_err(|err| format!("Failed to execute script ssh: {}", err))?;
+
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    } else {
+        Err(format!(
+            "Script failed:\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        ))
+    }
+}
+
+#[tauri::command]
+pub fn start_condor_master() -> Result<String, String> {
+    let script_path = std::env::current_dir()
+        .unwrap()
+        .join("src/scripts/start_condor_master.sh");
+
+    println!("path: {}", script_path.display());
+
+    if !script_path.exists() {
+        return Err(format!(
+            "Script not found at path: {}",
+            script_path.display()
+        ));
+    }
+
+    let output = Command::new("bash")
+        .arg(script_path)
+        .output()
+        .map_err(|err| format!("Failed to execute script daemon: {}", err))?;
 
     if output.status.success() {
         Ok(String::from_utf8_lossy(&output.stdout).to_string())
