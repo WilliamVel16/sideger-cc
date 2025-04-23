@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useNavigate } from "react-router-dom";
 
 function Test() {
+  const navigate = useNavigate();
   const [responseCommand, setResponseCommand] = useState("");
   const [SSHReq, setSSHReq] = useState({
     host: "",
@@ -55,9 +57,10 @@ function Test() {
 
   return (
     <main className="container">
+      <button onClick={() => navigate("/test2")}>Ir a la pagina de scripts</button>
       <h1>Simple test SSH</h1>
 
-      <p>Agrega los datos de la solicitud</p>
+      <p>Datos requeridos</p>
 
       <form
         className="row"
