@@ -1,6 +1,6 @@
 mod connect_ssh;
 
-use connect_ssh::{execute_ssh, run_containers, start_ssh_connection, start_condor_master};
+use connect_ssh::{execute_command, run_containers, start_ssh_connection, show_resources_specs, start_condor_master};
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -16,7 +16,8 @@ pub fn run() {
             greet,
             run_containers,
             start_ssh_connection,
-            execute_ssh,
+            execute_command,
+            show_resources_specs,
             start_condor_master
             ])
         .run(tauri::generate_context!())

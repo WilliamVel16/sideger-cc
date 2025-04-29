@@ -11,16 +11,15 @@ pub struct MySSHRequest {
     command: String,
 }
 
+
 #[tauri::command]
-pub async fn execute_ssh(req: MySSHRequest) -> Result<String, String> {
+pub async fn execute_command(req: MySSHRequest) -> Result<String, String> {
     dotenv().ok();
     println!("back receives: {}", req.command);
     let ssh_url = format!("{}@{}", req.username, req.host);
-    let key_path = std::env::var("SSH_KEY").expect("SSH_KEY env var not set");
 
     let session = SessionBuilder::default()
         .known_hosts_check(KnownHosts::Accept)
-        .keyfile(&key_path)
         .connect(&ssh_url)
         .await;
 
@@ -90,6 +89,36 @@ pub fn start_ssh_connection() -> Result<String, String> {
         .arg(script_path)
         .output()
         .map_err(|err| format!("Failed to execute script ssh: {}", err))?;
+
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    } else {
+        Err(format!(
+            "Script failed:\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        ))
+    }
+}
+
+#[tauri::command]
+pub fn show_resources_specs() -> Result<String, String> {
+    let script_path = std::env::current_dir()
+        .unwrap()
+        .join("src/scripts/get_resources_info.sh");
+
+    println!("path: {}", script_path.display());
+
+    if !script_path.exists() {
+        return Err(format!(
+            "Script not found at path: {}",
+            script_path.display()
+        ));
+    }
+
+    let output = Command::new("bash")
+        .arg(script_path)
+        .output()
+        .map_err(|err| format!("Failed to execute script daemon: {}", err))?;
 
     if output.status.success() {
         Ok(String::from_utf8_lossy(&output.stdout).to_string())
