@@ -38,7 +38,7 @@ function Test() {
   async function executeCommand() {
     console.log(SSHReq)
     try {
-      const output = await invoke("execute_ssh", {
+      const output = await invoke("execute_command", {
         req: SSHReq,
       });
       setResponseCommand(output);

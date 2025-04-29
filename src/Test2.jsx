@@ -4,37 +4,44 @@ import { useNavigate } from "react-router-dom";
 
 function Test2() {
   const navigate = useNavigate();
-  const [responseScript, setResponseScript] = useState("");
-  const [responseScript2, setResponseScript2] = useState("");
-  const [responseScript3, setResponseScript3] = useState("");
+  const [resRunContainers, setResRunContainers] = useState("");
+  const [resSshConnection, setResSshConnection] = useState("");
+  const [resShowResources, setResShowResources] = useState("");
+  const [resCondorMaster, setResCondorMaster] = useState("");
 
-  async function runScript() {
+  async function runContainers() {
     try {
       const output = await invoke("run_containers");
-      console.log("Script output: ", output);
-      setResponseScript(output);
+      setResRunContainers(output);
     } catch (err) {
-      console.error('Script error: ', err)
+      console.error('Script error runContainers: ', err)
     }
   }
 
-  async function runScript2() {
+  async function sshConnection() {
     try {
       const output = await invoke("start_ssh_connection");
-      console.log("Script output: ", output);
-      setResponseScript2(output);
+      setResSshConnection(output);
     } catch (err) {
-      console.error('Script error: ', err)
+      console.error('Script error sshConnection: ', err)
     }
   }
 
-  async function runScript3() {
+  async function showResourcesSpecs() {
+    try {
+      const output = await invoke("show_resources_specs");
+      setResShowResources(output);
+    } catch (err) {
+      console.error('Script error showResourcesSpecs: ', err)
+    }
+  }
+
+  async function startCondorMaster() {
     try {
       const output = await invoke("start_condor_master");
-      console.log("Script output: ", output);
-      setResponseScript2(output);
+      setResCondorMaster(output);
     } catch (err) {
-      console.error('Script error: ', err)
+      console.error('Script error startCondorMaster: ', err)
     }
   }
 
@@ -47,34 +54,45 @@ function Test2() {
         className="row"
         onSubmit={(e) => {
           e.preventDefault();
-          runScript();
+          runContainers();
         }}
       >
         <button type="submit">Correr contenedores</button>
       </form>
-      <p>{responseScript}</p>
+      <p>{resRunContainers}</p>
 
       <form
         className="row"
         onSubmit={(e) => {
           e.preventDefault();
-          runScript2();
+          sshConnection();
         }}
       >
         <button type="submit">Iniciar acceso SSH</button>
       </form>
-      <p>{responseScript2}</p>
+      <p>{resSshConnection}</p>
 
       <form
         className="row"
         onSubmit={(e) => {
           e.preventDefault();
-          runScript3();
+          showResourcesSpecs();
+        }}
+      >
+        <button type="submit">Mostrar recursos disponibles</button>
+      </form>
+      <p>{resShowResources}</p>
+
+      <form
+        className="row"
+        onSubmit={(e) => {
+          e.preventDefault();
+          startCondorMaster();
         }}
       >
         <button type="submit">Iniciar demonio condor_master</button>
       </form>
-      <p>{responseScript3}</p>
+      <p>{resCondorMaster}</p>
     </main>
   );
 }
