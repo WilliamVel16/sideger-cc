@@ -1,6 +1,7 @@
 use dotenv::dotenv;
 use openssh::{KnownHosts, SessionBuilder};
 use serde::Deserialize;
+use serde_json::Value;
 use std::process::Command;
 
 //#[derive(Deserialize)]
@@ -11,6 +12,21 @@ pub struct MySSHRequest {
     command: String,
 }
 
+#[derive(Debug, serde::Serialize)]
+pub struct NodeInfo {
+    hostname: String,
+    os: String,
+    ip: String,
+    cpu_cores: u32,
+    memory_gb: f32,
+    disk_space_gb: f32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct NodeRole {
+    ip: String,
+    role: String,
+}
 
 #[tauri::command]
 pub async fn execute_command(req: MySSHRequest) -> Result<String, String> {
@@ -101,7 +117,7 @@ pub fn start_ssh_connection() -> Result<String, String> {
 }
 
 #[tauri::command]
-pub fn show_resources_specs() -> Result<String, String> {
+pub fn show_resources_specs() -> Result<Value, String> {
     let script_path = std::env::current_dir()
         .unwrap()
         .join("src/scripts/get_resources_info.sh");
@@ -118,16 +134,28 @@ pub fn show_resources_specs() -> Result<String, String> {
     let output = Command::new("bash")
         .arg(script_path)
         .output()
-        .map_err(|err| format!("Failed to execute script daemon: {}", err))?;
+        .map_err(|err| format!("Failed to execute script show rescs: {}", err))?;
 
     if output.status.success() {
-        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        serde_json::from_str::<Value>(&stdout)
+            .map_err(|err| format!("Invalid JSON output: {}\nOriginal output:\n{}", err, stdout))
     } else {
         Err(format!(
             "Script failed:\n{}",
             String::from_utf8_lossy(&output.stderr)
         ))
     }
+}
+
+#[tauri::command]
+pub fn assign_roles(nodes: Vec<NodeRole>) -> Result<String, String> {
+    for node in nodes {
+        // usar SSH para escribirlo remotamente
+        println!("Assigning {} as {}", node.ip, node.role);
+        // invocar scripts según el rol
+    }
+    Ok("Roles assigned successfully.".into())
 }
 
 #[tauri::command]
