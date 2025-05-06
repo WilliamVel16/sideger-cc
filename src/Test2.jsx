@@ -48,7 +48,6 @@ function Test2() {
 
   return (
     <main className="container">
-      <button onClick={() => navigate("/")}>Ir a página del comando</button>
       <h1>Run scripts</h1>
 
       <form

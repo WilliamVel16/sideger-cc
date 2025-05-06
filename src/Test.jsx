@@ -57,7 +57,6 @@ function Test() {
 
   return (
     <main className="container">
-      <button onClick={() => navigate("/test2")}>Ir a la pagina de scripts</button>
       <h1>Simple test SSH</h1>
 
       <p>Datos requeridos</p>
