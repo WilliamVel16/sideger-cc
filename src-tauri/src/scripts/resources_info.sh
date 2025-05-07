@@ -1,5 +1,6 @@
 #!/bin/bash
 HOSTNAME=$(hostname)
+IP=$(hostname -I)
 OS=$(grep PRETTY_NAME /etc/os-release | cut -d= -f2 | tr -d '"')
 CPU=$(grep -m 1 "model name" /proc/cpuinfo | cut -d: -f2 | sed 's/^ //')
 RAM=$(grep MemTotal /proc/meminfo | awk '{printf "%.0f", $2 / 1024}')
@@ -15,6 +16,7 @@ fi
 
 echo "{
 \"hostname\": \"$HOSTNAME\",
+\"ip\": $IP,
 \"os\": \"$OS\",
 \"cpu\": \"$CPU\",
 \"ram_mb\": $RAM,
