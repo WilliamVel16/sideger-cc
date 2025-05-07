@@ -16,7 +16,7 @@ fi
 
 echo "{
 \"hostname\": \"$HOSTNAME\",
-\"ip\": $IP,
+\"ip\": \"$IP\",
 \"os\": \"$OS\",
 \"cpu\": \"$CPU\",
 \"ram_mb\": $RAM,
