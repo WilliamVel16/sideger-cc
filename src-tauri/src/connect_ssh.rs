@@ -138,6 +138,7 @@ pub fn show_resources_specs() -> Result<Value, String> {
 
     if output.status.success() {
         let stdout = String::from_utf8_lossy(&output.stdout);
+        //println!("data: {}", stdout);
         serde_json::from_str::<Value>(&stdout)
             .map_err(|err| format!("Invalid JSON output: {}\nOriginal output:\n{}", err, stdout))
     } else {
