@@ -12,8 +12,6 @@ import Test from "./Test";
 import Test2 from "./Test2";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
   // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 
   return (

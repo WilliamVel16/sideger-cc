@@ -15,8 +15,8 @@ function Sidebar() {
             <li><NavLink to="/jobs/new">Nuevo Trabajo</NavLink></li>
           </ul>
         </div>
+        <NavLink to="/test2">Iniciar Cluster</NavLink><br />
         <NavLink to="/test">Comando</NavLink><br />
-        <NavLink to="/test2">Scripts</NavLink><br />
       </nav>
     </div>
   );

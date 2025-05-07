@@ -76,34 +76,6 @@ function Test2() {
         className="row"
         onSubmit={(e) => {
           e.preventDefault();
-          showResourcesSpecs();
-        }}
-      >
-        <button type="submit">Mostrar recursos disponibles</button>
-      </form>
-      <div>
-        {resShowResources.map((node, idx) => (
-          <div key={idx}>
-            <h3>{node.hostname}</h3>
-            <p>OS: {node.os}</p>
-            <p>CPU: {node.cpu}</p>
-            <p>RAM: {node.ram_mb} MB</p>
-            <p>GPU: {node.gpu}</p>
-            <ul>
-              DISK: {node.disk.map((d, i) => (
-                <li key={i}>
-                  {d.name}: {d.size}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
           startCondorMaster();
         }}
       >
