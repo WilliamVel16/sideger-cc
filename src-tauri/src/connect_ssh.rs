@@ -194,15 +194,16 @@ pub fn show_resources_specs() -> Result<Value, String> {
 #[tauri::command]
 pub fn assign_roles(nodes: Vec<NodeRole>) -> Result<String, String> {
     if nodes.is_empty() {
-        return Err("No se enviaron nodos".into());
+        return Err("Request without nodes, empty request".into());
     }
     for node in nodes {
         println!("Assigning {} as {}", node.ip, node.role);
+        
         if node.role.is_empty() {
-            return Err(format!("El nodo {} no tiene rol asignado", node.ip));
+            return Err(format!("The node {} has no role assigned", node.ip));
         }
     }
-    Ok("Roles asignados correctamente.".into())
+    Ok("Successfully assigned roles".into())
 }
 
 /// this function permits to start htcondor pool, running the base
