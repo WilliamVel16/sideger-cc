@@ -18,7 +18,6 @@ function Resources() {
       try {
         const fetchNodesData = await invoke("show_resources_specs");
         setServers(fetchNodesData);
-        console.log(fetchNodesData)
       } catch (err) {
         console.error("Script error showResourcesSpecs: ", err);
       }
@@ -30,7 +29,6 @@ function Resources() {
   const handleToggle = (ip) => () => {
     const currentIndex = checkedServers.indexOf(ip);
     const newChecked = [...checkedServers];
-    console.log("elegidos", checkedServers)
 
     if (currentIndex === -1) {
       newChecked.push(ip);
@@ -60,8 +58,6 @@ function Resources() {
       role: s.role,
     }));
 
-    console.log(dataCheckedServers)
-    /*
     try {
       const response = await invoke("assign_roles", { nodes: dataCheckedServers });
       console.log(response);
@@ -70,7 +66,6 @@ function Resources() {
       console.error("Error al asignar roles:", err);
       alert("Error al asignar roles");
     }
-    */
   };
 
   return (
@@ -118,9 +113,9 @@ function Resources() {
                 sx={{ mr: 1 }}
               >
                 <MenuItem value="">Elegir rol</MenuItem>
-                <MenuItem value="submit">Envio</MenuItem>
-                <MenuItem value="execute">Ejecución</MenuItem>
-                <MenuItem value="admin">Administrador</MenuItem>
+                <MenuItem value="sub">Envio</MenuItem>
+                <MenuItem value="exe">Ejecución</MenuItem>
+                <MenuItem value="cm">Administrador</MenuItem>
               </Select>
               <IconButton edge="end" onClick={() => handleRemove(server.ip)}>
                 <DeleteIcon />
