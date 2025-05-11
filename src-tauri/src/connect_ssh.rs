@@ -27,7 +27,13 @@ pub struct NodeRole {
     ip: String,
     role: String,
 }
-
+/// 
+/// 
+/// # Example
+///
+/// ```
+/// 
+/// ```
 #[tauri::command]
 pub async fn execute_command(req: MySSHRequest) -> Result<String, String> {
     dotenv().ok();
@@ -56,6 +62,14 @@ pub async fn execute_command(req: MySSHRequest) -> Result<String, String> {
     }
 }
 
+/// this function permits running the container s that are simulating the
+/// real servers, this bacause temporally we are using Docker containers.
+/// 
+/// # Example
+///
+/// ```
+/// run servers with roles Central Manager, Submit and Execute
+/// ```
 #[tauri::command]
 pub fn run_containers() -> Result<String, String> {
     let script_path = std::env::current_dir()
@@ -86,6 +100,16 @@ pub fn run_containers() -> Result<String, String> {
     }
 }
 
+
+/// this function starts the SSH conenection con every available resource
+/// in the local network
+/// 
+/// # Example
+///
+/// ```
+/// copy the public keys from the server where sideger is being use inside
+/// of the other available servers of the network
+/// ```
 #[tauri::command]
 pub fn start_ssh_connection() -> Result<String, String> {
     let script_path = std::env::current_dir()
@@ -116,6 +140,15 @@ pub fn start_ssh_connection() -> Result<String, String> {
     }
 }
 
+
+/// this function permits get the software and hardware characteristics
+/// from the available servers that could be used in the cluster
+/// 
+/// # Example
+///
+/// ```
+///  Show info as: OS, DISK, RAM, CPU, GPU, HOSTNAME
+/// ```
 #[tauri::command]
 pub fn show_resources_specs() -> Result<Value, String> {
     let script_path = std::env::current_dir()
@@ -149,16 +182,37 @@ pub fn show_resources_specs() -> Result<Value, String> {
     }
 }
 
+/// this function sets the roles of every node in the pool before
+/// to start the pool.
+/// 
+/// # Example
+///
+/// ```
+/// asigns a submit role, a manager role and one or more execute roles
+/// to the servers 
+/// ```
 #[tauri::command]
 pub fn assign_roles(nodes: Vec<NodeRole>) -> Result<String, String> {
-    for node in nodes {
-        // usar SSH para escribirlo remotamente
-        println!("Assigning {} as {}", node.ip, node.role);
-        // invocar scripts según el rol
+    if nodes.is_empty() {
+        return Err("No se enviaron nodos".into());
     }
-    Ok("Roles assigned successfully.".into())
+    for node in nodes {
+        println!("Assigning {} as {}", node.ip, node.role);
+        if node.role.is_empty() {
+            return Err(format!("El nodo {} no tiene rol asignado", node.ip));
+        }
+    }
+    Ok("Roles asignados correctamente.".into())
 }
 
+/// this function permits to start htcondor pool, running the base
+/// daemon on every node that coulb be used in the cluster
+/// 
+/// # Example
+///
+/// ```
+/// execute the command: condor_master 
+/// ```
 #[tauri::command]
 pub fn start_condor_master() -> Result<String, String> {
     let script_path = std::env::current_dir()
