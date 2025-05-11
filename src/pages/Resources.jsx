@@ -6,12 +6,13 @@ import {
 import ComputerIcon from '@mui/icons-material/Computer';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { invoke } from "@tauri-apps/api/core";
+import { Button } from '@mui/material';
 
 function Resources() {
   const [checkedServers, setCheckedServers] = useState([]);
   const [servers, setServers] = useState([]);
 
-  // requests to backend for all able resources
+  // requests to backend for all available resources
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -29,7 +30,7 @@ function Resources() {
   const handleToggle = (ip) => () => {
     const currentIndex = checkedServers.indexOf(ip);
     const newChecked = [...checkedServers];
-    console.log(newChecked)
+    console.log("elegidos", checkedServers)
 
     if (currentIndex === -1) {
       newChecked.push(ip);
@@ -51,40 +52,92 @@ function Resources() {
     setCheckedServers(checkedServers.filter(s => s.ip !== ip));
   };
 
+  // sends the request to asign roles to every selected resource and start cluster
+  const handleAssignRoles = async () => {
+    console.log(checkedServers)
+    const dataCheckedServers = checkedServers.map(s => ({
+      ip: s.ip,
+      role: s.role,
+    }));
+
+    console.log(dataCheckedServers)
+    /*
+    try {
+      const response = await invoke("assign_roles", { nodes: dataCheckedServers });
+      console.log(response);
+      alert("Roles asignados correctamente");
+    } catch (err) {
+      console.error("Error al asignar roles:", err);
+      alert("Error al asignar roles");
+    }
+    */
+  };
+
   return (
-    <List
-      sx={{ width: '100%', maxWidth: 600, bgcolor: 'background.paper' }}
-      subheader={<ListSubheader>Recursos Disponibles</ListSubheader>}
-    >
-      {servers.map((server) => (
-        <ListItem key={server.ip} divider>
-          <ListItemIcon>
-            <ComputerIcon />
-          </ListItemIcon>
-          <ListItemText
-            primary={`${server.hostname} ${server.ip}`} 
-            secondary={
-              <Typography component="div" variant="body2" color="text.primary">
-                <Typography component="span" variant="body2">
-                  CPU: {server.cpu} | RAM: {server.ram_mb}
-                </Typography><br/>
-                <Typography component="span" variant="body2">
-                  SO: {server.os} | DISK: {server.disk.map(d => d.size).join(', ')}
-                </Typography>
-              </Typography>
-            }
-          />
-          <Switch
-            edge="end"
-            onChange={handleToggle(server.ip)}
-            checked={checkedServers.includes(server.ip)}
-            inputProps={{
-              'aria-labelledby': `switch-list-label-${server.ip}`,
-            }}
-          />
-        </ListItem>
-      ))}
-    </List>
+    <Grid container spacing={3}>
+      {/* recursos disponibles */}
+      <Grid item xs={6}>
+        <List subheader={<ListSubheader>Recursos Disponibles</ListSubheader>}>
+          {servers.map((server) => (
+            <ListItem key={server.ip} divider>
+              <ListItemIcon><ComputerIcon /></ListItemIcon>
+              <ListItemText
+                primary={`${server.hostname} ${server.ip}`} 
+                secondary={
+                  <Typography component="div" variant="body2" color="text.primary">
+                    <Typography component="span" variant="body2">
+                      CPU: {server.cpu} | RAM: {server.ram_mb}
+                    </Typography><br/>
+                    <Typography component="span" variant="body2">
+                      SO: {server.os} | DISK: {server.disk.map(d => d.size).join(', ')}
+                    </Typography>
+                  </Typography>
+                }
+              />
+              <Switch
+                edge="end"
+                onChange={handleToggle(server)}
+                checked={checkedServers.some(s => s.ip === server.ip)}
+              />
+            </ListItem>
+          ))}
+        </List> 
+      </Grid>
+
+      {/* recursos a usar */}
+      <Grid item xs={6}>
+        <List subheader={<ListSubheader>Recursos a Usar</ListSubheader>}>
+          {checkedServers.map((server) => (
+            <ListItem key={server.ip} divider>
+              <ListItemText primary={`${server.hostname} ${server.ip}`} />
+              <Select
+                value={server.role}
+                onChange={(e) => handleRoleChange(server.ip, e.target.value)}
+                displayEmpty
+                size="small"
+                sx={{ mr: 1 }}
+              >
+                <MenuItem value="">Elegir rol</MenuItem>
+                <MenuItem value="submit">Envio</MenuItem>
+                <MenuItem value="execute">Ejecución</MenuItem>
+                <MenuItem value="admin">Administrador</MenuItem>
+              </Select>
+              <IconButton edge="end" onClick={() => handleRemove(server.ip)}>
+                <DeleteIcon />
+              </IconButton>
+            </ListItem>
+          ))}
+        </List>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleAssignRoles}
+          disabled={checkedServers.length === 0 || checkedServers.some(s => !s.role)}
+        >
+          Inicializar Cluster
+        </Button>
+      </Grid>
+    </Grid>
   );
 }
 
