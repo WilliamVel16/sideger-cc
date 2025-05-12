@@ -1,6 +1,7 @@
 use dotenv::dotenv;
 use openssh::{KnownHosts, SessionBuilder};
 use serde::Deserialize;
+use serde_json::Value;
 use std::process::Command;
 
 //#[derive(Deserialize)]
@@ -11,16 +12,36 @@ pub struct MySSHRequest {
     command: String,
 }
 
+#[derive(Debug, serde::Serialize)]
+pub struct NodeInfo {
+    hostname: String,
+    os: String,
+    ip: String,
+    cpu_cores: u32,
+    memory_gb: f32,
+    disk_space_gb: f32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct NodeRole {
+    ip: String,
+    role: String,
+}
+/// 
+/// 
+/// # Example
+///
+/// ```
+/// 
+/// ```
 #[tauri::command]
-pub async fn execute_ssh(req: MySSHRequest) -> Result<String, String> {
+pub async fn execute_command(req: MySSHRequest) -> Result<String, String> {
     dotenv().ok();
     println!("back receives: {}", req.command);
     let ssh_url = format!("{}@{}", req.username, req.host);
-    let key_path = std::env::var("SSH_KEY").expect("SSH_KEY env var not set");
 
     let session = SessionBuilder::default()
         .known_hosts_check(KnownHosts::Accept)
-        .keyfile(&key_path)
         .connect(&ssh_url)
         .await;
 
@@ -41,6 +62,14 @@ pub async fn execute_ssh(req: MySSHRequest) -> Result<String, String> {
     }
 }
 
+/// this function permits running the container s that are simulating the
+/// real servers, this bacause temporally we are using Docker containers.
+/// 
+/// # Example
+///
+/// ```
+/// run servers with roles Central Manager, Submit and Execute
+/// ```
 #[tauri::command]
 pub fn run_containers() -> Result<String, String> {
     let script_path = std::env::current_dir()
@@ -71,6 +100,16 @@ pub fn run_containers() -> Result<String, String> {
     }
 }
 
+
+/// this function starts the SSH conenection con every available resource
+/// in the local network
+/// 
+/// # Example
+///
+/// ```
+/// copy the public keys from the server where sideger is being use inside
+/// of the other available servers of the network
+/// ```
 #[tauri::command]
 pub fn start_ssh_connection() -> Result<String, String> {
     let script_path = std::env::current_dir()
@@ -101,6 +140,125 @@ pub fn start_ssh_connection() -> Result<String, String> {
     }
 }
 
+
+/// this function permits get the software and hardware characteristics
+/// from the available servers that could be used in the cluster
+/// 
+/// # Example
+///
+/// ```
+///  Show info as: OS, DISK, RAM, CPU, GPU, HOSTNAME
+/// ```
+#[tauri::command]
+pub fn show_resources_specs() -> Result<Value, String> {
+    let script_path = std::env::current_dir()
+        .unwrap()
+        .join("src/scripts/get_resources_info.sh");
+
+    println!("path: {}", script_path.display());
+
+    if !script_path.exists() {
+        return Err(format!(
+            "Script not found at path: {}",
+            script_path.display()
+        ));
+    }
+
+    let output = Command::new("bash")
+        .arg(script_path)
+        .output()
+        .map_err(|err| format!("Failed to execute script show rescs: {}", err))?;
+
+    if output.status.success() {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        //println!("data: {}", stdout);
+        serde_json::from_str::<Value>(&stdout)
+            .map_err(|err| format!("Invalid JSON output: {}\nOriginal output:\n{}", err, stdout))
+    } else {
+        Err(format!(
+            "Script failed:\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        ))
+    }
+}
+
+/// this function sets the roles of every node in the pool before
+/// to start the pool. Uses images from dockerhub to run servers
+/// with roles: central manager, submit and execute
+/// 
+/// # Example
+///
+/// ```
+/// asigns and run a submit role, a manager role and one or more execute
+/// roles to the servers 
+/// ```
+pub fn run_single_node(ip: &str, role: &str) -> Result<String, String> {
+    let image = match role {
+        "cm" => "wvel/sideger-cm:1.0.2",
+        "sub" => "wvel/sideger-sub:1.0.2",
+        "exe" => "wvel/sideger-exe:1.0.2",
+        _ => return Err(format!("Unknown role: {}", role)),
+    };
+
+    let container_name = format!("{}_{}", role.replace("-", ""), ip.replace(".", "_"));
+
+    let output = Command::new("docker")
+        .args([
+            "run", "-d", "--rm",
+            "--name", &container_name,
+            "--net", "sidegernet",
+            image,
+        ])
+        .output()
+        .map_err(|e| format!("Failed to run container: {}", e))?;
+
+    if output.status.success() {
+        Ok(format!("Container {} launched successfully", container_name))
+    } else {
+        Err(String::from_utf8_lossy(&output.stderr).to_string())
+    }
+}
+
+/// this function uses the function run_single_node to iterate in every node
+/// of the array received from the request
+/// 
+/// # Example
+///
+/// ```
+/// sends the ip and rol of one node to run_single_node function to run
+/// the containers on an atomic form
+/// ```
+#[tauri::command]
+pub fn assign_roles(nodes: Vec<NodeRole>) -> Result<String, String> {
+    if nodes.is_empty() {
+        return Err("Request without nodes, empty request".into());
+    }
+
+    let mut results = Vec::new();
+
+    for node in nodes {
+        if node.role.is_empty() {
+            return Err(format!("The node {} has no role assigned", node.ip));
+        }
+
+        println!("Assigning {} as {}", node.ip, node.role);
+        match run_single_node(&node.ip, &node.role) {
+            Ok(msg) => results.push(msg),
+            Err(err) => return Err(format!("Failed to assign role to {}: {}", node.ip, err)),
+        }
+    }
+
+    Ok(results.join("\n"))
+}
+
+/// this function permits to start htcondor pool, running the base
+/// daemon on every node that coulb be used in the cluster
+/// 
+/// # Example
+///
+/// ```
+/// execute the command: condor_master 
+/// ```
 #[tauri::command]
 pub fn start_condor_master() -> Result<String, String> {
     let script_path = std::env::current_dir()
