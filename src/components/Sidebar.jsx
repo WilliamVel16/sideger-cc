@@ -1,22 +1,41 @@
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
+import logo from "../assets/logo.png";
+import "./Styles.css";
 
 function Sidebar() {
+
+
   return (
     <div className="sidebar">
-      <h2>sideger</h2>
-      <nav>
-        <NavLink to="/">Home</NavLink><br />
-        <NavLink to="/resources">Recursos</NavLink><br />
-        <div>
-          <span>Trabajos</span>
-          <ul>
-            <li><NavLink to="/jobs/finished">Finalizados</NavLink></li>
-            <li><NavLink to="/jobs/queue">Lista de Trabajos</NavLink></li>
-            <li><NavLink to="/jobs/new">Nuevo Trabajo</NavLink></li>
-          </ul>
+      <div className="sidebar-header">
+        <img src={logo} alt="Sideger Logo" className="logo" />
+        <span className="tool-name"> Sideger </span>
+      </div>
+
+      <nav className="nav-sections">
+        <div className="section">
+          <div className="section-title">Home e Información</div>
+          <NavLink to="/" className="nav-link">Home</NavLink>
         </div>
-        <NavLink to="/test2">Iniciar Cluster</NavLink><br />
-        <NavLink to="/test">Comando</NavLink><br />
+
+        <div className="section">
+          <div className="section-title">Recursos</div>
+          <NavLink to="/resources" className="nav-link">Recursos</NavLink>
+        </div>
+
+        <div className="section">
+          <div className="section-title">Trabajos</div>
+          <NavLink to="/jobs/finished" className="nav-link">Finalizados</NavLink>
+          <NavLink to="/jobs/queue" className="nav-link">Lista de Trabajos</NavLink>
+          <NavLink to="/jobs/new" className="nav-link">Nuevo Trabajo</NavLink>
+        </div>
+
+        <div className="section">
+          <div className="section-title">Temporales</div>
+          <NavLink to="/test2" className="nav-link">Iniciar Cluster</NavLink>
+          <NavLink to="/test" className="nav-link">Comando</NavLink>
+        </div>
       </nav>
     </div>
   );
