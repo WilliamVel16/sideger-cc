@@ -11,15 +11,15 @@
     background: #cd1f32;
     padding: 1rem;
     color: white;
-
     height: 100vh;
     box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .sidebar a {
     color:white;
     text-decoration: none;
-
     display: block;
     padding: 0.5rem;
     border-radius: 6px;
@@ -38,14 +38,15 @@
   }
 
   .logo {
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
     margin-right: 0.5rem;
   }
 
   .tool-name {
-    font-size: 1.2rem;
+    font-size: 1.9rem;
     font-weight: bold;
+    margin-top: 0.6rem;
   }
 
   .section {
@@ -63,6 +64,25 @@
   .nav-link {
     margin-left: 0.5rem;
   }
+
+  .sidebar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .sidebar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .sidebar::-webkit-scrollbar-thumb {
+    background-color: #ffffff66;
+    border-radius: 4px;
+  }
+
+  /* Opcional: que solo se muestre el scrollbar al hacer hover */
+  .sidebar:hover::-webkit-scrollbar-thumb {
+    background-color: #ffffffaa;
+  }
+  
 
 /* topbar (up) */
 .topbar {
