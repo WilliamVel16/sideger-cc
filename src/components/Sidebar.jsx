@@ -15,20 +15,20 @@ function Sidebar() {
 
       <nav className="nav-sections">
         <div className="section">
-          <div className="section-title">Home e Información</div>
+          <div className="section-title"> Home </div>
           <NavLink to="/" className="nav-link">Home</NavLink>
         </div>
 
         <div className="section">
-          <div className="section-title">Recursos</div>
-          <NavLink to="/resources" className="nav-link">Recursos</NavLink>
+          <div className="section-title"> Recursos </div>
+          <NavLink to="/resources" className="nav-link"> Recursos </NavLink>
         </div>
 
         <div className="section">
           <div className="section-title">Trabajos</div>
-          <NavLink to="/jobs/finished" className="nav-link">Finalizados</NavLink>
-          <NavLink to="/jobs/queue" className="nav-link">Lista de Trabajos</NavLink>
-          <NavLink to="/jobs/new" className="nav-link">Nuevo Trabajo</NavLink>
+          <NavLink to="/jobs/new" className="nav-link"> Nuevo Trabajo </NavLink>
+          <NavLink to="/jobs/queue" className="nav-link"> Estado de Trabajos </NavLink>
+          <NavLink to="/jobs/finished" className="nav-link"> Finalizados </NavLink>
         </div>
 
         <div className="section">
