@@ -8,11 +8,13 @@ function Sidebar() {
 
   return (
     <div className="sidebar">
+      {/* header */}
       <div className="sidebar-header">
         <img src={logo} alt="Sideger Logo" className="logo" />
         <span className="tool-name"> Sideger </span>
       </div>
 
+      {/* body or sections */}
       <nav className="nav-sections">
         <div className="section">
           <div className="section-title"> Home </div>

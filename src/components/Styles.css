@@ -70,7 +70,7 @@
   }
 
   .sidebar::-webkit-scrollbar-track {
-    background: transparent;
+    background: transparenbl;
   }
 
   .sidebar::-webkit-scrollbar-thumb {
@@ -78,7 +78,6 @@
     border-radius: 4px;
   }
 
-  /* Opcional: que solo se muestre el scrollbar al hacer hover */
   .sidebar:hover::-webkit-scrollbar-thumb {
     background-color: #ffffffaa;
   }
@@ -91,20 +90,50 @@
     padding: 0.7rem 1rem;
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    height: 25px;
   }
 
   .user-menu {
     position: relative;
   }
 
-  .dropdown {
-    position: absolute;
-    color: black;
-    right: 0;
-    background: white;
-    border: 1px solid #ccc;
-    list-style: none;
-    padding: 0.5rem;
+  .system-status {
+    display: flex;
+    align-items: center;
+    cursor: default;
+  }
+
+  .system-status-text {
+    margin-left: 8px;
+    margin-top: 5px;
+    font-size: 1rem;
+  }
+
+  .last-notif {
+    background-color: #cd1f32;
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    color: white;
+    font-size: 0.9rem;
+    margin-right: 0rem;
+    max-width: 300px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    transition: opacity 0.3s ease;
+  }
+ 
+  .topbar-icon {
+    transition: background-color 0.2s ease;
+    color: white !important;;
+  }
+
+  .topbar-icon:hover {
+    background-color: #cd1f32 !important;;
+    cursor: pointer;
   }
  
 /* main content (big space or center) - shows the "pages" */
