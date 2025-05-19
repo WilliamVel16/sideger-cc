@@ -112,10 +112,10 @@
 
   .last-notif {
     background-color: #cd1f32;
-    padding: 0.4rem 0.8rem;
+    padding: 0.2rem 0.8rem;
     border-radius: 8px;
     display: flex;
-    align-items: center;
+    align-items: end;
     color: white;
     font-size: 0.9rem;
     margin-right: 0rem;
@@ -128,11 +128,10 @@
  
   .topbar-icon {
     transition: background-color 0.2s ease;
-    color: white !important;;
   }
 
   .topbar-icon:hover {
-    background-color: #cd1f32 !important;;
+    background-color: rgba(255, 255, 255, 0.15) !important;;
     cursor: pointer;
   }
  

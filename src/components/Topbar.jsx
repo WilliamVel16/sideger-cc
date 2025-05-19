@@ -73,6 +73,7 @@ function Topbar() {
         <div className="last-notif">
           <span>{lastNotification}</span>
           <IconButton
+            className="topbar-icon"
             size="small"
             onClick={() => setShowNotifText(false)}
             style={{ marginLeft: 8, color: 'white' }}
