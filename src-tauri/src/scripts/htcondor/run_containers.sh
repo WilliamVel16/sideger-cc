@@ -1,5 +1,5 @@
 #!/bin/bash
-source ../../.env
+source ../.env
 docker container run -d --rm -it --name ${CM_C} --net ${NET_NAME} --hostname ${CENTRAL_MANAGER_NAME} ${CM_I}
 docker container run -d --rm -it --name ${EXE_C} --net ${NET_NAME} --hostname ${EXECUTE_HOSTNAME} ${EXE_I}
 docker container run -d --rm -it --name ${EXE_C2} --net ${NET_NAME} --hostname ${EXECUTE_HOSTNAME_TWO} ${EXE_I}
