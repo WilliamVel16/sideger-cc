@@ -8,7 +8,7 @@ import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 function Topbar() {
   const [anchorMenu, setAnchorMenu] = useState(null);
   const [anchorNotif, setAnchorNotif] = useState(null);
-  const [lastNotification, setLastNotification] = useState("Cluster iniciado correctamente");
+  const [lastNotification, setLastNotification] = useState("Notificación de prueba");
   const [showNotifText, setShowNotifText] = useState(true);
   const [notifications] = useState([
     "Cluster iniciado correctamente.",

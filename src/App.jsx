@@ -14,7 +14,7 @@ function App() {
   // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 
   return (
-    <div className="App">
+    <div >
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Layout />}>

@@ -132,6 +132,7 @@
 
   .topbar-icon:hover {
     background-color: rgba(255, 255, 255, 0.15) !important;;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.4);
     cursor: pointer;
   }
  
@@ -143,11 +144,7 @@
   }
   
   .page-content {
-    padding: 1rem;
+    padding: 2rem;
     width: 100%;
     box-sizing: border-box;
   }
-
-  
-  
-  
