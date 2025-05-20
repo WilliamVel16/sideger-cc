@@ -1,0 +1,170 @@
+/* layout (all the content) */
+.layout {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+}
+
+/* side bar (left) */
+.sidebar {
+    width: 200px;
+    background: #cd1f32;
+    padding: 1rem;
+    color: white;
+    height: 100vh;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .sidebar a {
+    color:white;
+    text-decoration: none;
+    display: block;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: background-color 0.2s, box-shadow 0.2s;
+  }
+
+  .sidebar a:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.4);
+  }
+
+  .sidebar-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  .logo {
+    width: 40px;
+    height: 40px;
+    margin-right: 0.5rem;
+  }
+
+  .tool-name {
+    font-size: 1.9rem;
+    font-weight: bold;
+    margin-top: 0.6rem;
+  }
+
+  .section {
+    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-bottom: 0rem;
+    color: #ffffffcc;
+    text-transform: uppercase;
+  }
+
+  .nav-link {
+    margin-left: 0.6rem;
+  }
+
+  .sidebar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .sidebar::-webkit-scrollbar-track {
+    background: transparenbl;
+  }
+
+  .sidebar::-webkit-scrollbar-thumb {
+    background-color: #ffffff66;
+    border-radius: 4px;
+  }
+
+  .sidebar:hover::-webkit-scrollbar-thumb {
+    background-color: #ffffffaa;
+  }
+  
+
+/* topbar (up) */
+.topbar {
+    background: #fd3048;
+    color: white;
+    padding: 0.7rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 25px;
+  }
+
+  .user-menu {
+    position: relative;
+  }
+
+  .system-status {
+    display: flex;
+    align-items: center;
+    cursor: default;
+  }
+
+  .system-status-text {
+    margin-left: 8px;
+    margin-top: 5px;
+    font-size: 1rem;
+  }
+
+  .last-notif {
+    background-color: #cd1f32;
+    padding: 0.2rem 0.8rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: end;
+    color: white;
+    font-size: 0.9rem;
+    margin-right: 0rem;
+    max-width: 300px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    transition: opacity 0.3s ease;
+  }
+ 
+  .topbar-icon {
+    transition: background-color 0.2s ease;
+  }
+
+  .topbar-icon:hover {
+    background-color: rgba(255, 255, 255, 0.15) !important;;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+  }
+ 
+/* main content (big space or center and topbar) - shows the "pages" */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .page-content {
+    padding: 2rem;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100vh;
+  }
+
+  .page-content::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .page-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .page-content::-webkit-scrollbar-thumb {
+      background-color: #a0a0a066;
+      border-radius: 4px;
+    }
+
+    .page-content:hover::-webkit-scrollbar-thumb {
+      background-color: #a3a3a3aa;
+    }

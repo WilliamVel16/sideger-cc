@@ -74,7 +74,7 @@ pub async fn execute_command(req: MySSHRequest) -> Result<String, String> {
 pub fn run_containers() -> Result<String, String> {
     let script_path = std::env::current_dir()
         .unwrap()
-        .join("src/scripts/run_containers.sh");
+        .join("src/scripts/htcondor/run_containers.sh");
 
     println!("path: {}", script_path.display());
 
@@ -114,7 +114,7 @@ pub fn run_containers() -> Result<String, String> {
 pub fn start_ssh_connection() -> Result<String, String> {
     let script_path = std::env::current_dir()
         .unwrap()
-        .join("src/scripts/ssh_connection.sh");
+        .join("src/scripts/utils/ssh_connection.sh");
 
     println!("path: {}", script_path.display());
 
@@ -153,7 +153,7 @@ pub fn start_ssh_connection() -> Result<String, String> {
 pub fn show_resources_specs() -> Result<Value, String> {
     let script_path = std::env::current_dir()
         .unwrap()
-        .join("src/scripts/get_resources_info.sh");
+        .join("src/scripts/utils/get_resources_info.sh");
 
     println!("path: {}", script_path.display());
 
@@ -263,7 +263,7 @@ pub fn assign_roles(nodes: Vec<NodeRole>) -> Result<String, String> {
 pub fn start_condor_master() -> Result<String, String> {
     let script_path = std::env::current_dir()
         .unwrap()
-        .join("src/scripts/start_condor_master.sh");
+        .join("src/scripts/htcondor/start_condor_master.sh");
 
     println!("path: {}", script_path.display());
 
