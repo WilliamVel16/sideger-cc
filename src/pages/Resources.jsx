@@ -1,30 +1,32 @@
 import { useEffect, useState } from 'react';
 import {
   Box, Grid, Paper, Typography, List, ListItem, ListItemIcon,
-  ListItemText, ListSubheader, Switch, Select, MenuItem,
+  ListItemText, Select, MenuItem,
   IconButton, Button, Container
 } from '@mui/material';
 import ComputerIcon from '@mui/icons-material/Computer';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import SearchIcon from '@mui/icons-material/Search';
 import { invoke } from "@tauri-apps/api/core";
 
 function Resources() {
   const [checkedServers, setCheckedServers] = useState([]);
   const [servers, setServers] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   // requests to backend for all available resources
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const fetchNodesData = await invoke("show_resources_specs");
-        setServers(fetchNodesData);
-      } catch (err) {
-        console.error("Script error showResourcesSpecs: ", err);
-      }
+  const fetchData = async () => {
+    setLoading(true);
+
+    try {
+      const fetchNodesData = await invoke("show_resources_specs");
+      setServers(fetchNodesData);
+    } catch (err) {
+      console.error("Script error showResourcesSpecs: ", err);
     }
-    fetchData();
-  }, [])
+    setLoading(false);
+  }
 
   // permits to identify which resources has been selected using its ip
   const handleAdd = (server) => {
@@ -64,30 +66,39 @@ function Resources() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 2, mx: "auto" }} >
+    <Container maxWidth="xl" sx={{ mt: 2, mx: "auto" }} >
       {/* information + instructions */}
-      <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid item xs={12} md={6}>
-          <Typography variant="h6"> Configuración </Typography>
+      <Grid container spacing={2} sx={{ mb: 4 }}>
+        <Grid item size={{ xs: 6, md: 7}}>
+          <Typography variant="h6"> Información </Typography>
           <Typography variant="body2">
-            Aquí podrías colocar opciones como el número máximo de nodos, preferencias, etc.
+            Sección para mostrar información sobre la selección de recursos, explicando los controles del lado derecho, como el número máximo de nodos,
+            se informa que por defecto el user debe elegir recursos, preferencias, etc.
           </Typography>
         </Grid>
 
-        <Grid item xs={12} md={6}>
-          <Typography variant="h6"> Información </Typography>
+        <Grid item size={{ xs:6, md:5}} spacing={2}>
+          <Typography variant="h6"> Gestión de Recursos </Typography>
           <Typography variant="body2">
-            Página para seleccionar los recursos disponibles, asignar roles y desplegar el clúster.
+            Para ver los recursos disponibles actualmente da click en el siguiente botón.
+          </Typography>
+          <Button variant='contained' color='gray' endIcon={<SearchIcon />}  disabled={loading} onClick={fetchData}>
+            {loading ? 'Cargando...' : 'Buscar Recursos'}
+          </Button>
+          <Typography variant="body2">
+            La siguientes opciónes te permite definir que sea el sistema quien elije los recursos a usar
+            El sistema define recursos y roles: sí/no sí? user elige el número de nodos de ejecución: select.
+            El sistema define sólo recursos: sí/no sí? user elige roles en el panel inferior
           </Typography>
         </Grid>
       </Grid>
 
-      <Grid container spacing={2}>
+      <Grid container direction="row" spacing={2} sx={{ mb: 4, alignItems: "stretch" }}>
         {/* available resources */}
-        <Grid item xs={12} md={6}>
-          <Paper elevation={3} sx={{ p: 2 }}>
+        <Grid item size={{ xs: 12, md: 6}}>
+          <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
             <Typography variant="h6" gutterBottom> Recursos Disponibles </Typography>
-            <List>
+            <List sx={{ height: 500, overflowY: 'auto'}}>
               {servers.map((server) => (
                 <ListItem key={server.ip} divider>
                   <ListItemIcon><ComputerIcon /></ListItemIcon>
@@ -100,7 +111,7 @@ function Resources() {
                       </>
                     }
                   />
-                  <IconButton edge="end" onClick={() => handleAdd(server)} sx={{ marginLeft: '5px'}}>
+                  <IconButton sx={{ marginRight:'10px' }} edge="end" onClick={() => handleAdd(server)} >
                     <AddIcon />
                   </IconButton>
                 </ListItem>
@@ -110,11 +121,10 @@ function Resources() {
         </Grid>
 
         {/* resources to use */}
-        <Grid item xs={12} md={6}>
-        <Paper elevation={3} sx={{ p: 2, width: '100%' }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <Typography variant="h6" gutterBottom>Recursos a Usar</Typography>
-            <List sx={{ flexGrow: 1 }}>
+        <Grid item size={{ xs: 12, md: 6}}>
+          <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
+            <Typography variant="h6" gutterBottom> Recursos a Usar </Typography>
+            <List sx={{ height: 500, overflowY: 'auto'}}>
               {checkedServers.map((server) => (
                 <ListItem key={server.ip} divider>
                   <ListItemText
@@ -145,22 +155,26 @@ function Resources() {
                 </ListItem>
               ))}
             </List>
-          </Box>
-        </Paper>
-      </Grid>
+          </Paper>
+        </Grid>
       </Grid>
 
       {/* controls */}
-      <Box sx={{ mt: 3, textAlign: 'center' }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleAssignRoles}
-          disabled={checkedServers.length === 0 || checkedServers.some(s => !s.role)}
-        >
-          Inicializar Clúster
-        </Button>
-      </Box>
+      <Grid container spacing={2} sx={{ mb: 2}}>
+        <Grid item size={12} >
+          <Box sx={{ mt: 3, textAlign: 'center' }}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleAssignRoles}
+              disabled={checkedServers.length === 0 || checkedServers.some(s => !s.role)}
+            >
+              Inicializar Clúster
+            </Button>
+          </Box>
+        </Grid>
+      </Grid>
+      
     </Container>
   );
 }

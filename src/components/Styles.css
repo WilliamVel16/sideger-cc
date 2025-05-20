@@ -136,7 +136,7 @@
     cursor: pointer;
   }
  
-/* main content (big space or center) - shows the "pages" */
+/* main content (big space or center and topbar) - shows the "pages" */
 .main-content {
     flex: 1;
     display: flex;
@@ -147,4 +147,24 @@
     padding: 2rem;
     width: 100%;
     box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100vh;
   }
+
+  .page-content::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .page-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .page-content::-webkit-scrollbar-thumb {
+      background-color: #a0a0a066;
+      border-radius: 4px;
+    }
+
+    .page-content:hover::-webkit-scrollbar-thumb {
+      background-color: #a3a3a3aa;
+    }
