@@ -41,8 +41,11 @@ function Resources() {
   };
 
   // permits to remove nodes from 'resoruces to use' that finally will not be use
-  const handleRemove = (ip) => {
-    setCheckedServers(checkedServers.filter(s => s.ip !== ip));
+  // and add that server to "available resources"
+  const handleRemove = (server) => {
+    setCheckedServers(checkedServers.filter(s => s.ip !== server.ip));
+    const serverWithoutRole = delete server["role"];
+    setServers([...servers, server]);
   };
 
   // sends the request to asign roles to every selected resource and start cluster
@@ -62,27 +65,28 @@ function Resources() {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 2, mx: "auto" }} >
-      {/* Sección superior: Configuración + Info */}
+      {/* information + instructions */}
       <Grid container spacing={2} sx={{ mb: 2 }}>
         <Grid item xs={12} md={6}>
-          <Typography variant="h6">Configuración</Typography>
-          <Typography variant="body2">Aquí podrías colocar opciones como el número máximo de nodos, preferencias, etc.</Typography>
+          <Typography variant="h6"> Configuración </Typography>
+          <Typography variant="body2">
+            Aquí podrías colocar opciones como el número máximo de nodos, preferencias, etc.
+          </Typography>
         </Grid>
 
         <Grid item xs={12} md={6}>
-          <Typography variant="h6">Información</Typography>
+          <Typography variant="h6"> Información </Typography>
           <Typography variant="body2">
             Página para seleccionar los recursos disponibles, asignar roles y desplegar el clúster.
           </Typography>
         </Grid>
       </Grid>
 
-      {/* Sección principal: recursos */}
       <Grid container spacing={2}>
-        {/* Recursos disponibles */}
+        {/* available resources */}
         <Grid item xs={12} md={6}>
           <Paper elevation={3} sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>Recursos Disponibles</Typography>
+            <Typography variant="h6" gutterBottom> Recursos Disponibles </Typography>
             <List>
               {servers.map((server) => (
                 <ListItem key={server.ip} divider>
@@ -96,7 +100,7 @@ function Resources() {
                       </>
                     }
                   />
-                  <IconButton edge="end" onClick={() => handleAdd(server)}>
+                  <IconButton edge="end" onClick={() => handleAdd(server)} sx={{ marginLeft: '5px'}}>
                     <AddIcon />
                   </IconButton>
                 </ListItem>
@@ -105,7 +109,7 @@ function Resources() {
           </Paper>
         </Grid>
 
-        {/* Recursos a usar */}
+        {/* resources to use */}
         <Grid item xs={12} md={6}>
         <Paper elevation={3} sx={{ p: 2, width: '100%' }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -135,7 +139,7 @@ function Resources() {
                     <MenuItem value="exe">Ejecución</MenuItem>
                     <MenuItem value="cm">Administrador</MenuItem>
                   </Select>
-                  <IconButton edge="end" onClick={() => handleRemove(server.ip)}>
+                  <IconButton edge="end" onClick={() => handleRemove(server)}>
                     <DeleteIcon />
                   </IconButton>
                 </ListItem>
@@ -146,7 +150,7 @@ function Resources() {
       </Grid>
       </Grid>
 
-      {/* Sección inferior: botón */}
+      {/* controls */}
       <Box sx={{ mt: 3, textAlign: 'center' }}>
         <Button
           variant="contained"
