@@ -2,7 +2,7 @@ import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router-dom";
 
-function Test() {
+function command() {
   const navigate = useNavigate();
   const [responseCommand, setResponseCommand] = useState("");
   const [SSHReq, setSSHReq] = useState({
@@ -43,7 +43,7 @@ function Test() {
       });
       setResponseCommand(output);
     } catch (err) {
-      setResponseCommand("Error: " + err);
+      setResponseCommand("Error command: " + err);
     }
   }
 
@@ -57,7 +57,7 @@ function Test() {
 
   return (
     <main className="container">
-      <h1>Simple test SSH</h1>
+      <h1>Simple command SSH</h1>
 
       <p>Datos requeridos</p>
 
@@ -93,4 +93,4 @@ function Test() {
   );
 }
 
-export default Test;
+export default command;

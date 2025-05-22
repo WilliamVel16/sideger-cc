@@ -2,7 +2,7 @@ import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router-dom";
 
-function Test2() {
+function Start() {
   const navigate = useNavigate();
   const [resRunContainers, setResRunContainers] = useState("");
   const [resSshConnection, setResSshConnection] = useState("");
@@ -86,4 +86,4 @@ function Test2() {
   );
 }
 
-export default Test2;
+export default Start;

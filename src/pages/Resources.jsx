@@ -78,7 +78,7 @@ function Resources() {
         </Grid>
 
         <Grid item size={{ xs:6, md:5}} spacing={2}>
-          <Typography variant="h6"> Gestión de Recursos </Typography>
+          <Typography variant="h6"> Gestiónar Cluster </Typography>
           <Typography variant="body2">
             Para ver los recursos disponibles actualmente da click en el siguiente botón.
           </Typography>
@@ -89,6 +89,7 @@ function Resources() {
             La siguientes opciónes te permite definir que sea el sistema quien elije los recursos a usar
             El sistema define recursos y roles: sí/no sí? user elige el número de nodos de ejecución: select.
             El sistema define sólo recursos: sí/no sí? user elige roles en el panel inferior
+            Mantener Cluster: sí/no sí? se ejecuta instalador sin --rm
           </Typography>
         </Grid>
       </Grid>
@@ -165,7 +166,7 @@ function Resources() {
           <Box sx={{ mt: 3, textAlign: 'center' }}>
             <Button
               variant="contained"
-              color="primary"
+              color="black"
               onClick={handleAssignRoles}
               disabled={checkedServers.length === 0 || checkedServers.some(s => !s.role)}
             >
