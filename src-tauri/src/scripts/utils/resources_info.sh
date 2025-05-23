@@ -7,7 +7,7 @@ RAM=$(grep MemTotal /proc/meminfo | awk '{printf "%.0f", $2 / 1024}')
 DISKS=$(lsblk -d -o NAME,SIZE,TYPE | awk '$3 == "disk" {print $1 ":" $2}' | grep -vE '^loop|^sr' | \
 awk -F: '{printf "{\"name\": \"%s\", \"size\": \"%s\"},", $1, $2}' | sed 's/,$//')
 
-#lspci is nos installed on docker containers
+#lspci is not installed on docker containers
 if command -v lspci &> /dev/null; then
   GPU=$(lspci | grep -i vga | cut -d ":" -f3 | sed 's/^ //')
 else

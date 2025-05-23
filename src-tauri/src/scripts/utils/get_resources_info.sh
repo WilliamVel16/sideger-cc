@@ -1,15 +1,21 @@
 #!/bin/bash
 source ../.env
-echo "["
 FIRST=true
-for i in ${CM_C} ${SUB_C} ${EXE_C} ${EXE_C2} ${EXE_C3}; do
-  IP=$(docker inspect -f '{{.NetworkSettings.Networks.sidegernet.IPAddress}}' ${i})
-  INFO_NODE=$(ssh user@$IP 'bash -s' < src/scripts/utils/resources_info.sh)
+NET_NAME="sidegernet"
+NUM_CONTAINERS=5
+CONT_NAME="server"
+USER="user"
+
+echo "["
+for i in $(seq 1 $NUM_CONTAINERS); do
+  CURR_CONT_NAME=${CONT_NAME}_$i
+  IP=$(docker inspect -f "{{.NetworkSettings.Networks.$NET_NAME.IPAddress}}" $CURR_CONT_NAME)
+  INFO_NODE=$(ssh ${USER}@${IP} 'bash -s' < src/scripts/utils/resources_info.sh)
   if [ $FIRST = true ]; then
     FIRST=false
   else
     echo ","
-  fi 
+  fi
   echo -n $INFO_NODE
-done
+done 
 echo "]"
