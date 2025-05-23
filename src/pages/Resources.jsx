@@ -50,7 +50,7 @@ function Resources() {
     setServers([...servers, server]);
   };
 
-  // sends the request to asign roles to every selected resource and start cluster
+  // sends the request ([{ip:role},]) to asign roles to every selected resource and start cluster
   const handleAssignRoles = async () => {
     console.log(checkedServers)
     const dataCheckedServers = checkedServers.map(s => ({ ip: s.ip, role: s.role, }));

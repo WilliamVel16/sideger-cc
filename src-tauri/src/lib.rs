@@ -1,6 +1,10 @@
-mod connect_ssh;
+mod backend;
 
-use connect_ssh::{execute_command, run_containers, start_ssh_connection, show_resources_specs, start_condor_master, assign_roles};
+use backend::{
+    containers::{run_containers, assign_roles, start_condor_master},
+    ssh::{start_ssh_connection, execute_command},
+    resources::{show_resources_specs}
+};
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
