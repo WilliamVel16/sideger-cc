@@ -40,14 +40,16 @@ pub fn run_containers() -> Result<String, String> {
 }
 
 /// this function sets the roles of every node in the pool before
-/// to start the pool. Uses images from dockerhub to run servers
-/// with roles: central manager, submit and execute
+/// to start the pool using as input every node ip and its role.
+/// Uses images from dockerhub to run the containers with one of
+/// the following roles: central manager, submit or execute
 /// 
 /// # Example
-///
 /// ```
-/// asigns and run a submit role, a manager role and one or more execute
-/// roles to the servers 
+/// input: "172.19.0.6", "cm"
+/// process: runs into node with ip 172.19.0.6 a container with role
+///          cm of htcondor.
+/// output: node name using nomenclature cm_172_19_0_6
 /// ```
 pub fn run_single_node(ip: &str, role: &str) -> Result<String, String> {
     let image = match role {
@@ -57,22 +59,28 @@ pub fn run_single_node(ip: &str, role: &str) -> Result<String, String> {
         _ => return Err(format!("Unknown role: {}", role)),
     };
 
-    let container_name = format!("{}_{}", role.replace("-", ""), ip.replace(".", "_"));
+    let container_name = format!("{}_{}", role, ip.replace(".", "_"));
+    let remote_command = format!(
+        "docker run -d --rm --name {} --net sidegernet {}", //THIS METHOD IS PENDING (NET)
+        container_name, image
+    );
 
-    let output = Command::new("docker")
+    let output = Command::new("ssh")
         .args([
-            "run", "-d", "--rm",
-            "--name", &container_name,
-            "--net", "sidegernet", // THIS METOD IS PENDING
-            image,
+            ip,
+            &remote_command,
         ])
         .output()
-        .map_err(|e| format!("Failed to run container: {}", e))?;
+        .map_err(|e| format!("SSH failed: {}", e))?;
 
     if output.status.success() {
-        Ok(format!("Container {} launched successfully", container_name))
+        Ok(format!("Container {} launched on {} successfully", container_name, ip))
     } else {
-        Err(String::from_utf8_lossy(&output.stderr).to_string())
+        Err(format!(
+            "Failed on {}: {}",
+            ip,
+            String::from_utf8_lossy(&output.stderr)
+        ))
     }
 }
 
