@@ -1,11 +1,35 @@
+
 use crate::backend::models::NodeRole;
 use std::process::Command;
+use super::models::ContainerConfig;
+
+/// permits create a container with its respective configuration
+impl ContainerConfig {
+    pub fn new(ip: &str, role: &str, onetwork_name: &str) -> Result<Self, String> {
+        let image = match role {
+            "cm" => "wvel/sideger-cm:1.0.2",
+            "sub" => "wvel/sideger-sub:1.0.2",
+            "exe" => "wvel/sideger-exe:1.0.2",
+            _ => return Err(format!("Unknown role: {}", role)),
+        };
+
+        let cont_name = format!("{}_{}", role, ip.replace(".", "_"));
+
+        Ok(ContainerConfig { 
+            ip: ip.to_string(),
+            username: "user".to_string(), // current container user
+            role: role.to_string(),
+            image: image.to_string(),
+            container_name: cont_name,
+            onetwork_name: onetwork_name.to_string(),
+        })
+    }
+}
 
 /// this function permits running the container s that are simulating the
 /// real servers, this bacause temporally we are using Docker containers.
 /// 
 /// # Example
-///
 /// ```
 /// run servers with roles Central Manager, Submit and Execute
 /// ```
@@ -51,34 +75,27 @@ pub fn run_containers() -> Result<String, String> {
 ///          cm of htcondor.
 /// output: node name using nomenclature cm_172_19_0_6
 /// ```
-pub fn run_single_node(ip: &str, role: &str) -> Result<String, String> {
-    let image = match role {
-        "cm" => "wvel/sideger-cm:1.0.2",
-        "sub" => "wvel/sideger-sub:1.0.2",
-        "exe" => "wvel/sideger-exe:1.0.2",
-        _ => return Err(format!("Unknown role: {}", role)),
-    };
-
-    let container_name = format!("{}_{}", role, ip.replace(".", "_"));
+pub fn run_single_node(config: &ContainerConfig) -> Result<String, String> {
+    let ssh_auth = format!("{}@{}", config.username, config.ip);
     let remote_command = format!(
-        "docker run -d --rm --name {} --net sidegernet {}", //THIS METHOD IS PENDING (NET)
-        container_name, image
+        "docker run -d --rm --name {} --net {} {}",
+        config.container_name, config.onetwork_name, config.image //THIS METHOD IS PENDING (NET)
     );
 
     let output = Command::new("ssh")
         .args([
-            ip,
+            &ssh_auth,
             &remote_command,
         ])
         .output()
-        .map_err(|e| format!("SSH failed: {}", e))?;
+        .map_err(|err| format!("SSH failed: {}", err))?;
 
     if output.status.success() {
-        Ok(format!("Container {} launched on {} successfully", container_name, ip))
+        Ok(format!("Container {} launched on {} successfully with role {}", config.container_name, config.ip, config.role))
     } else {
         Err(format!(
             "Failed on {}: {}",
-            ip,
+            config.ip,
             String::from_utf8_lossy(&output.stderr)
         ))
     }
@@ -88,13 +105,12 @@ pub fn run_single_node(ip: &str, role: &str) -> Result<String, String> {
 /// of the array received from the request
 /// 
 /// # Example
-///
 /// ```
 /// sends the ip and rol of one node to run_single_node function to run
 /// the containers on an atomic form
 /// ```
 #[tauri::command]
-pub fn assign_roles(nodes: Vec<NodeRole>) -> Result<String, String> {
+pub fn assign_roles(nodes: Vec<NodeRole>, onetwork_name: String) -> Result<String, String> {
     if nodes.is_empty() {
         return Err("Request without nodes, empty request".into());
     }
@@ -107,7 +123,8 @@ pub fn assign_roles(nodes: Vec<NodeRole>) -> Result<String, String> {
         }
 
         println!("Assigning {} as {}", node.ip, node.role);
-        match run_single_node(&node.ip, &node.role) {
+        let config = ContainerConfig::new(&node.ip, &node.role, &onetwork_name)?;
+        match run_single_node(&config) {
             Ok(msg) => results.push(msg),
             Err(err) => return Err(format!("Failed to assign role to {}: {}", node.ip, err)),
         }
@@ -120,7 +137,6 @@ pub fn assign_roles(nodes: Vec<NodeRole>) -> Result<String, String> {
 /// daemon on every node that coulb be used in the cluster
 /// 
 /// # Example
-///
 /// ```
 /// execute the command: condor_master 
 /// ```
