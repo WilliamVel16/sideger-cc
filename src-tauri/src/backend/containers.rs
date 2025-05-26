@@ -77,7 +77,7 @@ pub fn run_containers() -> Result<String, String> {
 /// ```
 pub fn run_single_node(config: &ContainerConfig) -> Result<String, String> {
     let ssh_auth = format!("{}@{}", config.username, config.ip);
-    let remote_command = format!(
+    let command = format!(
         "docker run -d --rm --name {} --net {} {}",
         config.container_name, config.onetwork_name, config.image //THIS METHOD IS PENDING (NET)
     );
@@ -85,7 +85,7 @@ pub fn run_single_node(config: &ContainerConfig) -> Result<String, String> {
     let output = Command::new("ssh")
         .args([
             &ssh_auth,
-            &remote_command,
+            &command,
         ])
         .output()
         .map_err(|err| format!("SSH failed: {}", err))?;
