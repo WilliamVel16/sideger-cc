@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   Box, Grid, Paper, Typography, List, ListItem, ListItemIcon, Container,
-  ListItemText, Select, MenuItem, FormControl, FormGroup, ToggleButton,
+  ListItemText, Select, MenuItem, FormControl, FormGroup, TextField,
   FormControlLabel, InputLabel, IconButton, Button, Switch, Tooltip
 } from '@mui/material';
 import ComputerIcon from '@mui/icons-material/Computer';
@@ -18,8 +18,9 @@ function Resources() {
   const [numExecutionNodes, setNumExecutionNodes] = useState(1);
   const [sysDefineResources, setSysDefineResources] = useState(false);
   const [keepCluster, setKeepCluster] = useState(false);
-  const [onetName, setOnetName] = useState("");
-  const [user, setUser] = useState("user");
+  const [onetName, setOnetName] = useState("sidegerOnet");
+  const [user, setUser] = useState("usuario");
+  const [pass, setPass] = useState("usuario");
 
 
   // requests to backend for all available resources
@@ -72,10 +73,10 @@ function Resources() {
 
   return (
     <Container maxWidth="xl" sx={{ mt: 2, mx: "sys" }} >
-      {/* information + instructions */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item size={{ xs: 6, md: 7}}>
-          <Typography variant="h6"> Información </Typography>
+        {/* information + instructions */}
+        <Grid item size={{ xs: 6, md: 6}}>
+          <Typography variant="h6" mb={1}> Información </Typography>
           <Typography variant="body1" sx={{ mb: 2 }}>
             Sección para mostrar información sobre la selección de recursos, explicando los controles del lado derecho, como
             el número máximo de nodos, se informa que por defecto el user debe elegir recursos, preferencias, etc.
@@ -89,72 +90,103 @@ function Resources() {
         </Grid>
         
         {/* configuración del cluster */}
-        <Grid item size={{ xs:6, md:5}}>
-          <Typography variant="h6"> Gestiónar Cluster </Typography>
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            Define la configuración del clúster.
-          </Typography>
-          
-          <FormGroup sx={{ mb: 1 }}>
-            <Grid container alignItems="center" spacing={2}>
-              <Grid item xs={7}>
+        <Grid item size={{ xs:6, md:6}}>
+          <Typography variant="h6" mb={1}> Gestiónar Cluster </Typography>
+          <Grid container spacing={2}>
+            <Grid item size={{ xs:6, md:6.5}}>
+              <FormGroup sx={{ ml: 1, mb: 1 }}>
+                <Grid container alignItems="stretch" justifyContent="flex-start" spacing={2} sx={{ mb: 1}}>
+                  <Grid item xs={7}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={sysDefineAll}
+                          onChange={(e) => setSysDefineAll(e.target.checked)}
+                          size="small"
+                          disabled={sysDefineResources}
+                        />
+                      }
+                      label="Sistema define recursos y roles"
+                    />
+                  </Grid>
+                  {sysDefineAll && (
+                    <Grid item xs={5}>
+                      <FormControl size="small">
+                        <Select
+                          value={numExecutionNodes}
+                          size="small"
+                          onChange={(e) => setNumExecutionNodes(parseInt(e.target.value))}
+                          fullWidth
+                        >
+                          {Array.from({ length: servers.length - 2 }, (_, i) => (
+                            <MenuItem key={i + 1} value={i + 1}> {i + 1} </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                  )}
+                </Grid>
+              </FormGroup>
+              <FormGroup sx={{ ml: 1, mb: 2 }}>
                 <FormControlLabel
                   control={
                     <Switch
-                      checked={sysDefineAll}
-                      onChange={(e) => setSysDefineAll(e.target.checked)}
+                      checked={sysDefineResources}
+                      onChange={(e) => setSysDefineResources(e.target.checked)}
                       size="small"
-                      disabled={sysDefineResources}
+                      disabled={sysDefineAll}
                     />
                   }
-                  label="El sistema define recursos y roles"
+                  label="Sistema define solo recursos"
                 />
-              </Grid>
-              {sysDefineAll && (
-                <Grid item xs={5}>
-                  <FormControl size="small">
-                    <Select
-                      value={numExecutionNodes}
+              </FormGroup>
+              <FormGroup sx={{ ml: 1, mb: 2 }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={keepCluster}
+                      onChange={(e) => setKeepCluster(e.target.checked)}
                       size="small"
-                      onChange={(e) => setNumExecutionNodes(parseInt(e.target.value))}
-                      fullWidth
-                    >
-                      {Array.from({ length: servers.length - 2 }, (_, i) => (
-                        <MenuItem key={i + 1} value={i + 1}> {i + 1} </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-              )}
+                    />
+                  }
+                  label="Mantener clúster"
+                />
+              </FormGroup>
             </Grid>
-          </FormGroup>
-
-          <FormGroup sx={{ mb: 1 }}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={sysDefineResources}
-                  onChange={(e) => setSysDefineResources(e.target.checked)}
+            <Grid item size={{ xs:6, md:4}}>
+              <FormGroup sx={{ mb: 2 }}>
+                <TextField
+                  label="Nombre de Usuario"
+                  variant="outlined"
                   size="small"
-                  disabled={sysDefineAll}
+                  fullWidth
+                  value={user}
+                  onChange={(e) => setUser(e.target.value)}
                 />
-              }
-              label="El sistema define solo recursos"
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={keepCluster}
-                  onChange={(e) => setKeepCluster(e.target.checked)}
+              </FormGroup>
+              <FormGroup sx={{ mb: 2 }}>
+                <TextField
+                  label="Contraseña"
+                  variant="outlined"
+                  type="password"
                   size="small"
+                  fullWidth
+                  value={pass}
+                  onChange={(e) => setPass(e.target.value)}
                 />
-              }
-              label="Mantener clúster"
-            />
-          </FormGroup>
+              </FormGroup>
+              <FormGroup sx={{ mb: 2 }}>
+                <TextField
+                  label="Nombre del Clúster"
+                  variant="outlined"
+                  size="small"
+                  fullWidth
+                  value={onetName}
+                  onChange={(e) => setOnetName(e.target.value)}
+                />
+              </FormGroup>
+            </Grid>
+          </Grid>
         </Grid>
       </Grid>
 

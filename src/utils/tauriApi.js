@@ -38,6 +38,6 @@ export const initializeCluster = async (nodes, user, onetName) => {
 	return invoke("initialize_cluster", {
 		nodes,
 		user,
-		onet_name: onetName,
+		onetName,
 	});
 };
