@@ -1,48 +1,35 @@
 import { useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import { useNavigate } from "react-router-dom";
+import { runContainers, sshConnection, startCondorMaster } from "./utils/tauriApi";
 
 function Start() {
-  const navigate = useNavigate();
   const [resRunContainers, setResRunContainers] = useState("");
   const [resSshConnection, setResSshConnection] = useState("");
-  const [resShowResources, setResShowResources] = useState([]);
   const [resCondorMaster, setResCondorMaster] = useState("");
 
-  async function runContainers() {
+  async function handleRunContainers() {
     try {
-      const output = await invoke("run_containers");
-      setResRunContainers(output);
+      const response = await runContainers();
+      setResRunContainers(response);
     } catch (err) {
-      console.error("Script error runContainers: ", err);
+      console.error("Script error handleRunContainers: ", err);
     }
   }
 
-  async function sshConnection() {
+  async function handleSshConnection() {
     try {
-      const output = await invoke("start_ssh_connection");
-      setResSshConnection(output);
+      const response = await sshConnection();
+      setResSshConnection(response);
     } catch (err) {
-      console.error("Script error sshConnection: ", err);
+      console.error("Script error handleSshConnection: ", err);
     }
   }
 
-  async function showResourcesSpecs() {
+  async function handleStartCondorMaster() {
     try {
-      const output = await invoke("show_resources_specs");
-      setResShowResources(output);
-      console.log("type of data:", typeof output);
+      const response = await startCondorMaster();
+      setResCondorMaster(response);
     } catch (err) {
-      console.error("Script error showResourcesSpecs: ", err);
-    }
-  }
-
-  async function startCondorMaster() {
-    try {
-      const output = await invoke("start_condor_master");
-      setResCondorMaster(output);
-    } catch (err) {
-      console.error("Script error startCondorMaster: ", err);
+      console.error("Script error handleStartCondorMaster: ", err);
     }
   }
 
@@ -54,7 +41,7 @@ function Start() {
         className="row"
         onSubmit={(e) => {
           e.preventDefault();
-          runContainers();
+          handleRunContainers();
         }}
       >
         <button type="submit">Correr contenedores</button>
@@ -65,7 +52,7 @@ function Start() {
         className="row"
         onSubmit={(e) => {
           e.preventDefault();
-          sshConnection();
+          handleSshConnection();
         }}
       >
         <button type="submit">Iniciar acceso SSH</button>
@@ -76,7 +63,7 @@ function Start() {
         className="row"
         onSubmit={(e) => {
           e.preventDefault();
-          startCondorMaster();
+          handleStartCondorMaster();
         }}
       >
         <button type="submit">Iniciar demonio condor_master</button>

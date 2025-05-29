@@ -8,7 +8,7 @@ import ComputerIcon from '@mui/icons-material/Computer';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
-import { invoke } from "@tauri-apps/api/core";
+import { showResourcesSpecs, initializeCluster } from "../utils/tauriApi";
 
 function Resources() {
   const [checkedServers, setCheckedServers] = useState([]);
@@ -18,6 +18,8 @@ function Resources() {
   const [numExecutionNodes, setNumExecutionNodes] = useState(1);
   const [sysDefineResources, setSysDefineResources] = useState(false);
   const [keepCluster, setKeepCluster] = useState(false);
+  const [onetName, setOnetName] = useState("");
+  const [user, setUser] = useState("user");
 
 
   // requests to backend for all available resources
@@ -25,8 +27,8 @@ function Resources() {
     setLoading(true);
 
     try {
-      const fetchNodesData = await invoke("show_resources_specs");
-      setServers(fetchNodesData);
+      const data = await showResourcesSpecs();
+      setServers(data);
     } catch (err) {
       console.error("Script error showResourcesSpecs: ", err);
     }
@@ -51,22 +53,20 @@ function Resources() {
   // and add that server to "available resources"
   const handleRemove = (server) => {
     setCheckedServers(checkedServers.filter(s => s.ip !== server.ip));
-    const serverWithoutRole = delete server["role"];
     setServers([...servers, server]);
   };
 
-  // sends the request ([{ip:role},]) to asign roles to every selected resource and start cluster
+  // sends the request ([{ip:role},]) to asign roles to every selected resource
+  // and start cluster
   const handleAssignRoles = async () => {
     console.log(checkedServers)
     const dataCheckedServers = checkedServers.map(s => ({ ip: s.ip, role: s.role, }));
 
     try {
-      const response = await invoke("assign_roles", { nodes: dataCheckedServers });
+      const response = await initializeCluster(dataCheckedServers, user, onetName);
       console.log(response);
-      alert("Roles asignados correctamente");
     } catch (err) {
       console.error("Error al asignar roles:", err);
-      alert("Error al asignar roles");
     }
   };
 
