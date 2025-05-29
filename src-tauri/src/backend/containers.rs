@@ -1,5 +1,4 @@
-
-use crate::backend::models::NodeRole;
+//use crate::backend::models::NodeRole;
 use std::process::Command;
 use super::models::ContainerConfig;
 
@@ -109,29 +108,29 @@ pub fn run_single_node(config: &ContainerConfig) -> Result<String, String> {
 /// sends the ip and rol of one node to run_single_node function to run
 /// the containers on an atomic form
 /// ```
-#[tauri::command]
-pub fn assign_roles(nodes: Vec<NodeRole>, onetwork_name: String) -> Result<String, String> {
-    if nodes.is_empty() {
-        return Err("Request without nodes, empty request".into());
-    }
+// #[tauri::command]
+// pub fn assign_roles(nodes: Vec<NodeRole>, onetwork_name: String) -> Result<String, String> {
+//     if nodes.is_empty() {
+//         return Err("Request without nodes, empty request".into());
+//     }
 
-    let mut results = Vec::new();
+//     let mut results = Vec::new();
 
-    for node in nodes {
-        if node.role.is_empty() {
-            return Err(format!("The node {} has no role assigned", node.ip));
-        }
+//     for node in nodes {
+//         if node.role.is_empty() {
+//             return Err(format!("The node {} has no role assigned", node.ip));
+//         }
 
-        println!("Assigning {} as {}", node.ip, node.role);
-        let config = ContainerConfig::new(&node.ip, &node.role, &onetwork_name)?;
-        match run_single_node(&config) {
-            Ok(msg) => results.push(msg),
-            Err(err) => return Err(format!("Failed to assign role to {}: {}", node.ip, err)),
-        }
-    }
+//         println!("Assigning {} as {}", node.ip, node.role);
+//         let config = ContainerConfig::new(&node.ip, &node.role, &onetwork_name)?;
+//         match run_single_node(&config) {
+//             Ok(msg) => results.push(msg),
+//             Err(err) => return Err(format!("Failed to assign role to {}: {}", node.ip, err)),
+//         }
+//     }
 
-    Ok(results.join("\n"))
-}
+//     Ok(results.join("\n"))
+// }
 
 /// this function permits to start htcondor pool, running the base
 /// daemon on every node that coulb be used in the cluster

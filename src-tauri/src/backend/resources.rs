@@ -1,3 +1,6 @@
+use super::{containers, models::ContainerConfig};
+use crate::backend::models::NodeRole;
+use containers::{run_single_node};
 use std::process::{Command};
 use serde_json::Value;
 
@@ -40,10 +43,56 @@ pub fn show_resources_specs() -> Result<Value, String> {
     }
 }
 
+/// this function joins all the functions (under of this) that permit the initialization
+/// of the cluster: init_swarm_manager, get_worker_token, join_as_worker and
+/// create_overlay_network
+#[tauri::command]
+pub fn initialize_cluster(nodes: Vec<NodeRole>, user: String, onet_name: String,) -> Result<String, String> {
+    if nodes.is_empty() {
+        return Err("No nodes provided".into());
+    }
+
+    // step 1: find the node with CM rol
+    let Some(cm_node) = nodes.iter().find(|n| n.role == "cm") else {
+        return Err("No node with role 'cm' found.".into());
+    };
+    println!("[1] Initializing swarm manager: {}", cm_node.ip);
+    init_swarm_manager(&cm_node.ip, &user)?;
+
+    // step 2: get the token to connect workers to swarm manager
+    let token = get_worker_token(&cm_node.ip, &user)?;
+    println!("[2] getting token of worker from {} - token: {}", cm_node.ip, token);
+
+    // step 3: join all the workers(submit or execute from condor) to swarm
+    for node in &nodes {
+        if node.ip != cm_node.ip {
+            println!("[3] {} joins to swarm as worker", node.ip);
+            join_as_worker(&node.ip, &user, &token, &cm_node.ip)?;
+        }
+    }
+
+    // step 4: create overlay network grom manager (o cm from htcondor)
+    println!("[4] creating overlay network: {}", onet_name);
+    create_overlay_network(&cm_node.ip, &user, &onet_name)?;
+
+    // step 5: run containers with its roles in every node choiced
+    println!("[5] Deploying containers...");
+    let mut results = Vec::new();
+    for node in nodes {
+        let config = ContainerConfig::new(&node.ip, &node.role, &onet_name)?;
+        match run_single_node(&config) {
+            Ok(msg) => results.push(msg),
+            Err(err) => return Err(format!("Error in container {}: {}", node.ip, err)),
+        }
+    }
+
+    Ok(results.join("\n"))
+}
+
+
 /// initialize the docker swarm manager inside the node which
 /// will be running central manager (htcondor) container
 /// receives the local node data (ip, user) to connect by ssh
-#[tauri::command]
 pub fn init_swarm_manager(manager_ip: &str, user: &str) -> Result<String, String> {
     let ssh_auth = format!("{}@{}", user, manager_ip);
     let command = format!("docker swarm init --advertise-addr {}", manager_ip);
@@ -64,7 +113,6 @@ pub fn init_swarm_manager(manager_ip: &str, user: &str) -> Result<String, String
 
 /// gets the token to the workers
 /// this is execute on node that has the swarm manager
-#[tauri::command]
 pub fn get_worker_token(manager_ip: &str, user: &str) -> Result<String, String> {
     let ssh_auth = format!("{}@{}", user, manager_ip);
     let command = "docker swarm join-token -q worker";
@@ -89,7 +137,6 @@ pub fn get_worker_token(manager_ip: &str, user: &str) -> Result<String, String> 
 
 /// join nodes to swarm as workers
 /// this is execute on others nodes that will be workers
-#[tauri::command]
 pub fn join_as_worker(worker_ip: &str, user: &str, token: &str, manager_ip: &str) -> Result<String, String> {
     let ssh_auth = format!("{}@{}", user, manager_ip);
     let command = format!(
@@ -115,7 +162,6 @@ pub fn join_as_worker(worker_ip: &str, user: &str, token: &str, manager_ip: &str
 
 /// creates the overlay network
 /// manager must be active and nodes join
-#[tauri::command]
 pub fn create_overlay_network(manager_ip: &str, user: &str, onet_name: &str) -> Result<String, String> {
     let ssh_auth = format!("{}@{}", user, manager_ip);
     let command = format!(

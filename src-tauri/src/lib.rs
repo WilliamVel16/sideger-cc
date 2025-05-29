@@ -1,9 +1,9 @@
 mod backend;
 
 use backend::{
-    containers::{run_containers, assign_roles, start_condor_master},
+    containers::{run_containers, start_condor_master},
     ssh::{start_ssh_connection, execute_command},
-    resources::{show_resources_specs, init_swarm_manager}
+    resources::{show_resources_specs, initialize_cluster}
 };
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -23,8 +23,7 @@ pub fn run() {
             execute_command,
             show_resources_specs,
             start_condor_master,
-            assign_roles,
-            init_swarm_manager
+            initialize_cluster
             ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
