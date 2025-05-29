@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router-dom";
+import { executeCommand } from "./utils/tauriApi";
 
-function Test() {
+function command() {
   const navigate = useNavigate();
   const [responseCommand, setResponseCommand] = useState("");
   const [SSHReq, setSSHReq] = useState({
@@ -12,7 +12,7 @@ function Test() {
   });
 
   /**
-  async function executeCommand() {
+  async function handleExecuteCommand() {
     try {
       const res = await fetch("http://localhost:3000/ssh", {
         method: "POST",
@@ -35,15 +35,13 @@ function Test() {
   }
    */
 
-  async function executeCommand() {
+  async function handleExecuteCommand() {
     console.log(SSHReq)
     try {
-      const output = await invoke("execute_command", {
-        req: SSHReq,
-      });
-      setResponseCommand(output);
+      const response = await executeCommand(SSHReq);
+      setResponseCommand(response);
     } catch (err) {
-      setResponseCommand("Error: " + err);
+      setResponseCommand("Error command: " + err);
     }
   }
 
@@ -57,7 +55,7 @@ function Test() {
 
   return (
     <main className="container">
-      <h1>Simple test SSH</h1>
+      <h1>Simple command SSH</h1>
 
       <p>Datos requeridos</p>
 
@@ -65,7 +63,7 @@ function Test() {
         className="row"
         onSubmit={(e) => {
           e.preventDefault();
-          executeCommand();
+          handleExecuteCommand();
         }}
       >
         <input
@@ -93,4 +91,4 @@ function Test() {
   );
 }
 
-export default Test;
+export default command;
