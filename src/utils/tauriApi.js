@@ -1,5 +1,15 @@
 import { invoke } from "@tauri-apps/api/core";
 
+// to execute scripts with user permission
+export const scriptPermissions = async (interfaceName, password) => {
+	return invoke("script_permissions")
+}
+
+// to obtain the IPs of the resources (up) by scanning the LAN
+export const scanLanResources = async (interfaceName, password) => {
+	return invoke("scan_lan_resources")
+}
+
 // to run container (one host)
 // is used in Start.jsx
 export const runContainers = async () => {

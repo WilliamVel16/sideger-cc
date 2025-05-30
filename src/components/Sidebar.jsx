@@ -14,7 +14,7 @@ function Sidebar() {
         <span className="tool-name"> Sideger </span>
       </div>
 
-      {/* body or sections */}
+      {/* sections */}
       <nav className="nav-sections">
         <div className="section">
           <div className="section-title"> Home </div>
@@ -22,8 +22,9 @@ function Sidebar() {
         </div>
 
         <div className="section">
-          <div className="section-title"> Recursos </div>
+          <div className="section-title"> Cluster </div>
           <NavLink to="/resources" className="nav-link"> Recursos </NavLink>
+          <NavLink to="/initialize-cluster" className="nav-link"> Desplegar </NavLink>
         </div>
 
         <div className="section">

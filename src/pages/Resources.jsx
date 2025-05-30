@@ -1,279 +1,145 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
-  Box, Grid, Paper, Typography, List, ListItem, ListItemIcon, Container,
-  ListItemText, Select, MenuItem, FormControl, FormGroup, TextField,
-  FormControlLabel, InputLabel, IconButton, Button, Switch, Tooltip
+  Box, Grid, Paper, Typography, Container,
+  FormGroup, TextField, Button, Snackbar, Alert
 } from '@mui/material';
-import ComputerIcon from '@mui/icons-material/Computer';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
-import SearchIcon from '@mui/icons-material/Search';
-import { showResourcesSpecs, initializeCluster } from "../utils/tauriApi";
+import VerifiedIcon from '@mui/icons-material/Verified';
+import { scriptPermissions, scanLanResources } from "../utils/tauriApi";
 
-function Resources() {
-  const [checkedServers, setCheckedServers] = useState([]);
-  const [servers, setServers] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [sysDefineAll, setSysDefineAll] = useState(false);
-  const [numExecutionNodes, setNumExecutionNodes] = useState(1);
-  const [sysDefineResources, setSysDefineResources] = useState(false);
-  const [keepCluster, setKeepCluster] = useState(false);
-  const [onetName, setOnetName] = useState("sidegerOnet");
-  const [user, setUser] = useState("usuario");
-  const [pass, setPass] = useState("usuario");
+function Permissions() {
+  const [interfaceLanName, setInterfaceLanName] = useState("");
+  const [password, setPassword] = useState("");
+  const [accepted, setAccepted] = useState(false);
+  const [successPermissions, setSuccessPermissions] = useState(false);
+  const [errorPermissions, setErrorPermissions] = useState("");
+  const [successScan, setSuccessScan] = useState(false);
+  const [errorScan, setErrorScan] = useState("");
 
+  const handleAccept = async () => {
+    setSuccessPermissions(true);
+    setAccepted(true);
+    // try {
+    //   const result = await scriptPermissions();
+    //   if (result.successPermissions) {
+    //     setSuccessPermissions(true);
+    //   } else {
+    //     throw new Error(result.message || "Error desconocido");
+    //   }
+    // } catch (err) {
+    //   setErrorPermissions(err.message);
+    // } finally {
+    //   setAccepted(true);
+    // }
+  };
 
-  // requests to backend for all available resources
-  const fetchData = async () => {
-    setLoading(true);
+  const handleScanResources = async () => {
 
-    try {
-      const data = await showResourcesSpecs();
-      setServers(data);
-    } catch (err) {
-      console.error("Script error showResourcesSpecs: ", err);
-    }
-    setLoading(false);
   }
 
-  // permits to identify which resources has been selected using its ip
-  const handleAdd = (server) => {
-    console.log(server);
-    setCheckedServers([...checkedServers, { ...server, role: "" }]);
-    setServers(servers.filter(s => s.ip !== server.ip));
-  };
-
-  // permits to define roles to nodes
-  const handleRoleChange = (ip, role) => {
-    setCheckedServers(
-      checkedServers.map(s => s.ip == ip? { ...s, role } : s)
-    );
-  };
-
-  // permits to remove nodes from 'resoruces to use' that finally will not be use
-  // and add that server to "available resources"
-  const handleRemove = (server) => {
-    setCheckedServers(checkedServers.filter(s => s.ip !== server.ip));
-    setServers([...servers, server]);
-  };
-
-  // sends the request ([{ip:role},]) to asign roles to every selected resource
-  // and start cluster
-  const handleAssignRoles = async () => {
-    console.log(checkedServers)
-    const dataCheckedServers = checkedServers.map(s => ({ ip: s.ip, role: s.role, }));
-
-    try {
-      const response = await initializeCluster(dataCheckedServers, user, onetName);
-      console.log(response);
-    } catch (err) {
-      console.error("Error al asignar roles:", err);
-    }
-  };
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 2, mx: "sys" }} >
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        {/* information + instructions */}
-        <Grid item size={{ xs: 6, md: 6}}>
-          <Typography variant="h6" mb={1}> Información </Typography>
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            Sección para mostrar información sobre la selección de recursos, explicando los controles del lado derecho, como
-            el número máximo de nodos, se informa que por defecto el user debe elegir recursos, preferencias, etc.
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            Para ver los recursos disponibles actualmente da click en el siguiente botón.
-          </Typography>
-          <Button variant='contained' color='gray' endIcon={<SearchIcon />}  disabled={loading} onClick={fetchData}>
-            {loading ? 'Cargando...' : 'Buscar Recursos'}
+    <Container maxWidth="md" sx={{ mt: 4 }}>
+      <Paper elevation={3} sx={{ p: 4 }}>
+        {/** permisos */}
+        <Typography variant="h5" gutterBottom>
+          Permitir ejecución de scripts
+        </Typography>
+        <Typography variant="body1" sx={{ mb: 2 }}>
+          Para proceder con el despliegue del clúster, se requiere que otorgues permisos para ejecutar scripts seguros
+          en tu máquina. Esto es necesario para configurar correctamente la red y los servicios necesarios.
+        </Typography>
+        <Box sx={{ textAlign: 'center', mt: 3 }}>
+          <Button variant="contained" color="black" onClick={handleAccept}>
+            Dar permiso y continuar
           </Button>
-        </Grid>
-        
-        {/* configuración del cluster */}
-        <Grid item size={{ xs:6, md:6}}>
-          <Typography variant="h6" mb={1}> Gestiónar Cluster </Typography>
-          <Grid container spacing={2}>
-            <Grid item size={{ xs:6, md:6.5}}>
-              <FormGroup sx={{ ml: 1, mb: 1 }}>
-                <Grid container alignItems="stretch" justifyContent="flex-start" spacing={2} sx={{ mb: 1}}>
-                  <Grid item xs={7}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={sysDefineAll}
-                          onChange={(e) => setSysDefineAll(e.target.checked)}
-                          size="small"
-                          disabled={sysDefineResources}
-                        />
-                      }
-                      label="Sistema define recursos y roles"
-                    />
-                  </Grid>
-                  {sysDefineAll && (
-                    <Grid item xs={5}>
-                      <FormControl size="small">
-                        <Select
-                          value={numExecutionNodes}
-                          size="small"
-                          onChange={(e) => setNumExecutionNodes(parseInt(e.target.value))}
-                          fullWidth
-                        >
-                          {Array.from({ length: servers.length - 2 }, (_, i) => (
-                            <MenuItem key={i + 1} value={i + 1}> {i + 1} </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                  )}
-                </Grid>
-              </FormGroup>
-              <FormGroup sx={{ ml: 1, mb: 2 }}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={sysDefineResources}
-                      onChange={(e) => setSysDefineResources(e.target.checked)}
-                      size="small"
-                      disabled={sysDefineAll}
-                    />
-                  }
-                  label="Sistema define solo recursos"
-                />
-              </FormGroup>
-              <FormGroup sx={{ ml: 1, mb: 2 }}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={keepCluster}
-                      onChange={(e) => setKeepCluster(e.target.checked)}
-                      size="small"
-                    />
-                  }
-                  label="Mantener clúster"
-                />
-              </FormGroup>
-            </Grid>
-            <Grid item size={{ xs:6, md:4}}>
-              <FormGroup sx={{ mb: 2 }}>
-                <TextField
-                  label="Nombre de Usuario"
-                  variant="outlined"
-                  size="small"
-                  fullWidth
-                  value={user}
-                  onChange={(e) => setUser(e.target.value)}
-                />
-              </FormGroup>
-              <FormGroup sx={{ mb: 2 }}>
-                <TextField
-                  label="Contraseña"
-                  variant="outlined"
-                  type="password"
-                  size="small"
-                  fullWidth
-                  value={pass}
-                  onChange={(e) => setPass(e.target.value)}
-                />
-              </FormGroup>
-              <FormGroup sx={{ mb: 2 }}>
-                <TextField
-                  label="Nombre del Clúster"
-                  variant="outlined"
-                  size="small"
-                  fullWidth
-                  value={onetName}
-                  onChange={(e) => setOnetName(e.target.value)}
-                />
-              </FormGroup>
-            </Grid>
+        </Box>
+
+        {accepted && successPermissions && (
+          <Box sx={{ textAlign: 'center', mt: 4 }}>
+            <VerifiedIcon color="success" sx={{ fontSize: 60 }} />
+            <Typography variant="h6" color="success.main">
+              Permisos concedidos correctamente
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              Por favor continúa con el siguiente requerimiento
+            </Typography>
+          </Box>
+        )}
+
+        <Snackbar
+          open={Boolean(errorPermissions)}
+          autoHideDuration={6000}
+          onClose={() => setErrorPermissions("")}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert onClose={() => setErrorPermissions("")} severity="error" sx={{ width: '100%' }}>
+            {errorPermissions}
+          </Alert>
+        </Snackbar>
+
+        {/** scan LAN */}
+        <Typography variant="h5" gutterBottom marginTop={6}>
+          Información sobre la red local (LAN)
+        </Typography>
+        <Typography variant="body1" sx={{ mb: 2 }}>
+          Para continuar con el procedimiento se requiere el nombre de la interfaz de la red local de la
+          sala de cómputo e información sobre la infraestructura física, por favor ingresa el nombre de la
+          interfaz y la contraseña de tu usuario local.
+        </Typography>
+
+        <Grid container direction="column" spacing={2} marginTop={3} alignItems={"center"}>
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Interfaz LAN"
+              variant="outlined"
+              fullWidth
+              size="small"
+              value={interfaceLanName}
+              onChange={(e) => setInterfaceLanName(e.target.value)}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Contraseña de usuario"
+              variant="outlined"
+              type="password"
+              fullWidth
+              size="small"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </Grid>
         </Grid>
-      </Grid>
+        <Box sx={{ textAlign: 'center', mt: 5 }}>
+          <Button variant="contained" color="black" onClick={handleAccept}>
+            Dar permiso y continuar
+          </Button>
+        </Box>
 
-      <Grid container direction="row" spacing={2} sx={{ mb: 4, alignItems: "stretch" }}>
-        {/* available resources */}
-        <Grid item size={{ xs: 12, md: 6}}>
-          <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
-            <Typography variant="h6" gutterBottom> Recursos Disponibles </Typography>
-            <List sx={{ height: 500, overflowY: 'sys'}}>
-              {servers.map((server) => (
-                <ListItem key={server.ip} divider>
-                  <ListItemIcon><ComputerIcon /></ListItemIcon>
-                  <ListItemText
-                    primary={`${server.hostname} (${server.ip})`}
-                    secondary={
-                      <>
-                        CPU: {server.cpu} | RAM: {server.ram_mb}MB<br />
-                        SO: {server.os} | DISK: {server.disk.map(d => d.size).join(', ')}
-                      </>
-                    }
-                  />
-                  <IconButton sx={{ marginRight:'10px' }} edge="end" onClick={() => handleAdd(server)} >
-                    <AddIcon />
-                  </IconButton>
-                </ListItem>
-              ))}
-            </List>
-          </Paper>
-        </Grid>
-
-        {/* resources to use */}
-        <Grid item size={{ xs: 12, md: 6}}>
-          <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
-            <Typography variant="h6" gutterBottom> Recursos a Usar </Typography>
-            <List sx={{ height: 500, overflowY: 'sys'}}>
-              {checkedServers.map((server) => (
-                <ListItem key={server.ip} divider>
-                  <ListItemText
-                    primary={`${server.hostname} (${server.ip})`}
-                    secondary={
-                      <>
-                        CPU: {server.cpu} | RAM: {server.ram_mb}MB<br />
-                        SO: {server.os} | DISK: {server.disk.map(d => d.size).join(', ')}
-                      </>
-                    }
-                  />
-
-                  <Select
-                    value={server.role || ""}
-                    onChange={(e) => handleRoleChange(server.ip, e.target.value)}
-                    displayEmpty
-                    size="small"
-                    sx={{ mr: 1 }}
-                  >
-                    <MenuItem value="">Elegir rol</MenuItem>
-                    <MenuItem value="sub">Envío</MenuItem>
-                    <MenuItem value="exe">Ejecución</MenuItem>
-                    <MenuItem value="cm">Administrador</MenuItem>
-                  </Select>
-                  <IconButton edge="end" onClick={() => handleRemove(server)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </ListItem>
-              ))}
-            </List>
-          </Paper>
-        </Grid>
-      </Grid>
-
-      {/* controls */}
-      <Grid container spacing={2} sx={{ mb: 2}}>
-        <Grid item size={12} >
-          <Box sx={{ mt: 3, textAlign: 'center' }}>
-            <Button
-              variant="contained"
-              color="black"
-              onClick={handleAssignRoles}
-              disabled={checkedServers.length === 0 || checkedServers.some(s => !s.role)}
-            >
-              Inicializar Clúster
-            </Button>
+        {accepted && successPermissions && (
+          <Box sx={{ textAlign: 'center', mt: 4 }}>
+            <VerifiedIcon color="success" sx={{ fontSize: 60 }} />
+            <Typography variant="h6" color="success.main">
+              El sistema ha encontrado recursos disponibles en la red
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              Ya puedes dirigirte a la sección "Desplegar"
+            </Typography>
           </Box>
-        </Grid>
-      </Grid>
-      
-    </Container> 
+        )}
+
+        <Snackbar
+          open={Boolean(errorScan)}
+          autoHideDuration={6000}
+          onClose={() => setErrorPermissions("")}
+        >
+          <Alert onClose={() => setErrorPermissions("")} severity="error" sx={{ width: '100%' }}>
+            {errorScan}
+          </Alert>
+        </Snackbar>
+      </Paper>
+    </Container>
   );
 }
 
-export default Resources;
+export default Permissions;
