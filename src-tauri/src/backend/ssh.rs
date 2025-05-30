@@ -13,19 +13,13 @@ use dotenv::dotenv;
 /// of the other available servers of the network
 /// ```
 #[tauri::command]
-pub fn start_ssh_connection() -> Result<String, String> {
+pub fn start_ssh_connection(node_ip: String, user: String, pass: String) -> Result<String, String> {
+    let ssh_auth = format!("{}@{}", user, node_ip);
     let script_path = std::env::current_dir()
         .unwrap()
         .join("src/scripts/utils/ssh_connection.sh");
 
     println!("path: {}", script_path.display());
-
-    if !script_path.exists() {
-        return Err(format!(
-            "Script not found at path: {}",
-            script_path.display()
-        ));
-    }
 
     let output = Command::new("bash")
         .arg(script_path)
