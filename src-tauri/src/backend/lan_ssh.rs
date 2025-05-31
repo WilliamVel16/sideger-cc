@@ -2,12 +2,49 @@ use openssh::{KnownHosts, SessionBuilder};
 use crate::backend::models::MySSHRequest;
 use std::process::Command;
 use dotenv::dotenv;
+use std::os::unix::fs::PermissionsExt;
+use std::path::Path;
+use std::fs;
+
+/// allows to give permissions to run scripts to configure the 
+/// network and prepare the resources founded on the LAN, iterates
+/// for every .sh file inside the directory to give execution permission
+/// 
+/// # Example
+/// ```
+/// allows the app to run a script to scan the LAN
+/// ```
+#[tauri::command]
+pub fn script_permissions() -> Result<String, String> {
+    let scripts_dir = Path::new("../local-scripts");
+
+    if !scripts_dir.exists() {
+        return Err("The directory doesn't exists".to_string());
+    }
+
+    println!("path: {}", scripts_dir.display());
+
+    for file in fs::read_dir(scripts_dir).map_err(|e| e.to_string())? {
+        let file = file.map_err(|e| e.to_string())?;
+        let path = file.path();
+
+        if path.extension().and_then(|s| s.to_str()) == Some("sh") {
+            let metadata = fs::metadata(&path).map_err(|e| e.to_string())?;
+            let mut permissions = metadata.permissions();
+
+            permissions.set_mode(0o755); // chmod 755 -> rwxr-xr-x 
+            fs::set_permissions(&path, permissions).map_err(|e| e.to_string())?;
+        }
+    }
+
+    Ok("Permissions correctly assigned".to_string())
+}
+
 
 /// this function starts the SSH conenection con every available resource
 /// in the local network
 /// 
 /// # Example
-///
 /// ```
 /// copy the public keys from the server where sideger is being use inside
 /// of the other available servers of the network

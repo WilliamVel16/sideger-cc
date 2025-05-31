@@ -16,20 +16,18 @@ function Permissions() {
   const [errorScan, setErrorScan] = useState("");
 
   const handleAccept = async () => {
-    setSuccessPermissions(true);
-    setAccepted(true);
-    // try {
-    //   const result = await scriptPermissions();
-    //   if (result.successPermissions) {
-    //     setSuccessPermissions(true);
-    //   } else {
-    //     throw new Error(result.message || "Error desconocido");
-    //   }
-    // } catch (err) {
-    //   setErrorPermissions(err.message);
-    // } finally {
-    //   setAccepted(true);
-    // }
+    try {
+      const result = await scriptPermissions();
+      if (result.successPermissions) {
+        setSuccessPermissions(true);
+      } else {
+        throw new Error(result.message || "Error desconocido");
+      }
+    } catch (err) {
+      setErrorPermissions(err.message);
+    } finally {
+      setAccepted(true);
+    }
   };
 
   const handleScanResources = async () => {
@@ -112,7 +110,7 @@ function Permissions() {
         </Grid>
         <Box sx={{ textAlign: 'center', mt: 5 }}>
           <Button variant="contained" color="black" onClick={handleAccept}>
-            Dar permiso y continuar
+            Buscar Recursos
           </Button>
         </Box>
 
