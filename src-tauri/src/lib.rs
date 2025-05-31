@@ -2,7 +2,7 @@ mod backend;
 
 use backend::{
     containers::{run_containers, start_condor_master},
-    lan_ssh::{script_permissions, start_ssh_connection, execute_command},
+    lan_ssh::{script_permissions, scan_lan_resources, start_ssh_connection, execute_command},
     resources::{show_resources_specs, initialize_cluster}
 };
 
@@ -22,7 +22,8 @@ pub fn run() {
             initialize_cluster,
 
             // lan
-            script_permissions
+            script_permissions,
+            scan_lan_resources
             
             ])
         .run(tauri::generate_context!())

@@ -14,24 +14,37 @@ function Permissions() {
   const [errorPermissions, setErrorPermissions] = useState("");
   const [successScan, setSuccessScan] = useState(false);
   const [errorScan, setErrorScan] = useState("");
+  const [numberResources, setNumberResources] = useState(0);
 
   const handleAccept = async () => {
     try {
       const result = await scriptPermissions();
-      if (result.successPermissions) {
-        setSuccessPermissions(true);
-      } else {
-        throw new Error(result.message || "Error desconocido");
-      }
+      console.log("GOOD", result);
+      setSuccessPermissions(true);
     } catch (err) {
-      setErrorPermissions(err.message);
+      console.error("BAD", err);
+      setErrorPermissions(err.message || "Unresolved error");
     } finally {
       setAccepted(true);
     }
   };
 
-  const handleScanResources = async () => {
+  const handleScanResources = async (lanName, pass) => {
+    try {
+      const result = await scanLanResources(lanName, pass);
+      setNumberResources(result.ips.length - 1) // it includes the gateway
+      setSuccessScan(true);
+      console.log("ok", result.ips);
 
+    } catch (err) {
+      if (typeof err === "string") {
+        console.error("no ok 1", err);
+      } else if (err && err.message) {
+        console.error("no ok 2", err.message);
+      } else {
+        console.error("no ok 3", "Unresolved error");
+      }
+    }
   }
 
 
@@ -109,16 +122,16 @@ function Permissions() {
           </Grid>
         </Grid>
         <Box sx={{ textAlign: 'center', mt: 5 }}>
-          <Button variant="contained" color="black" onClick={handleAccept}>
+          <Button variant="contained" color="black" onClick={() => handleScanResources(interfaceLanName, password)}>
             Buscar Recursos
           </Button>
         </Box>
 
-        {accepted && successPermissions && (
+        {successScan && (
           <Box sx={{ textAlign: 'center', mt: 4 }}>
             <VerifiedIcon color="success" sx={{ fontSize: 60 }} />
             <Typography variant="h6" color="success.main">
-              El sistema ha encontrado recursos disponibles en la red
+              El sistema ha encontrado {numberResources} recursos disponibles en la red
             </Typography>
             <Typography variant="body2" sx={{ mt: 1 }}>
               Ya puedes dirigirte a la sección "Desplegar"

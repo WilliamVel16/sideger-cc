@@ -1,5 +1,5 @@
 use openssh::{KnownHosts, SessionBuilder};
-use crate::backend::models::MySSHRequest;
+use crate::backend::models::{MySSHRequest, ScanResourcesResult};
 use std::process::Command;
 use dotenv::dotenv;
 use std::os::unix::fs::PermissionsExt;
@@ -11,7 +11,7 @@ use std::fs;
 /// for every .sh file inside the directory to give execution permission
 /// 
 /// # Example
-/// ```
+/// ``` 
 /// allows the app to run a script to scan the LAN
 /// ```
 #[tauri::command]
@@ -21,8 +21,6 @@ pub fn script_permissions() -> Result<String, String> {
     if !scripts_dir.exists() {
         return Err("The directory doesn't exists".to_string());
     }
-
-    println!("path: {}", scripts_dir.display());
 
     for file in fs::read_dir(scripts_dir).map_err(|e| e.to_string())? {
         let file = file.map_err(|e| e.to_string())?;
@@ -38,6 +36,38 @@ pub fn script_permissions() -> Result<String, String> {
     }
 
     Ok("Permissions correctly assigned".to_string())
+}
+
+
+/// this function allows scan the allowed resources in the network
+#[tauri::command]
+pub fn scan_lan_resources(interface_lan_name: String, pass: String) -> Result<ScanResourcesResult, String> {
+    let script_path = Path::new("../local-scripts/get_resources_up.sh");
+
+    if !script_path.exists() {
+        return Err("Script doesn't exists".to_string());
+    }
+
+    let output = Command::new(script_path)
+        .arg(&interface_lan_name)
+        .arg(&pass)
+        .output()
+        .map_err(|e| format!("Error executing script: {}", e))?;
+
+    if output.status.success() {
+        println!("out success");
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let ips: Vec<String> = stdout
+            .lines()
+            .map(|line| line.trim().to_string())
+            .filter(|ip| !ip.is_empty())
+            .collect();
+
+        Ok(ScanResourcesResult { ips })
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+        Err(format!("Script process error: {}", stderr))
+    }
 }
 
 
