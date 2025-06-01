@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize)]
 pub struct MySSHRequest {
@@ -31,4 +31,9 @@ pub struct ContainerConfig {
     pub image: String,
     pub container_name: String,
     pub onetwork_name: String,
+}
+
+#[derive(Serialize)]
+pub struct ScanResourcesResult {
+    pub ips: Vec<String>,
 }

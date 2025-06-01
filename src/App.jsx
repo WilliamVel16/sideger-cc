@@ -8,23 +8,26 @@ import InitializeCluster from "./pages/InitializeCluster";
 //import NewJob from "./pages/NewJob";
 import Command from "./Command";
 import Start from "./Start";
+import { AppProvider } from "./context/AppContext";
 
 function App() {
   // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 
   return (
     <div >
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<div>Home</div>} />
-            <Route path="/resources" element={<Resources />} />
-            <Route path="/initialize-cluster" element={<InitializeCluster />} />
-            <Route path="/command" element={<Command />} />
-            <Route path="/start" element={<Start />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <AppProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<div>Home</div>} />
+              <Route path="/resources" element={<Resources />} />
+              <Route path="/initialize-cluster" element={<InitializeCluster />} />
+              <Route path="/command" element={<Command />} />
+              <Route path="/start" element={<Start />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </AppProvider>
     </div>
   );
 }

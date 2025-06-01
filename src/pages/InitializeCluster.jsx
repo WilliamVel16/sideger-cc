@@ -9,8 +9,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import { showResourcesSpecs, initializeCluster } from "../utils/tauriApi";
+import { useAppContext } from '../context/AppContext';
 
 function InitializeCluster() {
+  const { resourcesIPs, setResourcesIPs, user, setUser, pass, setPass } = useAppContext();
   const [checkedServers, setCheckedServers] = useState([]);
   const [servers, setServers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -18,21 +20,18 @@ function InitializeCluster() {
   const [numExecutionNodes, setNumExecutionNodes] = useState(1);
   const [sysDefineResources, setSysDefineResources] = useState(false);
   const [keepCluster, setKeepCluster] = useState(false);
-  const [onetName, setOnetName] = useState("sidegerOnet");
-  const [user, setUser] = useState("usuario");
-  const [pass, setPass] = useState("usuario");
-
+  const [onetName, setOnetName] = useState("sidegerOnet");  
 
   // requests to backend for all available resources
   const fetchData = async () => {
     setLoading(true);
-
-    try {
-      const data = await showResourcesSpecs();
-      setServers(data);
-    } catch (err) {
-      console.error("Script error showResourcesSpecs: ", err);
-    }
+    console.log(resourcesIPs)
+    // try {
+    //   const data = await showResourcesSpecs();
+    //   setServers(data);
+    // } catch (err) {
+    //   console.error("Script error showResourcesSpecs: ", err);
+    // }
     setLoading(false);
   }
 
