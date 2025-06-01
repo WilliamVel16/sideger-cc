@@ -5,10 +5,11 @@ import {
 } from '@mui/material';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import { scriptPermissions, scanLanResources } from "../utils/tauriApi";
+import { useAppContext } from '../context/AppContext';
 
 function Permissions() {
+  const { setResourcesIPs, pass, setPass } = useAppContext();
   const [interfaceLanName, setInterfaceLanName] = useState("");
-  const [password, setPassword] = useState("");
   const [accepted, setAccepted] = useState(false);
   const [successPermissions, setSuccessPermissions] = useState(false);
   const [errorPermissions, setErrorPermissions] = useState("");
@@ -32,6 +33,7 @@ function Permissions() {
   const handleScanResources = async (lanName, pass) => {
     try {
       const result = await scanLanResources(lanName, pass);
+      setResourcesIPs(result.ips);
       setNumberResources(result.ips.length - 1) // it includes the gateway
       setSuccessScan(true);
       console.log("ok", result.ips);
@@ -39,10 +41,13 @@ function Permissions() {
     } catch (err) {
       if (typeof err === "string") {
         console.error("no ok 1", err);
+        setErrorScan(err);
       } else if (err && err.message) {
         console.error("no ok 2", err.message);
+        setErrorScan(err.message);
       } else {
         console.error("no ok 3", "Unresolved error");
+        setErrorScan("Unresolved error");
       }
     }
   }
@@ -116,13 +121,13 @@ function Permissions() {
               type="password"
               fullWidth
               size="small"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={pass}
+              onChange={(e) => setPass(e.target.value)}
             />
           </Grid>
         </Grid>
         <Box sx={{ textAlign: 'center', mt: 5 }}>
-          <Button variant="contained" color="black" onClick={() => handleScanResources(interfaceLanName, password)}>
+          <Button variant="contained" color="black" onClick={() => handleScanResources(interfaceLanName, pass)}>
             Buscar Recursos
           </Button>
         </Box>
