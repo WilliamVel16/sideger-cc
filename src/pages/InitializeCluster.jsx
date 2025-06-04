@@ -26,12 +26,12 @@ function InitializeCluster() {
   const fetchData = async () => {
     setLoading(true);
     console.log(resourcesIPs)
-    // try {
-    //   const data = await showResourcesSpecs();
-    //   setServers(data);
-    // } catch (err) {
-    //   console.error("Script error showResourcesSpecs: ", err);
-    // }
+    try {
+      const data = await showResourcesSpecs(resourcesIPs, user);
+      setServers(data);
+    } catch (err) {
+      console.error("Script error showResourcesSpecs: ", err);
+    }
     setLoading(false);
   }
 

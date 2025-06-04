@@ -1,10 +1,12 @@
 use openssh::{KnownHosts, SessionBuilder};
-use crate::backend::models::{MySSHRequest, ScanResourcesResult};
+use crate::backend::models::{MySSHRequest, SSHConnectionResult, ScanResourcesResult};
 use std::process::Command;
 use dotenv::dotenv;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::fs;
+use std::net::{IpAddr};
+use pnet_datalink::{self, NetworkInterface};
 
 /// allows to give permissions to run scripts to configure the 
 /// network and prepare the resources founded on the LAN, iterates
@@ -70,6 +72,36 @@ pub fn scan_lan_resources(interface_lan_name: String, pass: String) -> Result<Sc
     }
 }
 
+/// this function gets the local ip of the machine where user is using the 
+/// Sideger app
+/// 
+#[tauri::command]
+pub fn get_local_ip(interface_name: String) -> Result<String, String> {
+    let interfaces = pnet_datalink::interfaces();
+    println!("Interfaces encontradas:");
+    for iface in &interfaces {
+        println!(
+            "- {} | MAC: {:?} | IPs: {:?}",
+            iface.name,
+            iface.mac,
+            iface.ips
+        );
+    }
+    
+    let interface = interfaces
+        .into_iter()
+        .find(|iface: &NetworkInterface| iface.name == interface_name)
+        .ok_or_else(|| format!("Interface {} not found", interface_name))?;
+
+    for ip_network in interface.ips {
+        if let IpAddr::V4(ipv4) = ip_network.ip() {
+            return Ok(ipv4.to_string());
+        }
+    }
+
+    Err("No IPv4 address found for the interface".into())
+}
+
 
 /// this function starts the SSH conenection con every available resource
 /// in the local network
@@ -80,27 +112,55 @@ pub fn scan_lan_resources(interface_lan_name: String, pass: String) -> Result<Sc
 /// of the other available servers of the network
 /// ```
 #[tauri::command]
-pub fn start_ssh_connection(node_ip: String, user: String, pass: String) -> Result<String, String> {
-    let ssh_auth = format!("{}@{}", user, node_ip);
+pub fn start_ssh_connection(nodes_ips: Vec<String>, user: String, pass: String) -> Result<Vec<SSHConnectionResult>, String> {
     let script_path = std::env::current_dir()
         .unwrap()
         .join("src/scripts/utils/ssh_connection.sh");
 
-    println!("path: {}", script_path.display());
+    println!("start ssh connection called");
 
-    let output = Command::new("bash")
-        .arg(script_path)
-        .output()
-        .map_err(|err| format!("Failed to execute script ssh: {}", err))?;
-
-    if output.status.success() {
-        Ok(String::from_utf8_lossy(&output.stdout).to_string())
-    } else {
-        Err(format!(
-            "Script failed:\n{}",
-            String::from_utf8_lossy(&output.stderr)
-        ))
+    if !script_path.exists() {
+        return Err(format!("Script not found in path: {}", script_path.display()));
     }
+
+    let mut results = Vec::new();
+    for ip in nodes_ips {
+        let output = Command::new("bash")
+            .arg(&script_path)
+            .arg(&user)
+            .arg(&pass)
+            .arg(&ip)
+            .output();
+
+        match output {
+            Ok(output) => {
+                if output.status.success() {
+                    println!("Success for IP {}:\n{}", ip, String::from_utf8_lossy(&output.stdout));
+                    results.push(SSHConnectionResult {
+                        ip,
+                        success: true,
+                        message: String::from_utf8_lossy(&output.stdout).to_string(),
+                    });
+                } else {
+                     println!("Error for IP {}:\n{}", ip, String::from_utf8_lossy(&output.stderr));
+                    results.push(SSHConnectionResult {
+                        ip,
+                        success: false,
+                        message: String::from_utf8_lossy(&output.stderr).to_string(),
+                    });
+                }
+            }
+            Err(e) => {
+                results.push(SSHConnectionResult {
+                    ip,
+                    success: false,
+                    message: format!("Execution failed: {}", e),
+                });
+            }
+        }
+    }
+
+    Ok(results)
 }
 
 

@@ -1,14 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Box, Grid, Paper, Typography, Container,
   FormGroup, TextField, Button, Snackbar, Alert
 } from '@mui/material';
 import VerifiedIcon from '@mui/icons-material/Verified';
-import { scriptPermissions, scanLanResources } from "../utils/tauriApi";
+import { scriptPermissions, scanLanResources, startSshConnection, getLocalIp } from "../utils/tauriApi";
 import { useAppContext } from '../context/AppContext';
 
 function Permissions() {
-  const { setResourcesIPs, pass, setPass } = useAppContext();
+  const { resourcesIPs, setResourcesIPs, user, setUser, pass, setPass } = useAppContext();
   const [interfaceLanName, setInterfaceLanName] = useState("");
   const [accepted, setAccepted] = useState(false);
   const [successPermissions, setSuccessPermissions] = useState(false);
@@ -16,7 +16,9 @@ function Permissions() {
   const [successScan, setSuccessScan] = useState(false);
   const [errorScan, setErrorScan] = useState("");
   const [numberResources, setNumberResources] = useState(0);
+  const [localPass, setLocalPass] = useState("");
 
+  // get the permissions to execute scripts to deploy the cluster
   const handleAccept = async () => {
     try {
       const result = await scriptPermissions();
@@ -30,14 +32,15 @@ function Permissions() {
     }
   };
 
-  const handleScanResources = async (lanName, pass) => {
+  // executes the resources scanning in the LAN
+  const handleScanResources = async (lanName, localPass) => {
     try {
-      const result = await scanLanResources(lanName, pass);
-      setResourcesIPs(result.ips);
-      setNumberResources(result.ips.length - 1) // it includes the gateway
+      const result = await scanLanResources(lanName, localPass);
+      const resultNoGateway = result.ips.filter(ip => !ip.endsWith(".1"));
+      console.log("Ressss:",resultNoGateway);
+      setResourcesIPs(resultNoGateway);
+      setNumberResources(resultNoGateway.length - 1) // no includes submit
       setSuccessScan(true);
-      console.log("ok", result.ips);
-
     } catch (err) {
       if (typeof err === "string") {
         console.error("no ok 1", err);
@@ -51,6 +54,22 @@ function Permissions() {
       }
     }
   }
+
+  // executes ssh connection after resources scanning
+  useEffect(() => {
+    if (successScan && resourcesIPs.length > 0) {
+      (async () => {
+        try {
+          const localIp = await getLocalIp(interfaceLanName);
+          const resourcesIPsNoLocal = resourcesIPs.filter(ip => ip != localIp);
+          const output = await startSshConnection(user, pass, resourcesIPsNoLocal);
+          console.log("results ssh connection:", output);
+        } catch (err) {
+          console.log("Error during ssh connection:", err);
+        }
+      })();
+    }
+  }, [successScan, resourcesIPs]);
 
 
   return (
@@ -99,12 +118,34 @@ function Permissions() {
         </Typography>
         <Typography variant="body1" sx={{ mb: 2 }}>
           Para continuar con el procedimiento se requiere el nombre de la interfaz de la red local de la
-          sala de cómputo e información sobre la infraestructura física, por favor ingresa el nombre de la
-          interfaz y la contraseña de tu usuario local.
+          sala de cómputo e información sobre la infraestructura física, por favor ingresa el nombre y la 
+          contraseña del usuario remoto, luego el nombre de la interfaz de la red LAN y la contraseña del
+          usuario del pc que estás usando.
         </Typography>
 
         <Grid container direction="column" spacing={2} marginTop={3} alignItems={"center"}>
           <Grid item xs={12} md={6}>
+            <TextField
+              label="Nombre de usuario"
+              variant="outlined"
+              fullWidth
+              size="small"
+              value={user}
+              onChange={(e) => setUser(e.target.value)}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Contraseña de usuario remoto"
+              variant="outlined"
+              type="password"
+              fullWidth
+              size="small"
+              value={pass}
+              onChange={(e) => setPass(e.target.value)}
+            />
+          </Grid>
+           <Grid item xs={12} md={6}>
             <TextField
               label="Interfaz LAN"
               variant="outlined"
@@ -116,18 +157,18 @@ function Permissions() {
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
-              label="Contraseña de usuario"
+              label="Contraseña de usuario local"
               variant="outlined"
               type="password"
               fullWidth
               size="small"
-              value={pass}
-              onChange={(e) => setPass(e.target.value)}
+              value={localPass}
+              onChange={(e) => setLocalPass(e.target.value)}
             />
           </Grid>
         </Grid>
         <Box sx={{ textAlign: 'center', mt: 5 }}>
-          <Button variant="contained" color="black" onClick={() => handleScanResources(interfaceLanName, pass)}>
+          <Button variant="contained" color="black" onClick={() => handleScanResources(interfaceLanName, localPass)}>
             Buscar Recursos
           </Button>
         </Box>

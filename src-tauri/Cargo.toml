@@ -29,4 +29,6 @@ openssh = "0.8"
 openssl = { version = "0.10", features = ["vendored"] }
 axum-server = "0.7.2"
 dotenv = "0.15.0"
+pnet_datalink = "0.34.0"
+
 
