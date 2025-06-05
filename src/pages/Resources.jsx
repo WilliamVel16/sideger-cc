@@ -42,7 +42,7 @@ function Permissions() {
       console.log("Ressss:",finalResources);
       setResourcesIPs(finalResources);
       setNumberResources(finalResources.length)
-      //setSuccessScan(true);
+      setSuccessScan(true);
     } catch (err) {
       if (typeof err === "string") {
         console.error("no ok 1", err);

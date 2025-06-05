@@ -203,7 +203,8 @@ function InitializeCluster() {
                     secondary={
                       <>
                         CPU: {server.cpu} | RAM: {server.ram_mb}MB<br />
-                        SO: {server.os} | DISK: {server.disk.map(d => d.size).join(', ')}
+                        SO: {server.os} | DISK: {server.disk.map(d => d.size).join(', ')}<br />
+                        GPU: {server.gpu}
                       </>
                     }
                   />
@@ -228,7 +229,8 @@ function InitializeCluster() {
                     secondary={
                       <>
                         CPU: {server.cpu} | RAM: {server.ram_mb}MB<br />
-                        SO: {server.os} | DISK: {server.disk.map(d => d.size).join(', ')}
+                        SO: {server.os} | DISK: {server.disk.map(d => d.size).join(', ')}<br />
+                        GPU: {server.gpu}
                       </>
                     }
                   />
