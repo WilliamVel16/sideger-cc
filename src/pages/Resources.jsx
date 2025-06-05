@@ -33,14 +33,16 @@ function Permissions() {
   };
 
   // executes the resources scanning in the LAN
-  const handleScanResources = async (lanName, localPass) => {
+  const handleScanResources = async (localPass) => {
     try {
-      const result = await scanLanResources(lanName, localPass);
-      const resultNoGateway = result.ips.filter(ip => !ip.endsWith(".1"));
-      console.log("Ressss:",resultNoGateway);
-      setResourcesIPs(resultNoGateway);
-      setNumberResources(resultNoGateway.length - 1) // no includes submit
-      setSuccessScan(true);
+      const allDevicesFound = await scanLanResources(interfaceLanName, localPass);
+      const thisResourceIp = await getLocalIp(interfaceLanName);
+      console.log(thisResourceIp)
+      const finalResources = allDevicesFound.ips.filter(ip => ip !== thisResourceIp && !ip.endsWith(".1"));
+      console.log("Ressss:",finalResources);
+      setResourcesIPs(finalResources);
+      setNumberResources(finalResources.length)
+      //setSuccessScan(true);
     } catch (err) {
       if (typeof err === "string") {
         console.error("no ok 1", err);
@@ -60,9 +62,7 @@ function Permissions() {
     if (successScan && resourcesIPs.length > 0) {
       (async () => {
         try {
-          const localIp = await getLocalIp(interfaceLanName);
-          const resourcesIPsNoLocal = resourcesIPs.filter(ip => ip != localIp);
-          const output = await startSshConnection(user, pass, resourcesIPsNoLocal);
+          const output = await startSshConnection(user, pass, resourcesIPs);
           console.log("results ssh connection:", output);
         } catch (err) {
           console.log("Error during ssh connection:", err);
@@ -168,7 +168,7 @@ function Permissions() {
           </Grid>
         </Grid>
         <Box sx={{ textAlign: 'center', mt: 5 }}>
-          <Button variant="contained" color="black" onClick={() => handleScanResources(interfaceLanName, localPass)}>
+          <Button variant="contained" color="black" onClick={() => handleScanResources(localPass)}>
             Buscar Recursos
           </Button>
         </Box>

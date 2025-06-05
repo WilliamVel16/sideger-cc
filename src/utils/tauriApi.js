@@ -53,7 +53,7 @@ export const startCondorMaster = async () => {
 // to get resources specifications [InitializeClster.jsx]
 export const showResourcesSpecs = async (resourcesIPs, user) => {
 	return invoke("show_resources_specs", {
-		resourcesIps: resourcesIPs,
+		ipsResources: resourcesIPs,
 		user: user,
 	})
 };
