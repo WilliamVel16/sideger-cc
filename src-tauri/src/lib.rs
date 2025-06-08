@@ -2,7 +2,7 @@ mod backend;
 
 use backend::{
     containers::{run_containers, start_condor_master},
-    lan_ssh::{script_permissions, scan_lan_resources, start_ssh_connection, execute_command},
+    lan_ssh::{script_permissions, scan_lan_resources, get_local_ip, start_ssh_connection, execute_command},
     resources::{show_resources_specs, initialize_cluster}
 };
 
@@ -15,7 +15,6 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             // local
             run_containers,
-            start_ssh_connection,
             execute_command,
             show_resources_specs,
             start_condor_master,
@@ -23,7 +22,9 @@ pub fn run() {
 
             // lan
             script_permissions,
-            scan_lan_resources
+            scan_lan_resources,
+            get_local_ip,
+            start_ssh_connection,
             
             ])
         .run(tauri::generate_context!())

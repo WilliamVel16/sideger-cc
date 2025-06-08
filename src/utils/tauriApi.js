@@ -6,13 +6,27 @@ export const scriptPermissions = async () => {
 }
 
 // to obtain the IPs of the resources (up) by scanning the LAN [Resources.jsx]
-export const scanLanResources = async (interfaceName, password) => {
-	console.log("invocando scan_lan_resources con:", interfaceName, password);
+export const scanLanResources = async (interfaceName, localPassword) => {
 	return invoke("scan_lan_resources", {
 		interfaceLanName: interfaceName,
-		pass: password,
+		pass: localPassword,
 	})
 }
+
+// to get the ip of the resource which user is using Sideger
+export const getLocalIp = async (interfaceName) => {
+	return invoke("get_local_ip", {interfaceName });
+}
+
+// to set the ssh connection in the resources of LAN
+export const startSshConnection = async (user, remotePassword, resources_ips) => {
+	return invoke("start_ssh_connection", {
+		nodesIps: resources_ips,
+		user: user,
+		pass: remotePassword,
+	})
+}
+
 
 // to run container (one host) [Start.jsx]
 export const runContainers = async () => {
@@ -37,8 +51,11 @@ export const startCondorMaster = async () => {
 };
 
 // to get resources specifications [InitializeClster.jsx]
-export const showResourcesSpecs = async () => {
-	return invoke("show_resources_specs")
+export const showResourcesSpecs = async (resourcesIPs, user) => {
+	return invoke("show_resources_specs", {
+		ipsResources: resourcesIPs,
+		user: user,
+	})
 };
 
 // to start cluster with selected nodes [InitializeClster.jsx]

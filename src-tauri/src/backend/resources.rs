@@ -3,49 +3,57 @@ use crate::backend::models::NodeRole;
 use containers::{run_single_node};
 use std::process::{Command};
 use serde_json::Value;
+use std::path::Path;
 
 /// this function permits get the software and hardware characteristics
-/// from the available servers that could be used in the cluster
+/// from the available servers that could be used in the cluster. executes
+/// a script in every resource using ssh to get its specifications
 /// 
 /// # Example
 /// ```
 ///  Show info as: OS, DISK, RAM, CPU, GPU, HOSTNAME
 /// ```
 #[tauri::command]
-pub fn show_resources_specs() -> Result<Value, String> {
-    let script_path = std::env::current_dir()
-        .unwrap()
-        .join("src/scripts/utils/get_resources_info.sh");
+pub fn show_resources_specs(ips_resources: Vec<String>, user: String) -> Result<Value, String> {
+    let script_path = Path::new("src/scripts/utils/resources_info.sh");
 
-    println!("path: {}", script_path.display());
     if !script_path.exists() {
-        return Err(format!(
-            "Script not found at path: {}",
-            script_path.display()
-        ));
+        return Err(format!("Script not found at path: {}", script_path.display()));
     }
 
-    let output = Command::new("bash")
-        .arg(script_path)
-        .output()
-        .map_err(|err| format!("Failed to execute script show rescs: {}", err))?;
+    let mut all_resources_info = Vec::new();
+    for ip in ips_resources.iter() {
+        let output = Command::new("ssh")
+            .arg(format!("{}@{}", user, ip))
+            .arg("bash -s")
+            .stdin(
+                std::fs::File::open(&script_path)
+                    .map_err(|e| format!("Error opening script: {}", e))?,
+            )
+            .output()
+            .map_err(|err| format!("Failed to execute script show resorces specs: {}", err))?;
+            
+        if !output.status.success() {
+            return Err(format!(
+                "SSH to {} failed: {}",
+                ip,
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
 
-    if output.status.success() {
         let stdout = String::from_utf8_lossy(&output.stdout);
-        //println!("data: {}", stdout);
-        serde_json::from_str::<Value>(&stdout)
-            .map_err(|err| format!("Invalid JSON output: {}\nOriginal output:\n{}", err, stdout))
-    } else {
-        Err(format!(
-            "Script failed:\n{}",
-            String::from_utf8_lossy(&output.stderr)
-        ))
+        let info: serde_json::Value = serde_json::from_str(&stdout)
+            .map_err(|e| format!("Invalid JSON from {}: {}\nOutput: {}", ip, e, stdout))?;
+        all_resources_info.push(info);
     }
+
+    Ok(serde_json::Value::Array(all_resources_info))
 }
 
-/// this function joins all the functions (under of this) that permit the initialization
-/// of the cluster: init_swarm_manager, get_worker_token, join_as_worker and
-/// create_overlay_network
+
+/// this function joins all the functions (under of this) that permits the initialization
+/// of the overlay network and then the cluster: init_swarm_manager, get_worker_token,
+/// join_as_worker
 #[tauri::command]
 pub fn initialize_cluster(nodes: Vec<NodeRole>, user: String, onet_name: String,) -> Result<String, String> {
     if nodes.is_empty() {

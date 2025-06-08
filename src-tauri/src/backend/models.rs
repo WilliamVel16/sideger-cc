@@ -37,3 +37,10 @@ pub struct ContainerConfig {
 pub struct ScanResourcesResult {
     pub ips: Vec<String>,
 }
+
+#[derive(serde::Serialize)]
+pub struct SSHConnectionResult {
+    pub ip: String,
+    pub success: bool,
+    pub message: String,
+}

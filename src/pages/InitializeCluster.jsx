@@ -26,12 +26,12 @@ function InitializeCluster() {
   const fetchData = async () => {
     setLoading(true);
     console.log(resourcesIPs)
-    // try {
-    //   const data = await showResourcesSpecs();
-    //   setServers(data);
-    // } catch (err) {
-    //   console.error("Script error showResourcesSpecs: ", err);
-    // }
+    try {
+      const data = await showResourcesSpecs(resourcesIPs, user);
+      setServers(data);
+    } catch (err) {
+      console.error("Script error showResourcesSpecs: ", err);
+    }
     setLoading(false);
   }
 
@@ -203,7 +203,8 @@ function InitializeCluster() {
                     secondary={
                       <>
                         CPU: {server.cpu} | RAM: {server.ram_mb}MB<br />
-                        SO: {server.os} | DISK: {server.disk.map(d => d.size).join(', ')}
+                        SO: {server.os} | DISK: {server.disk.map(d => d.size).join(', ')}<br />
+                        GPU: {server.gpu}
                       </>
                     }
                   />
@@ -228,7 +229,8 @@ function InitializeCluster() {
                     secondary={
                       <>
                         CPU: {server.cpu} | RAM: {server.ram_mb}MB<br />
-                        SO: {server.os} | DISK: {server.disk.map(d => d.size).join(', ')}
+                        SO: {server.os} | DISK: {server.disk.map(d => d.size).join(', ')}<br />
+                        GPU: {server.gpu}
                       </>
                     }
                   />
