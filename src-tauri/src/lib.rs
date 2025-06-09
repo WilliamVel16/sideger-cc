@@ -16,7 +16,6 @@ pub fn run() {
             // local
             run_containers,
             execute_command,
-            show_resources_specs,
             start_condor_master,
             initialize_cluster,
 
@@ -25,6 +24,7 @@ pub fn run() {
             scan_lan_resources,
             get_local_ip,
             start_ssh_connection,
+            show_resources_specs,
             
             ])
         .run(tauri::generate_context!())
