@@ -18,7 +18,7 @@ export const getLocalIp = async (interfaceName) => {
 	return invoke("get_local_ip", {interfaceName });
 }
 
-// to set the ssh connection in the resources of LAN
+// to set the ssh connection in the resources of LAN [Resources.jsx]
 export const startSshConnection = async (user, remotePassword, resources_ips) => {
 	return invoke("start_ssh_connection", {
 		nodesIps: resources_ips,
@@ -26,7 +26,6 @@ export const startSshConnection = async (user, remotePassword, resources_ips) =>
 		pass: remotePassword,
 	})
 }
-
 
 // to run container (one host) [Start.jsx]
 export const runContainers = async () => {
