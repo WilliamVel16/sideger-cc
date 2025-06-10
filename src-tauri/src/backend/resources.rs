@@ -60,36 +60,43 @@ pub fn initialize_cluster(nodes: Vec<NodeRole>, user: String, onet_name: String,
         return Err("No nodes provided".into());
     }
 
-    // // step 1: find the node with CM role and starts Swarm Manager in this
+    // step 1: find the node with CM role and starts Swarm Manager in this
     let Some(cm_node) = nodes.iter().find(|n| n.role == "cm") else {
         return Err("No node with role 'cm' found.".into());
     };
-    // println!("[1] Initializing swarm manager: {}", cm_node.ip);
-    // init_swarm_manager(&cm_node.ip, &user)?;
+    println!("[1] Initializing swarm manager: {}", cm_node.ip);
+    let init_result = init_swarm_manager(&cm_node.ip, &user);
+    match &init_result {
+        Ok(msg) => println!("[OK] (in init): {}", msg),
+        Err(msg) => println!("[ERR] (in init): {}", msg),
+    }
+    init_result?;
 
     // step 2: get the token to connect workers to swarm manager
     let token =  get_worker_token(&cm_node.ip, &user)?;
     println!("this is the token: {}", token);
 
-
     // step 3: join all the workers(submit or execute from condor) to swarm
-    // for node in &nodes {
-    //     if node.ip != cm_node.ip {
-    //         println!("[3] {} joins to swarm as worker", node.ip);
-    //         join_as_worker(&node.ip, &user, &token, &cm_node.ip)?;
-    //     }
-    // }
+    for node in &nodes {
+        if node.ip != cm_node.ip {
+            println!("[3] {} joins to swarm as worker", node.ip);
+            let join_result = join_as_worker(&node.ip, &user, &token, &cm_node.ip);
+            match &join_result {
+                Ok(msg) => println!("[OK] (in join): {}", msg),
+                Err(msg) => println!("[ERR {}] (in join): {}", node.ip, msg),
+            }
+            join_result?;
+        }
+    }
 
     // step 4: create overlay network From manager (o cm for htcondor)
-    // println!("[4] creating overlay network: {}", onet_name);
-    // match create_overlay_network(&cm_node.ip, &user, &onet_name) {
-    //     Ok(output) => println!("Overlay network created successfully:\n{}", output),
-    //     Err(err) => eprintln!("Error: {}", err),
-    // }
+    println!("[4] creating overlay network: {}", onet_name);
+    match create_overlay_network(&cm_node.ip, &user, &onet_name) {
+        Ok(output) => println!("Overlay network created successfully:\n{}", output),
+        Err(err) => eprintln!("Error: {}", err),
+    }
 
-    // step 5: run containers with its roles at each selected node after
-    // og give a hostname to each container's node
-    // and run base daemon of htcondor condor_master
+    // step 5: give hostname to each node, run containers and run base daemon of htcondor condor_master
     println!("[5] Deploying containers...");
     let mut results = Vec::new();
     let mut role_counts: HashMap<String, usize> = HashMap::new();
@@ -106,23 +113,22 @@ pub fn initialize_cluster(nodes: Vec<NodeRole>, user: String, onet_name: String,
         let config = ContainerConfig::new(&node.ip, &node.role, &onet_name, &hostname, &user)?;
         let run_result = run_single_node(&config);
         match &run_result {
-            Ok(msg) => println!("[OK] {}", msg),
-            Err(msg) => eprintln!("[ERR] {}", msg),
+            Ok(msg) => println!("[OK] (in run) {}", msg),
+            Err(msg) => eprintln!("[ERR {}] (in run): {}", node.ip, msg),
         }
         run_result?; // propaga el error si lo hubo y detiene la función
 
         let condor_result = start_condor_master(&config);
         match &condor_result {
-            Ok(msg) => println!("[OK] {}", msg),
-            Err(msg) => eprintln!("[ERR] {}", msg),
+            Ok(msg) => println!("[OK] (in condor): {}", msg),
+            Err(msg) => eprintln!("[ERR {}] (in condor): {}", node.ip, msg),
         }
         condor_result?;
 
         results.push(format!("Container {} with role {} deployed and condor_master started.", config.container_name, config.role));
     }
 
-    // Ok(results.join("\n"))
-    Ok(format!("end initialize cluster"))
+    Ok(results.join("\n"))
 }
 
 
@@ -139,15 +145,10 @@ pub fn init_swarm_manager(manager_ip: &str, user: &str) -> Result<String, String
         .map_err(|err| format!("SSH failed: {}", err))?;
 
     if output.status.success() {
-        let out = String::from_utf8_lossy(&output.stdout).to_string();
-        println!("out swarm: {}", out);
-        Ok(out)
+        Ok(String::from_utf8_lossy(&output.stdout).to_string())
     } else {
         Err(format!("Failed in {} to init swarm: {}", &manager_ip, String::from_utf8_lossy(&output.stderr)))
     }
-
-    // ES IMPORTANTE RECORDAR QUE AQUÍ SE DEBE OBETNER EL TOKEN PARA UNIR LOS DEMAS NODOS
-    // SE PODRÍA USAR GREP PARA OBTENER EL TOKEN O COMO SERÍA?
 }
 
 ///
