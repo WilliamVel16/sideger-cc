@@ -4,7 +4,7 @@ use super::models::ContainerConfig;
 
 /// permits create a container with its respective configuration
 impl ContainerConfig {
-    pub fn new(ip: &str, role: &str, onetwork_name: &str) -> Result<Self, String> {
+    pub fn new(ip: &str, role: &str, onetwork_name: &str, hostname: &str, user: &str) -> Result<Self, String> {
         let image = match role {
             "cm" => "wvel/sideger-cm:1.0.2",
             "sub" => "wvel/sideger-sub:1.0.2",
@@ -21,6 +21,8 @@ impl ContainerConfig {
             image: image.to_string(),
             container_name: cont_name,
             onetwork_name: onetwork_name.to_string(),
+            hostname: hostname.to_string(),
+            user: user.to_string(), // user physical resources
         })
     }
 }
@@ -75,10 +77,10 @@ pub fn run_containers() -> Result<String, String> {
 /// output: node name using nomenclature cm_172_19_0_6
 /// ```
 pub fn run_single_node(config: &ContainerConfig) -> Result<String, String> {
-    let ssh_auth = format!("{}@{}", config.username, config.ip);
+    let ssh_auth = format!("{}@{}", config.user, config.ip);
     let command = format!(
-        "docker run -d --rm --name {} --net {} {}",
-        config.container_name, config.onetwork_name, config.image //THIS METHOD IS PENDING (NET)
+        "docker container run -d --rm -it --name {} --net {} --hostname {} {}",
+        config.container_name, config.onetwork_name, config.hostname, config.image
     );
 
     let output = Command::new("ssh")

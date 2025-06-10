@@ -12,7 +12,7 @@ import { showResourcesSpecs, initializeCluster } from "../utils/tauriApi";
 import { useAppContext } from '../context/AppContext';
 
 function InitializeCluster() {
-  const { resourcesIPs, setResourcesIPs, user, setUser, pass, setPass } = useAppContext();
+  const { resourcesIPs, user, setUser, pass, setPass } = useAppContext();
   const [checkedServers, setCheckedServers] = useState([]);
   const [servers, setServers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -58,7 +58,7 @@ function InitializeCluster() {
 
   // sends the request ([{ip:role},]) to asign roles to every selected resource
   // and start cluster
-  const handleAssignRoles = async () => {
+  const handleSendRequest = async () => {
     console.log(checkedServers)
     const dataCheckedServers = checkedServers.map(s => ({ ip: s.ip, role: s.role, }));
 
@@ -264,7 +264,7 @@ function InitializeCluster() {
             <Button
               variant="contained"
               color="black"
-              onClick={handleAssignRoles}
+              onClick={handleSendRequest}
               disabled={checkedServers.length === 0 || checkedServers.some(s => !s.role)}
             >
               Inicializar Clúster
