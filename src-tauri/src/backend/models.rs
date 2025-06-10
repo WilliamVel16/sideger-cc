@@ -32,6 +32,7 @@ pub struct ContainerConfig {
     pub container_name: String,
     pub onetwork_name: String,
     pub hostname: String,
+    pub user: String,
 }
 
 #[derive(Serialize)]

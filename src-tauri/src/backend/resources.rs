@@ -60,29 +60,35 @@ pub fn initialize_cluster(nodes: Vec<NodeRole>, user: String, onet_name: String,
         return Err("No nodes provided".into());
     }
 
-    // step 1: find the node with CM rol
+    // // step 1: find the node with CM role and starts Swarm Manager in this
     let Some(cm_node) = nodes.iter().find(|n| n.role == "cm") else {
         return Err("No node with role 'cm' found.".into());
     };
-    println!("[1] Initializing swarm manager: {}", cm_node.ip);
-    init_swarm_manager(&cm_node.ip, &user)?;
+    // println!("[1] Initializing swarm manager: {}", cm_node.ip);
+    // init_swarm_manager(&cm_node.ip, &user)?;
 
     // step 2: get the token to connect workers to swarm manager
     let token =  get_worker_token(&cm_node.ip, &user)?;
+    println!("this is the token: {}", token);
+
 
     // step 3: join all the workers(submit or execute from condor) to swarm
-    for node in &nodes {
-        if node.ip != cm_node.ip {
-            println!("[3] {} joins to swarm as worker", node.ip);
-            join_as_worker(&node.ip, &user, &token, &cm_node.ip)?;
-        }
-    }
+    // for node in &nodes {
+    //     if node.ip != cm_node.ip {
+    //         println!("[3] {} joins to swarm as worker", node.ip);
+    //         join_as_worker(&node.ip, &user, &token, &cm_node.ip)?;
+    //     }
+    // }
 
     // step 4: create overlay network From manager (o cm for htcondor)
-    println!("[4] creating overlay network: {}", onet_name);
-    create_overlay_network(&cm_node.ip, &user, &onet_name)?;
+    // println!("[4] creating overlay network: {}", onet_name);
+    // match create_overlay_network(&cm_node.ip, &user, &onet_name) {
+    //     Ok(output) => println!("Overlay network created successfully:\n{}", output),
+    //     Err(err) => eprintln!("Error: {}", err),
+    // }
 
-    // step 5: run containers with its roles in every node choiced
+    // step 5: run containers with its roles at each selected node after
+    // og give a hostname to each container's node
     // and run base daemon of htcondor condor_master
     println!("[5] Deploying containers...");
     let mut results = Vec::new();
@@ -90,15 +96,33 @@ pub fn initialize_cluster(nodes: Vec<NodeRole>, user: String, onet_name: String,
     for node in nodes {
         let count = role_counts.entry(node.role.clone()).or_insert(0);
         *count += 1;
-        let hostname = format!("{}{}", node.role, *count);
 
-        let config = ContainerConfig::new(&node.ip, &node.role, &onet_name, &hostname)?;
-        run_single_node(&config)?;
-        start_condor_master(&config)?; 
+        let hostname = if node.role == "cm" {
+            "sidegerCM".to_string()
+        } else {
+            format!("{}{}", node.role, *count)
+        };
+
+        let config = ContainerConfig::new(&node.ip, &node.role, &onet_name, &hostname, &user)?;
+        let run_result = run_single_node(&config);
+        match &run_result {
+            Ok(msg) => println!("[OK] {}", msg),
+            Err(msg) => eprintln!("[ERR] {}", msg),
+        }
+        run_result?; // propaga el error si lo hubo y detiene la función
+
+        let condor_result = start_condor_master(&config);
+        match &condor_result {
+            Ok(msg) => println!("[OK] {}", msg),
+            Err(msg) => eprintln!("[ERR] {}", msg),
+        }
+        condor_result?;
+
         results.push(format!("Container {} with role {} deployed and condor_master started.", config.container_name, config.role));
     }
 
-    Ok(results.join("\n"))
+    // Ok(results.join("\n"))
+    Ok(format!("end initialize cluster"))
 }
 
 
@@ -149,8 +173,8 @@ pub fn get_worker_token(manager_ip: &str, user: &str) -> Result<String, String> 
 pub fn join_as_worker(worker_ip: &str, user: &str, token: &str, manager_ip: &str) -> Result<String, String> {
     let ssh_auth = format!("{}@{}", user, worker_ip);
     let command = format!(
-        "docker swarm join --token {} {}:2377",
-        token, manager_ip
+        "docker swarm join --token {} --advertise-addr {} {}:2377",
+        token, worker_ip, manager_ip
     );
 
     let output = Command::new("ssh")
@@ -195,8 +219,9 @@ pub fn create_overlay_network(manager_ip: &str, user: &str, onet_name: &str) -> 
 /// 
 /// 
 pub fn start_condor_master(config: &ContainerConfig) -> Result<String, String> {
-    let ssh_auth = format!("{}@{}", config.username, config.ip);
-    let command = format!("docker exec {} condor_master", config.container_name);
+    let ssh_auth = format!("{}@{}", config.user, config.ip);
+    let command = format!(
+        "docker container exec {} sh -c 'echo pass123 | sudo -S condor_master'", config.container_name); // OJO, USO PASSWORD!!
 
     let output = Command::new("ssh")
         .args([&ssh_auth, &command])
