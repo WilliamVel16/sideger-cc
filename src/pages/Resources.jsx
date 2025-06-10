@@ -118,13 +118,12 @@ function Permissions() {
         </Typography>
         <Typography variant="body1" sx={{ mb: 2 }}>
           Para continuar con el procedimiento se requiere el nombre de la interfaz de la red local de la
-          sala de cómputo e información sobre la infraestructura física, por favor ingresa el nombre y la 
-          contraseña del usuario remoto, luego el nombre de la interfaz de la red LAN y la contraseña del
-          usuario del pc que estás usando.
+          sala de cómputo e información sobre la infraestructura física, por favor ingresa el nombre de la interfaz de la red LAN y la contraseña del
+          usuario del recurso que estás usando.
         </Typography>
-
+        
         <Grid container direction="column" spacing={2} marginTop={3} alignItems={"center"}>
-          <Grid item xs={12} md={6}>
+          {/*<Grid item xs={12} md={6}>
             <TextField
               label="Nombre de usuario"
               variant="outlined"
@@ -144,7 +143,7 @@ function Permissions() {
               value={pass}
               onChange={(e) => setPass(e.target.value)}
             />
-          </Grid>
+          </Grid>*/}
            <Grid item xs={12} md={6}>
             <TextField
               label="Interfaz LAN"
@@ -157,7 +156,7 @@ function Permissions() {
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
-              label="Contraseña de usuario local"
+              label="Contraseña de usuario"
               variant="outlined"
               type="password"
               fullWidth
