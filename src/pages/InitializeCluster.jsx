@@ -7,7 +7,7 @@ import {
 import ComputerIcon from '@mui/icons-material/Computer';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import SearchIcon from '@mui/icons-material/Search';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { showResourcesSpecs, initializeCluster } from "../utils/tauriApi";
 import { useAppContext } from '../context/AppContext';
 
@@ -71,28 +71,38 @@ function InitializeCluster() {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 2, mx: "sys" }} >
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+    <Container maxWidth="xl" sx={{ mt: 2, mx: "auto" }} >
+      <Grid container spacing={4} sx={{ mb: 4 }}>
         {/* information + instructions */}
-        <Grid item size={{ xs: 6, md: 6}}>
+        <Grid item size={{ xs: 6, md: 4}}>
           <Typography variant="h6" mb={1}> Información </Typography>
           <Typography variant="body1" sx={{ mb: 2 }}>
-            Sección para mostrar información sobre la selección de recursos, explicando los controles del lado derecho, como
-            el número máximo de nodos, se informa que por defecto el user debe elegir recursos, preferencias, etc.
+            En esta sección puedes ver y configurar los recursos para posteriormente desplegar el clúster. Sideger es capaz de elegir
+            los recursos y sus roles por tí, sin embargo, tienes la oportunidad de elegirlos tú mismo. Ten presente las
+            opciones y gestiona el cluster según tus necesidades.<br/>
           </Typography>
-          <Typography variant="body1" sx={{ mb: 2 }}>
+          {/*<Typography variant="body1" sx={{ mb: 2 }}>
             Para ver los recursos disponibles actualmente da click en el siguiente botón.
-          </Typography>
-          <Button variant='contained' color='gray' endIcon={<SearchIcon />}  disabled={loading} onClick={fetchData}>
-            {loading ? 'Cargando...' : 'Buscar Recursos'}
+          </Typography>*/}
+          <Button variant='contained' color='gray' endIcon={<VisibilityIcon />}  disabled={loading} onClick={fetchData}>
+            {loading ? 'Cargando...' : 'Ver Recursos'}
           </Button>
         </Grid>
         
-        {/* configuración del cluster */}
-        <Grid item size={{ xs:6, md:6}}>
-          <Typography variant="h6" mb={1}> Gestiónar Cluster </Typography>
+        {/* cluster options and settings */}
+        <Grid item size={{ xs:6, md:8}}>
+          <Typography variant="h6" mb={1}> Opciones </Typography>
           <Grid container spacing={2}>
             <Grid item size={{ xs:6, md:6.5}}>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                Automática: Sideger elige recursos y sus roles, solamente debes ingresar el número de recursos a utilizar. <br/>
+                Manual: Tú eliges los recursos que quieras usar, así como sus roles, hazlo desde las cuadrillas inferiores. <br/>
+                Mantener Cluster: pendiente.  <br/>
+                Nombre: Ingresa un nombre para identificar tu cluster
+              </Typography>
+            </Grid>
+            <Grid item size={{ xs:6, md:4}}>
+              <Typography variant="h6" mb={1}> Gestiónar Cluster </Typography>
               <FormGroup sx={{ ml: 1, mb: 1 }}>
                 <Grid container alignItems="stretch" justifyContent="flex-start" spacing={2} sx={{ mb: 1}}>
                   <Grid item xs={7}>
@@ -105,7 +115,7 @@ function InitializeCluster() {
                           disabled={sysDefineResources}
                         />
                       }
-                      label="Sistema define recursos y roles"
+                      label="Automática"
                     />
                   </Grid>
                   {sysDefineAll && (
@@ -136,7 +146,7 @@ function InitializeCluster() {
                       disabled={sysDefineAll}
                     />
                   }
-                  label="Sistema define solo recursos"
+                  label="Manual"
                 />
               </FormGroup>
               <FormGroup sx={{ ml: 1, mb: 2 }}>
@@ -148,30 +158,7 @@ function InitializeCluster() {
                       size="small"
                     />
                   }
-                  label="Mantener clúster"
-                />
-              </FormGroup>
-            </Grid>
-            <Grid item size={{ xs:6, md:4}}>
-              <FormGroup sx={{ mb: 2 }}>
-                <TextField
-                  label="Nombre de Usuario"
-                  variant="outlined"
-                  size="small"
-                  fullWidth
-                  value={user}
-                  onChange={(e) => setUser(e.target.value)}
-                />
-              </FormGroup>
-              <FormGroup sx={{ mb: 2 }}>
-                <TextField
-                  label="Contraseña"
-                  variant="outlined"
-                  type="password"
-                  size="small"
-                  fullWidth
-                  value={pass}
-                  onChange={(e) => setPass(e.target.value)}
+                  label="Mantener cluster"
                 />
               </FormGroup>
               <FormGroup sx={{ mb: 2 }}>
@@ -194,7 +181,7 @@ function InitializeCluster() {
         <Grid item size={{ xs: 12, md: 6}}>
           <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
             <Typography variant="h6" gutterBottom> Recursos Disponibles </Typography>
-            <List sx={{ height: 500, overflowY: 'sys'}}>
+            <List sx={{ height: 500, overflowY: 'auto'}}>
               {servers.map((server) => (
                 <ListItem key={server.ip} divider>
                   <ListItemIcon><ComputerIcon /></ListItemIcon>
@@ -221,7 +208,7 @@ function InitializeCluster() {
         <Grid item size={{ xs: 12, md: 6}}>
           <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
             <Typography variant="h6" gutterBottom> Recursos a Usar </Typography>
-            <List sx={{ height: 500, overflowY: 'sys'}}>
+            <List sx={{ height: 500, overflowY: 'auto'}}>
               {checkedServers.map((server) => (
                 <ListItem key={server.ip} divider>
                   <ListItemText

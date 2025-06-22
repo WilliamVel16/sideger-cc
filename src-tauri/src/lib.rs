@@ -2,7 +2,7 @@ mod backend;
 
 use backend::{
     containers::{run_containers, start_condor_master},
-    lan_ssh::{script_permissions, scan_lan_resources, get_local_ip, start_ssh_connection, execute_command},
+    lan_ssh::{script_permissions, scan_interfaces, scan_lan_resources, get_local_ip, start_ssh_connection, execute_command},
     resources::{show_resources_specs, initialize_cluster}
 };
 
@@ -21,6 +21,7 @@ pub fn run() {
 
             // lan
             script_permissions,
+            scan_interfaces,
             scan_lan_resources,
             get_local_ip,
             start_ssh_connection,

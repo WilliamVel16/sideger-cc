@@ -2,6 +2,7 @@ use openssh::{KnownHosts, SessionBuilder};
 use crate::backend::models::{MySSHRequest, SSHConnectionResult, ScanResourcesResult};
 use std::process::Command;
 use dotenv::dotenv;
+use get_if_addrs::get_if_addrs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::fs;
@@ -40,8 +41,25 @@ pub fn script_permissions() -> Result<String, String> {
     Ok("Permissions correctly assigned".to_string())
 }
 
+/// this function allows scan the network interfaces
+/// 
+#[tauri::command]
+pub fn scan_interfaces() -> Result<Vec<String>, String> {
+    match get_if_addrs() {
+        Ok(interfaces) => {
+            let names = interfaces.into_iter()
+                .map(|iface| iface.name)
+                .collect::<std::collections::HashSet<_>>()
+                .into_iter()
+                .collect::<Vec<_>>();
+            Ok(names)
+        },
+        Err(err) => Err(format!("Error to obtain interfaces: {}", err))
+    }
+}
 
 /// this function allows scan the allowed resources in the network
+/// 
 #[tauri::command]
 pub fn scan_lan_resources(interface_lan_name: String, pass: String) -> Result<ScanResourcesResult, String> {
     let script_path = Path::new("../local-scripts/get_resources_up.sh");

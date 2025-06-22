@@ -5,6 +5,11 @@ export const scriptPermissions = async () => {
 	return invoke("script_permissions")
 }
 
+// to obtain names of the network interfaces
+export const scanInterfaces = async () => {
+	return invoke("scan_interfaces")
+}
+
 // to obtain the IPs of the resources (up) by scanning the LAN [Resources.jsx]
 export const scanLanResources = async (interfaceName, localPassword) => {
 	return invoke("scan_lan_resources", {
