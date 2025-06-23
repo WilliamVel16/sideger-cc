@@ -5,7 +5,7 @@ export const scriptPermissions = async () => {
 	return invoke("script_permissions")
 }
 
-// to obtain names of the network interfaces
+// to obtain names of the network interfaces [Resources.jsx]
 export const scanInterfaces = async () => {
 	return invoke("scan_interfaces")
 }
@@ -18,9 +18,9 @@ export const scanLanResources = async (interfaceName, localPassword) => {
 	})
 }
 
-// to get the ip of the resource which user is using Sideger
-export const getLocalIp = async (interfaceName) => {
-	return invoke("get_local_ip", {interfaceName });
+// to get the ip of the resource which user is using Sideger [Resources.jsx]
+export const getMyIp = async (interfaceName) => {
+	return invoke("get_my_ip", {interfaceName });
 }
 
 // to set the ssh connection in the resources of LAN [Resources.jsx]
@@ -60,6 +60,11 @@ export const showResourcesSpecs = async (resourcesIPs, user) => {
 		ipsResources: resourcesIPs,
 		user: user,
 	})
+};
+
+// to get specifications of this resource [InitializeClster.jsx]
+export const showMySpecs = async () => {
+	return invoke("show_my_specs")
 };
 
 // to start cluster with selected nodes [InitializeClster.jsx]

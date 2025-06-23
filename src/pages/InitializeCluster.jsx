@@ -8,11 +8,11 @@ import ComputerIcon from '@mui/icons-material/Computer';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { showResourcesSpecs, initializeCluster } from "../utils/tauriApi";
+import { showResourcesSpecs, initializeCluster, showMySpecs } from "../utils/tauriApi";
 import { useAppContext } from '../context/AppContext';
 
 function InitializeCluster() {
-  const { resourcesIPs, user, setUser, pass, setPass } = useAppContext();
+  const { resourcesIPs, user, setUser, pass, setPass, myIP } = useAppContext();
   const [checkedServers, setCheckedServers] = useState([]);
   const [servers, setServers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -22,13 +22,15 @@ function InitializeCluster() {
   const [keepCluster, setKeepCluster] = useState(false);
   const [onetName, setOnetName] = useState("sidegerOnet");  
 
-  // requests to backend for all available resources
+  // requests to backend for view all available resources
   const fetchData = async () => {
     setLoading(true);
     console.log(resourcesIPs)
     try {
-      const data = await showResourcesSpecs(resourcesIPs, user);
-      setServers(data);
+      //const remoteData = await showResourcesSpecs(resourcesIPs, user);
+      const myData = await showMySpecs();
+      //setServers(remoteData);
+      setCheckedServers([...checkedServers, {...myData, role: "sub"}]);
     } catch (err) {
       console.error("Script error showResourcesSpecs: ", err);
     }
@@ -89,7 +91,6 @@ function InitializeCluster() {
           </Button>
         </Grid>
         
-        {/* cluster options and settings */}
         <Grid item size={{ xs:6, md:8}}>
           <Typography variant="h6" mb={1}> Opciones </Typography>
           {/* options */}
@@ -227,17 +228,18 @@ function InitializeCluster() {
 
                   <Select
                     value={server.role || ""}
+                    disabled={server.role === "sub"}
                     onChange={(e) => handleRoleChange(server.ip, e.target.value)}
                     displayEmpty
                     size="small"
                     sx={{ mr: 1 }}
                   >
-                    <MenuItem value="">Elegir rol</MenuItem>
-                    <MenuItem value="sub">Envío</MenuItem>
-                    <MenuItem value="exe">Ejecución</MenuItem>
-                    <MenuItem value="cm">Administrador</MenuItem>
+                    <MenuItem value=""> Elegir rol </MenuItem>
+                    <MenuItem value="sub"> Envío </MenuItem>
+                    <MenuItem value="cm"> Administrador </MenuItem>
+                    <MenuItem value="exe"> Ejecución </MenuItem>
                   </Select>
-                  <IconButton edge="end" onClick={() => handleRemove(server)}>
+                  <IconButton edge="end" onClick={() => handleRemove(server)} disabled={server.role === "sub"}>
                     <DeleteIcon />
                   </IconButton>
                 </ListItem>

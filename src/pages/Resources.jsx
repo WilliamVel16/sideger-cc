@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import {
   Box, Grid, Paper, Typography, Container,
   FormGroup, TextField, Button, Snackbar, Alert, Select,
@@ -6,12 +5,13 @@ import {
   InputLabel,
   MenuItem
 } from '@mui/material';
-import VerifiedIcon from '@mui/icons-material/Verified';
-import { scriptPermissions, scanInterfaces, scanLanResources, startSshConnection, getLocalIp } from "../utils/tauriApi";
+import { useEffect, useState } from 'react';
+import { scriptPermissions, scanInterfaces, scanLanResources, startSshConnection, getMyIp } from "../utils/tauriApi";
 import { useAppContext } from '../context/AppContext';
+import VerifiedIcon from '@mui/icons-material/Verified';
 
 function Permissions() {
-  const { resourcesIPs, setResourcesIPs, user, setUser, pass, setPass } = useAppContext();
+  const { resourcesIPs, setResourcesIPs, user, setUser, pass, setPass, myIP, setMyIP } = useAppContext();
   const [interfaceLanName, setInterfaceLanName] = useState("");
   const [accepted, setAccepted] = useState(false);
   const [successPermissions, setSuccessPermissions] = useState(false);
@@ -40,11 +40,12 @@ function Permissions() {
   const handleScanResources = async (localPass) => {
     try {
       const allDevicesFound = await scanLanResources(interfaceLanName, localPass);
-      const thisResourceIp = await getLocalIp(interfaceLanName);
+      const thisResourceIp = await getMyIp(interfaceLanName);
       console.log(thisResourceIp)
       const finalResources = allDevicesFound.ips.filter(ip => ip !== thisResourceIp && !ip.endsWith(".1"));
       console.log("Ressss:",finalResources);
       setResourcesIPs(finalResources);
+      setMyIP(thisResourceIp)
       setNumberResources(finalResources.length)
       setSuccessScan(true);
     } catch (err) {

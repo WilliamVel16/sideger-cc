@@ -1,6 +1,6 @@
 use super::{containers, models::ContainerConfig};
 use crate::backend::models::NodeRole;
-use containers::{run_single_node};
+use containers::{run_single_node, start_condor_master};
 use std::{collections::HashMap, process::Command};
 use serde_json::Value;
 use std::path::Path;
@@ -51,6 +51,41 @@ pub fn show_resources_specs(ips_resources: Vec<String>, user: String) -> Result<
 }
 
 
+/// this function permits get the software and hardware characteristics
+/// of the resource which user is using sideger.
+/// 
+/// # Example
+/// ```
+///  Show info as: OS, DISK, RAM, CPU, GPU, HOSTNAME
+/// ```
+#[tauri::command]
+pub fn show_my_specs() -> Result<serde_json::Value, String> {
+    let script_path = Path::new("src/scripts/utils/resources_info.sh");
+
+    if !script_path.exists() {
+        return Err(format!("Script not found at path: {}", script_path.display()));
+    }
+
+    let output = Command::new("bash")
+        .arg(script_path)
+        .output()
+        .map_err(|e| format!("Failed to execute show my specs script: {}", e))?;
+
+    if !output.status.success() {
+        return Err(format!(
+            "Script execution failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        ));
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let info: serde_json::Value = serde_json::from_str(&stdout)
+        .map_err(|e| format!("Invalid JSON output: {}\nOutput: {}", e, stdout))?;
+
+    Ok(info)
+}
+
+
 /// this function joins all the functions (under of this) that permits the initialization
 /// of the overlay network and then the cluster: init_swarm_manager, get_worker_token,
 /// join_as_worker
@@ -80,7 +115,7 @@ pub fn initialize_cluster(nodes: Vec<NodeRole>, user: String, onet_name: String,
     for node in &nodes {
         if node.ip != cm_node.ip {
             println!("[3] {} joins to swarm as worker", node.ip);
-            let join_result = join_as_worker(&node.ip, &user, &token, &cm_node.ip);
+            let join_result = join_as_worker(&node.ip, &node.role, &user, &token, &cm_node.ip);
             match &join_result {
                 Ok(msg) => println!("[OK] (in join): {}", msg),
                 Err(msg) => println!("[ERR {}] (in join): {}", node.ip, msg),
@@ -151,7 +186,8 @@ pub fn init_swarm_manager(manager_ip: &str, user: &str) -> Result<String, String
     }
 }
 
-///
+
+/// 
 /// 
 pub fn get_worker_token(manager_ip: &str, user: &str) -> Result<String, String> {
     let ssh_auth = format!("{}@{}", user, manager_ip);
@@ -169,19 +205,27 @@ pub fn get_worker_token(manager_ip: &str, user: &str) -> Result<String, String> 
     }
 }
 
+
 /// join nodes to swarm as workers
 /// this is execute on others nodes that will be workers
-pub fn join_as_worker(worker_ip: &str, user: &str, token: &str, manager_ip: &str) -> Result<String, String> {
+pub fn join_as_worker(worker_ip: &str, node_role: &str, user: &str, token: &str, manager_ip: &str) -> Result<String, String> {
     let ssh_auth = format!("{}@{}", user, worker_ip);
     let command = format!(
         "docker swarm join --token {} --advertise-addr {} {}:2377",
         token, worker_ip, manager_ip
     );
 
-    let output = Command::new("ssh")
+    let output = if node_role == "sub" {
+        Command::new("sh")
+        .args(["-c", &command])
+        .output()
+        .map_err(|e| format!("Local join as worker failed: {}", e))?
+    } else {
+        Command::new("ssh")
         .args([&ssh_auth, &command])
         .output()
-        .map_err(|err| format!("SSH failed: {}", err))?;
+        .map_err(|e| format!("Remote join as worker failed: {}", e))?
+    };
 
     if output.status.success() {
         Ok(format!("{} joined as worker", worker_ip))
@@ -193,6 +237,7 @@ pub fn join_as_worker(worker_ip: &str, user: &str, token: &str, manager_ip: &str
         ))
     }
 }
+
 
 /// creates the overlay network
 /// manager must be active and nodes join
@@ -216,22 +261,3 @@ pub fn create_overlay_network(manager_ip: &str, user: &str, onet_name: &str) -> 
     }
 }
 
-///
-/// 
-/// 
-pub fn start_condor_master(config: &ContainerConfig) -> Result<String, String> {
-    let ssh_auth = format!("{}@{}", config.user, config.ip);
-    let command = format!(
-        "docker container exec {} sh -c 'echo pass123 | sudo -S condor_master'", config.container_name); // OJO, USO PASSWORD!!
-
-    let output = Command::new("ssh")
-        .args([&ssh_auth, &command])
-        .output()
-        .map_err(|err| format!("SSH failed to start condor_master: {}", err))?;
-
-    if output.status.success() {
-        Ok(format!("condor_master started on {}", config.container_name))
-    } else {
-        Err(format!("Failed to start condor_master on {}: {}", config.container_name, String::from_utf8_lossy(&output.stderr)))
-    }
-}

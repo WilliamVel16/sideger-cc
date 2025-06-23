@@ -82,14 +82,18 @@ pub fn run_single_node(config: &ContainerConfig) -> Result<String, String> {
         config.container_name, config.onetwork_name, config.hostname, config.image
     );
 
-    let output = Command::new("ssh")
-        .args([
-            &ssh_auth,
-            &command,
-        ])
+    let output = if config.role == "sub" {
+        Command::new("sh")
+        .args(["-c", &command])
         .output()
-        .map_err(|err| format!("SSH failed: {}", err))?;
-
+        .map_err(|e| format!("Local run single node failed: {}", e))?
+    } else {
+        Command::new("ssh")
+        .args([&ssh_auth, &command])
+        .output()
+        .map_err(|err| format!("SSH failed: {}", err))?
+    };
+    
     if output.status.success() {
         Ok(format!("Container {} launched on {} successfully with role {}", config.container_name, config.ip, config.role))
     } else {
@@ -101,39 +105,27 @@ pub fn run_single_node(config: &ContainerConfig) -> Result<String, String> {
     }
 }
 
+
 /// this function permits to start htcondor pool, running the base
-/// daemon on every node that coulb be used in the cluster
+/// daemon on every node that will be used in the cluster
 /// 
 /// # Example
 /// ```
-/// execute the command: condor_master 
+/// executes the command: condor_master 
 /// ```
-#[tauri::command]
-pub fn start_condor_master() -> Result<String, String> {
-    let script_path = std::env::current_dir()
-        .unwrap()
-        .join("src/scripts/htcondor/start_condor_master.sh");
+pub fn start_condor_master(config: &ContainerConfig) -> Result<String, String> {
+    let ssh_auth = format!("{}@{}", config.user, config.ip);
+    let command = format!(
+        "docker container exec {} sh -c 'echo pass123 | sudo -S condor_master'", config.container_name); // OJO, USO PASSWORD!!
 
-    println!("path: {}", script_path.display());
-
-    if !script_path.exists() {
-        return Err(format!(
-            "Script not found at path: {}",
-            script_path.display()
-        ));
-    }
-
-    let output = Command::new("bash")
-        .arg(script_path)
+    let output = Command::new("ssh")
+        .args([&ssh_auth, &command])
         .output()
-        .map_err(|err| format!("Failed to execute script daemon: {}", err))?;
+        .map_err(|err| format!("SSH failed to start condor_master: {}", err))?;
 
     if output.status.success() {
-        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+        Ok(format!("condor_master started on {}", config.container_name))
     } else {
-        Err(format!(
-            "Script failed:\n{}",
-            String::from_utf8_lossy(&output.stderr)
-        ))
+        Err(format!("Failed to start condor_master on {}: {}", config.container_name, String::from_utf8_lossy(&output.stderr)))
     }
 }
