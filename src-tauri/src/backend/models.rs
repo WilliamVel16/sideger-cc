@@ -26,7 +26,6 @@ pub struct NodeRole {
 #[derive(Clone)]
 pub struct ContainerConfig {
     pub ip: String,
-    pub username: String,
     pub role: String,
     pub image: String,
     pub container_name: String,

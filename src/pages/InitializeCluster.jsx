@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
 import {
   Box, Grid, Paper, Typography, List, ListItem, ListItemIcon, Container,
   ListItemText, Select, MenuItem, FormControl, FormGroup, TextField,
   FormControlLabel, InputLabel, IconButton, Button, Switch, Tooltip
 } from '@mui/material';
+import { useState } from 'react';
 import ComputerIcon from '@mui/icons-material/Computer';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -92,6 +92,7 @@ function InitializeCluster() {
         {/* cluster options and settings */}
         <Grid item size={{ xs:6, md:8}}>
           <Typography variant="h6" mb={1}> Opciones </Typography>
+          {/* options */}
           <Grid container spacing={2}>
             <Grid item size={{ xs:6, md:6.5}}>
               <Typography variant="body1" sx={{ mb: 2 }}>
@@ -101,6 +102,8 @@ function InitializeCluster() {
                 Nombre: Ingresa un nombre para identificar tu cluster
               </Typography>
             </Grid>
+
+            {/* controls */}
             <Grid item size={{ xs:6, md:4}}>
               <Typography variant="h6" mb={1}> Gestiónar Cluster </Typography>
               <FormGroup sx={{ ml: 1, mb: 1 }}>
@@ -244,7 +247,6 @@ function InitializeCluster() {
         </Grid>
       </Grid>
 
-      {/* controls */}
       <Grid container spacing={2} sx={{ mb: 2}}>
         <Grid item size={12} >
           <Box sx={{ mt: 3, textAlign: 'center' }}>

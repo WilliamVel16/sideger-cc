@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { IconButton, Menu, MenuItem, Tooltip, Snackbar, Alert } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import CloseIcon from "@mui/icons-material/Close";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
+import { useAppContext } from "../context/AppContext";
 
 function Topbar() {
+  const { clusterState } = useAppContext();
   const [anchorMenu, setAnchorMenu] = useState(null);
   const [anchorNotif, setAnchorNotif] = useState(null);
   const [lastNotification, setLastNotification] = useState("Notificación de prueba");
@@ -15,7 +17,6 @@ function Topbar() {
     "Nuevo trabajo en cola",
     "3 trabajos finalizados."
   ]);
-  const systemStatus = "";
 
   useEffect(() => {
     const timer = setTimeout(() => setShowNotifText(false), 6000);
@@ -30,8 +31,8 @@ function Topbar() {
   };
 
   // functions to show system state
-  const getSystemStateColor = () => {
-    switch(systemStatus) {
+  const getClusterStateColor = () => {
+    switch(clusterState) {
       case "active":
         return "green";
       case "inactive":
@@ -42,16 +43,16 @@ function Topbar() {
         return "gray";
     }
   };
-  const getSystemStateText = () => {
-    switch(systemStatus) {
+  const getClusterStateText = () => {
+    switch(clusterState) {
       case "active":
-        return "Sistema activo";
+        return "Cluster activo";
       case "inactive":
-        return "Sistema inactivo";
+        return "Cluster inactivo";
       case "warning":
-        return "Sistema en alerta";
+        return "Cluster en alerta";
       default:
-        return "Herramienta en construcción";
+        return "En construcción";
     }
   };
 
@@ -60,8 +61,8 @@ function Topbar() {
       {/* system state */}
       <Tooltip title="Estado del Cluster">
         <div className="system-status" >
-          <FiberManualRecordIcon style={{ color: getSystemStateColor(), backgroundColor: 'white', fontSize: '1.5rem', borderRadius: '5px'}} />
-          <span className="system-status-text">{getSystemStateText()}</span>
+          <FiberManualRecordIcon style={{ color: getClusterStateColor(), backgroundColor: 'white', fontSize: '1.5rem', borderRadius: '5px'}} />
+          <span className="system-status-text">{getClusterStateText()}</span>
         </div>
       </Tooltip>
 

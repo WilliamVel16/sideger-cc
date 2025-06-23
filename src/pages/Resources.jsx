@@ -91,7 +91,7 @@ function Permissions() {
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
+      {/*<Paper elevation={3} sx={{ p: 4 }}>*/}
         {/** permisos */}
         <Typography variant="h5" gutterBottom>
           Permitir ejecución de scripts
@@ -195,7 +195,7 @@ function Permissions() {
             {errorScan}
           </Alert>
         </Snackbar>
-      </Paper>
+      {/*</Paper>*/}
     </Container>
   );
 }

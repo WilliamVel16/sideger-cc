@@ -16,7 +16,6 @@ impl ContainerConfig {
 
         Ok(ContainerConfig { 
             ip: ip.to_string(),
-            username: "user".to_string(), // current container user
             role: role.to_string(),
             image: image.to_string(),
             container_name: cont_name,
@@ -101,38 +100,6 @@ pub fn run_single_node(config: &ContainerConfig) -> Result<String, String> {
         ))
     }
 }
-
-/// this function uses the function run_single_node to iterate in every node
-/// of the array received from the request
-/// 
-/// # Example
-/// ```
-/// sends the ip and rol of one node to run_single_node function to run
-/// the containers on an atomic form
-/// ```
-// #[tauri::command]
-// pub fn assign_roles(nodes: Vec<NodeRole>, onetwork_name: String) -> Result<String, String> {
-//     if nodes.is_empty() {
-//         return Err("Request without nodes, empty request".into());
-//     }
-
-//     let mut results = Vec::new();
-
-//     for node in nodes {
-//         if node.role.is_empty() {
-//             return Err(format!("The node {} has no role assigned", node.ip));
-//         }
-
-//         println!("Assigning {} as {}", node.ip, node.role);
-//         let config = ContainerConfig::new(&node.ip, &node.role, &onetwork_name)?;
-//         match run_single_node(&config) {
-//             Ok(msg) => results.push(msg),
-//             Err(err) => return Err(format!("Failed to assign role to {}: {}", node.ip, err)),
-//         }
-//     }
-
-//     Ok(results.join("\n"))
-// }
 
 /// this function permits to start htcondor pool, running the base
 /// daemon on every node that coulb be used in the cluster
