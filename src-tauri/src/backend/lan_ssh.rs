@@ -96,15 +96,6 @@ pub fn scan_lan_resources(interface_lan_name: String, pass: String) -> Result<Sc
 #[tauri::command]
 pub fn get_my_ip(interface_name: String) -> Result<String, String> {
     let interfaces = pnet_datalink::interfaces();
-    println!("Interfaces encontradas:");
-    for iface in &interfaces {
-        println!(
-            "- {} | MAC: {:?} | IPs: {:?}",
-            iface.name,
-            iface.mac,
-            iface.ips
-        );
-    }
     
     let interface = interfaces
         .into_iter()

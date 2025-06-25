@@ -59,8 +59,8 @@ pub fn show_resources_specs(ips_resources: Vec<String>, user: String) -> Result<
 ///  Show info as: OS, DISK, RAM, CPU, GPU, HOSTNAME
 /// ```
 #[tauri::command]
-pub fn show_my_specs() -> Result<serde_json::Value, String> {
-    let script_path = Path::new("src/scripts/utils/resources_info.sh");
+pub fn show_my_specs(lan_name: String) -> Result<serde_json::Value, String> {
+    let script_path = Path::new("src/scripts/utils/my_info.sh");
 
     if !script_path.exists() {
         return Err(format!("Script not found at path: {}", script_path.display()));
@@ -68,6 +68,7 @@ pub fn show_my_specs() -> Result<serde_json::Value, String> {
 
     let output = Command::new("bash")
         .arg(script_path)
+        .arg(&lan_name)
         .output()
         .map_err(|e| format!("Failed to execute show my specs script: {}", e))?;
 
@@ -260,4 +261,3 @@ pub fn create_overlay_network(manager_ip: &str, user: &str, onet_name: &str) -> 
         ))
     }
 }
-

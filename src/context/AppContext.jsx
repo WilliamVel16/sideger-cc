@@ -7,7 +7,7 @@ export const AppProvider = ({ children }) => {
 	const [user, setUser] = useState("usuario");
 	const [pass, setPass] = useState("pass123"); // temporal
 	const [clusterState, setClusterState] = useState("inactive");
-	const [myIP, setMyIP] = useState("");
+	const [LANname, setLANname] = useState("");
 
 	return (
 		<AppContext.Provider value={{
@@ -15,7 +15,7 @@ export const AppProvider = ({ children }) => {
 			user, setUser,
 			pass, setPass,
 			clusterState, setClusterState,
-			myIP, setMyIP,
+			LANname, setLANname,
 			}}>
 			{ children }
 		</AppContext.Provider>

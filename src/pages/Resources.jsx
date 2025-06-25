@@ -11,8 +11,7 @@ import { useAppContext } from '../context/AppContext';
 import VerifiedIcon from '@mui/icons-material/Verified';
 
 function Permissions() {
-  const { resourcesIPs, setResourcesIPs, user, setUser, pass, setPass, myIP, setMyIP } = useAppContext();
-  const [interfaceLanName, setInterfaceLanName] = useState("");
+  const { resourcesIPs, setResourcesIPs, user, setUser, pass, setPass, LANname, setLANname } = useAppContext();
   const [accepted, setAccepted] = useState(false);
   const [successPermissions, setSuccessPermissions] = useState(false);
   const [errorPermissions, setErrorPermissions] = useState("");
@@ -39,13 +38,10 @@ function Permissions() {
   // executes the resources scanning in the LAN
   const handleScanResources = async (localPass) => {
     try {
-      const allDevicesFound = await scanLanResources(interfaceLanName, localPass);
-      const thisResourceIp = await getMyIp(interfaceLanName);
-      console.log(thisResourceIp)
+      const allDevicesFound = await scanLanResources(LANname, localPass);
+      const thisResourceIp = await getMyIp(LANname);
       const finalResources = allDevicesFound.ips.filter(ip => ip !== thisResourceIp && !ip.endsWith(".1"));
-      console.log("Ressss:",finalResources);
       setResourcesIPs(finalResources);
-      setMyIP(thisResourceIp)
       setNumberResources(finalResources.length)
       setSuccessScan(true);
     } catch (err) {
@@ -145,9 +141,9 @@ function Permissions() {
             <FormControl fullWidth size="small">
               <InputLabel> Interfaz LAN </InputLabel>
               <Select
-                value={interfaceLanName}
+                value={LANname}
                 label="Interfaz LAN"
-                onChange={(e) => setInterfaceLanName(e.target.value)}
+                onChange={(e) => setLANname(e.target.value)}
                 >
                   {interfaces.map((iface) => (
                     <MenuItem key={iface} value={iface}>

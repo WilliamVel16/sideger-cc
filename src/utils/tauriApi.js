@@ -59,12 +59,14 @@ export const showResourcesSpecs = async (resourcesIPs, user) => {
 	return invoke("show_resources_specs", {
 		ipsResources: resourcesIPs,
 		user: user,
-	})
+	});
 };
 
 // to get specifications of this resource [InitializeClster.jsx]
-export const showMySpecs = async () => {
-	return invoke("show_my_specs")
+export const showMySpecs = async (lanName) => {
+	return invoke("show_my_specs", {
+		lanName,
+	});
 };
 
 // to start cluster with selected nodes [InitializeClster.jsx]

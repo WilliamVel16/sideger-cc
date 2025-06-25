@@ -12,7 +12,7 @@ import { showResourcesSpecs, initializeCluster, showMySpecs } from "../utils/tau
 import { useAppContext } from '../context/AppContext';
 
 function InitializeCluster() {
-  const { resourcesIPs, user, setUser, pass, setPass, myIP } = useAppContext();
+  const { resourcesIPs, user, setUser, pass, setPass, LANname } = useAppContext();
   const [checkedServers, setCheckedServers] = useState([]);
   const [servers, setServers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -27,9 +27,9 @@ function InitializeCluster() {
     setLoading(true);
     console.log(resourcesIPs)
     try {
-      //const remoteData = await showResourcesSpecs(resourcesIPs, user);
-      const myData = await showMySpecs();
-      //setServers(remoteData);
+      const remoteData = await showResourcesSpecs(resourcesIPs, user);
+      const myData = await showMySpecs(LANname);
+      setServers(remoteData);
       setCheckedServers([...checkedServers, {...myData, role: "sub"}]);
     } catch (err) {
       console.error("Script error showResourcesSpecs: ", err);

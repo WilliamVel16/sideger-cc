@@ -91,7 +91,7 @@ pub fn run_single_node(config: &ContainerConfig) -> Result<String, String> {
         Command::new("ssh")
         .args([&ssh_auth, &command])
         .output()
-        .map_err(|err| format!("SSH failed: {}", err))?
+        .map_err(|e| format!("SSH failed: {}", e))?
     };
     
     if output.status.success() {
@@ -118,10 +118,17 @@ pub fn start_condor_master(config: &ContainerConfig) -> Result<String, String> {
     let command = format!(
         "docker container exec {} sh -c 'echo pass123 | sudo -S condor_master'", config.container_name); // OJO, USO PASSWORD!!
 
-    let output = Command::new("ssh")
+    let output = if config.role == "sub" {
+        Command::new("bash")
+        .args(["-c", &command])
+        .output()
+        .map_err(|e| format!("Local failed to start condor_master: {}", e))?
+    } else {
+        Command::new("ssh")
         .args([&ssh_auth, &command])
         .output()
-        .map_err(|err| format!("SSH failed to start condor_master: {}", err))?;
+        .map_err(|e| format!("SSH failed to start condor_master: {}", e))?
+    };
 
     if output.status.success() {
         Ok(format!("condor_master started on {}", config.container_name))
