@@ -2,7 +2,7 @@ mod backend;
 use backend::{
     containers::{run_containers},
     lan_ssh::{script_permissions, scan_interfaces, scan_lan_resources, get_my_ip, start_ssh_connection, execute_command},
-    resources::{show_resources_specs, show_my_specs, initialize_cluster}
+    resources::{show_resources_specs, show_my_specs, initialize_cluster, shutdown_cluster}
 };
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -25,6 +25,7 @@ pub fn run() {
             start_ssh_connection,
             show_resources_specs,
             show_my_specs,
+            shutdown_cluster,
             
             ])
         .run(tauri::generate_context!())

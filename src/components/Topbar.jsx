@@ -5,9 +5,10 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import CloseIcon from "@mui/icons-material/Close";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import { useAppContext } from "../context/AppContext";
+import { shutdownCluster } from "../utils/tauriApi";
 
 function Topbar() {
-  const { clusterState } = useAppContext();
+  const { clusterState, setClusterState, clusterNodesConfig, user, overlayNetworkName } = useAppContext();
   const [anchorMenu, setAnchorMenu] = useState(null);
   const [anchorNotif, setAnchorNotif] = useState(null);
   const [lastNotification, setLastNotification] = useState("Notificación de prueba");
@@ -29,6 +30,17 @@ function Topbar() {
     setAnchorMenu(null);
     setAnchorNotif(null);
   };
+
+  const handleShutdownCluster = async () => {
+    // send as arguments: nodes, onetName, and user
+    try {
+      const response = await shutdownCluster(clusterNodesConfig);
+      console.log(response);
+      setClusterState("inactive")
+    } catch (err) {
+      console.log("Error to try kill the cluster:", err);
+    }
+  }
 
   // functions to show system state
   const getClusterStateColor = () => {
@@ -104,7 +116,7 @@ function Topbar() {
       </Tooltip>
       <Menu anchorEl={anchorMenu} open={Boolean(anchorMenu)} onClose={handleClose}>
         <MenuItem onClick={handleClose}>Reiniciar</MenuItem>
-        <MenuItem onClick={handleClose}>Dar de Baja</MenuItem>
+        <MenuItem onClick={handleShutdownCluster}>Dar de Baja</MenuItem>
         <MenuItem onClick={handleClose}>Salir</MenuItem>
       </Menu>
 

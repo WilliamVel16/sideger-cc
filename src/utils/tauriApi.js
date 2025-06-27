@@ -77,3 +77,11 @@ export const initializeCluster = async (nodes, user, onetName) => {
 		onetName,
 	});
 };
+
+// to kill the cluster [Topbar.jsx]
+export const shutdownCluster = async (clusterNodesConfig) => {
+	return invoke("shutdown_cluster", {
+		config: clusterNodesConfig
+	});
+};
+

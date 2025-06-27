@@ -7,7 +7,7 @@ pub struct MySSHRequest {
     pub command: String,
 }
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, Serialize)]
 pub struct NodeInfo {
     pub hostname: String,
     pub os: String,
@@ -23,7 +23,7 @@ pub struct NodeRole {
     pub role: String,
 }
 
-#[derive(Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ContainerConfig {
     pub ip: String,
     pub role: String,
@@ -39,9 +39,21 @@ pub struct ScanResourcesResult {
     pub ips: Vec<String>,
 }
 
-#[derive(serde::Serialize)]
+#[derive(Serialize)]
 pub struct SSHConnectionResult {
     pub ip: String,
     pub success: bool,
+    pub message: String,
+}
+
+#[derive(Serialize)]
+pub struct ClusterNodeResult {
+    pub message: String,
+    pub config: ContainerConfig,
+}
+
+#[derive(Serialize)]
+pub struct ShutdownNodeResult {
+    pub free: bool,
     pub message: String,
 }

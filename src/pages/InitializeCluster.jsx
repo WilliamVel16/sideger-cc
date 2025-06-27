@@ -12,7 +12,7 @@ import { showResourcesSpecs, initializeCluster, showMySpecs } from "../utils/tau
 import { useAppContext } from '../context/AppContext';
 
 function InitializeCluster() {
-  const { resourcesIPs, user, setUser, pass, setPass, LANname } = useAppContext();
+  const { resourcesIPs, user, setUser, setClusterState, LANname, setClusterNodesConfig, overlayNetworkName, setOverlayNetworkName } = useAppContext();
   const [checkedServers, setCheckedServers] = useState([]);
   const [servers, setServers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -20,7 +20,6 @@ function InitializeCluster() {
   const [numExecutionNodes, setNumExecutionNodes] = useState(1);
   const [sysDefineResources, setSysDefineResources] = useState(false);
   const [keepCluster, setKeepCluster] = useState(false);
-  const [onetName, setOnetName] = useState("sidegerOnet");  
 
   // requests to backend for view all available resources
   const fetchData = async () => {
@@ -61,14 +60,15 @@ function InitializeCluster() {
   // sends the request ([{ip:role},]) to asign roles to every selected resource
   // and start cluster
   const handleSendRequest = async () => {
-    console.log(checkedServers)
     const dataCheckedServers = checkedServers.map(s => ({ ip: s.ip, role: s.role, }));
-
     try {
-      const response = await initializeCluster(dataCheckedServers, user, onetName);
+      const response = await initializeCluster(dataCheckedServers, user, overlayNetworkName);
+      setClusterState("active");
       console.log(response);
+      console.log(response[0].config);
+      setClusterNodesConfig(response.map(node => node.config));
     } catch (err) {
-      console.error("Error al asignar roles:", err);
+      console.error("Error setting roles:", err);
     }
   };
 
@@ -171,8 +171,8 @@ function InitializeCluster() {
                   variant="outlined"
                   size="small"
                   fullWidth
-                  value={onetName}
-                  onChange={(e) => setOnetName(e.target.value)}
+                  value={overlayNetworkName}
+                  onChange={(e) => setOverlayNetworkName(e.target.value)}
                 />
               </FormGroup>
             </Grid>

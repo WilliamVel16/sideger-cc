@@ -8,6 +8,8 @@ export const AppProvider = ({ children }) => {
 	const [pass, setPass] = useState("pass123"); // temporal
 	const [clusterState, setClusterState] = useState("inactive");
 	const [LANname, setLANname] = useState("");
+	const [clusterNodesConfig, setClusterNodesConfig] = useState();
+	const [overlayNetworkName, setOverlayNetworkName] = useState("sidegerOnet");
 
 	return (
 		<AppContext.Provider value={{
@@ -16,6 +18,8 @@ export const AppProvider = ({ children }) => {
 			pass, setPass,
 			clusterState, setClusterState,
 			LANname, setLANname,
+			clusterNodesConfig, setClusterNodesConfig,
+			overlayNetworkName, setOverlayNetworkName
 			}}>
 			{ children }
 		</AppContext.Provider>

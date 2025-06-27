@@ -1,6 +1,6 @@
 use super::{containers, models::ContainerConfig};
-use crate::backend::models::NodeRole;
-use containers::{run_single_node, start_condor_master};
+use crate::backend::models::{NodeRole, ClusterNodeResult, ShutdownNodeResult};
+use containers::{run_single_node, start_condor_master, stop_single_node, remove_overlay_network, leave_swarm};
 use std::{collections::HashMap, process::Command};
 use serde_json::Value;
 use std::path::Path;
@@ -91,7 +91,7 @@ pub fn show_my_specs(lan_name: String) -> Result<serde_json::Value, String> {
 /// of the overlay network and then the cluster: init_swarm_manager, get_worker_token,
 /// join_as_worker
 #[tauri::command]
-pub fn initialize_cluster(nodes: Vec<NodeRole>, user: String, onet_name: String,) -> Result<String, String> {
+pub fn initialize_cluster(nodes: Vec<NodeRole>, user: String, onet_name: String,) -> Result<Vec<ClusterNodeResult>, String> {
     if nodes.is_empty() {
         return Err("No nodes provided".into());
     }
@@ -161,10 +161,13 @@ pub fn initialize_cluster(nodes: Vec<NodeRole>, user: String, onet_name: String,
         }
         condor_result?;
 
-        results.push(format!("Container {} with role {} deployed and condor_master started.", config.container_name, config.role));
+        results.push(ClusterNodeResult {
+            message: format!("Container {} with role {} deployed and condor_master started.", config.container_name, config.role),
+            config
+        });
     }
 
-    Ok(results.join("\n"))
+    Ok(results)
 }
 
 
@@ -260,4 +263,52 @@ pub fn create_overlay_network(manager_ip: &str, user: &str, onet_name: &str) -> 
             String::from_utf8_lossy(&output.stderr)
         ))
     }
+}
+
+///
+/// 
+/// 
+#[tauri::command]
+pub fn shutdown_cluster(config: Vec<ContainerConfig>) -> Result<Vec<ShutdownNodeResult>, String> {
+    if config.is_empty() {
+        return Err("No config provided".into());
+    }
+
+    let Some(cm_node) = config.iter().find(|n| n.role == "cm") else {
+        return Err("No node with role 'cm' found.".into());
+    };
+
+    let mut results = Vec::new();
+    for node_config in &config {
+        // step 1: stop container in the node
+        let stop_result = stop_single_node(node_config);
+        match &stop_result {
+            Ok(msg) => println!("[OK] (in stop container): {}", msg),
+            Err(err) => println!("[ERR {}] (in stop container): {}", node_config.ip, err),
+        }
+        stop_result?;
+
+        // step 2: the node leaves the swarm
+        let leave_result = leave_swarm(node_config);
+        match  &leave_result {
+            Ok(msg) => println!("[OK] (in leave swarm): {}", msg),
+            Err(err) => println!("[ERR {}] (in leave): {}", node_config.ip, err),
+        }
+        leave_result?;
+
+        results.push(ShutdownNodeResult {
+            free: true,
+            message: format!("El recurso {} con rol {} ha sido liberado del cluster", node_config.ip, node_config.role),
+        });
+    }
+
+    // step 3: deletes the overlay network since central manager node
+    let remove_result = remove_overlay_network(cm_node);
+    match &remove_result {
+        Ok(msg) => println!("[OK] (in remove onet): {}", msg),
+        Err(err) => println!("[ERR {}] (in remove onet): {}", cm_node.ip, err),
+    }
+    remove_result?;
+
+    Ok(results)
 }

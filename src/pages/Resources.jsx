@@ -63,7 +63,6 @@ function Permissions() {
     (async () => {
       try {
       const output = await scanInterfaces();
-      console.log(output);
       setInterfaces(output);
       } catch (err) {
         console.error("Error al obtener interfaces:", err);

@@ -98,12 +98,102 @@ pub fn run_single_node(config: &ContainerConfig) -> Result<String, String> {
         Ok(format!("Container {} launched on {} successfully with role {}", config.container_name, config.ip, config.role))
     } else {
         Err(format!(
-            "Failed on {}: {}",
+            "Failed running container on {}: {}",
             config.ip,
             String::from_utf8_lossy(&output.stderr)
         ))
     }
 }
+
+
+/// this function stops the container running in the physical resource
+/// 
+/// # Example
+/// ```
+/// process: run a command to stop the container with any rol
+/// ```
+#[tauri::command]
+pub fn stop_single_node(config: &ContainerConfig) -> Result<String, String> {
+    let ssh_auth = format!("{}@{}", config.user, config.ip);
+    let command = format!(
+        "docker stop {}", config.container_name
+    );
+
+    let output = if config.role == "sub" {
+        Command::new("sh")
+        .args(["-c", &command])
+        .output()
+        .map_err(|e| format!("Local failed in {} trying stop single node: {}", config.ip, e))?
+    } else {
+        Command::new("ssh")
+        .args([&ssh_auth, &command])
+        .output()
+        .map_err(|e| format!("SSH failed in {} trying stop sigle node: {}", config.ip, e))?
+    };
+    
+    if output.status.success() {
+        Ok(format!("Container {} with role {} stopped on {}", config.container_name, config.role, config.ip))
+    } else {
+        Err(format!("Failed stopping container on {}: {}", config.ip, String::from_utf8_lossy(&output.stderr)))
+    }
+}
+
+
+/// deletes the overlay network from swarm manager (or role 'cm' for htcondor)
+#[tauri::command]
+pub fn remove_overlay_network(config: &ContainerConfig) -> Result<String, String> {
+    let ssh_auth = format!("{}@{}", config.user, config.ip);
+    let command = format!("docker network rm {}", config.onetwork_name);
+
+    let output = Command::new("ssh")
+        .args([&ssh_auth, &command])
+        .output()
+        .map_err(|e| format!("SSH failed in {} trying remove onet: {}", config.ip, e))?;
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    if output.status.success() {
+        Ok(format!("Overlay network '{}' removed from {}", config.onetwork_name, config.ip))
+    } else if stderr.contains("not found") {
+        Ok(format!("Overlay network '{}' did not exist on {} (already removed)", config.onetwork_name, config.ip))
+    } else {
+        Err(format!(
+            "Failed to remove overlay network on {}: {}", config.ip, stderr
+        ))
+    }
+}
+
+
+/// this function do that a node leave the swarm
+#[tauri::command]
+pub fn leave_swarm(config: &ContainerConfig) -> Result<String, String> {
+    let ssh_auth = format!("{}@{}", config.user, config.ip);
+    let command = if config.role == "cm" {
+        format!("docker swarm leave --force")
+    } else {
+        format!("docker swarm leave")
+    };
+
+    let output = if config.role == "sub" {
+        Command::new("sh")
+        .args(["-c", &command])
+        .output()
+        .map_err(|e| format!("Local failed in node trying leave swarm: {}", e))?
+    } else {
+        Command::new("ssh")
+        .args([&ssh_auth, &command])
+        .output()
+        .map_err(|e| format!("SSH failed in node trying leave swarm: {}", e))?
+    };
+
+    if output.status.success() {
+        Ok(format!("{} left the swarm successfully", config.ip))
+    } else {
+        Err(format!("Failed to leave swarm on {}: {}", config.ip, String::from_utf8_lossy(&output.stderr)))
+    }
+}
+
+
 
 
 /// this function permits to start htcondor pool, running the base
