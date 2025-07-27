@@ -32,26 +32,9 @@ export const startSshConnection = async (user, remotePassword, resources_ips) =>
 	})
 }
 
-// to run container (one host) [Start.jsx]
-export const runContainers = async () => {
-	return invoke("run_containers");
-};
-
 // to start ssh connection [Start.jsx]
 export const sshConnection = async () => {
 	return invoke("start_ssh_connection");
-};
-
-// to execute command (temporal) [Command.jsx]
-export const executeCommand = async (sshReq) => {
-	return invoke("execute_command", {
-		req: sshReq,
-	});
-};
-
-// to start condor master (one host) [Start.jsx]
-export const startCondorMaster = async () => {
-	return invoke("start_condor_master");
 };
 
 // to get resources specifications [InitializeClster.jsx]

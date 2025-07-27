@@ -36,8 +36,7 @@ function Sidebar() {
 
         <div className="section">
           <div className="section-title">Temporales</div>
-          <NavLink to="/start" className="nav-link">Iniciar Cluster</NavLink>
-          <NavLink to="/command" className="nav-link">Comando</NavLink>
+
         </div>
       </nav>
     </div>

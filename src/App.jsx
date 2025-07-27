@@ -6,8 +6,6 @@ import InitializeCluster from "./pages/InitializeCluster";
 //import FinishedJobs from "./pages/FinishedJobs";
 //import JobQueue from "./pages/JobQueue";
 //import NewJob from "./pages/NewJob";
-import Command from "./Command";
-import Start from "./Start";
 import { AppProvider } from "./context/AppContext";
 import NewJob from "./pages/NewJob";
 
@@ -24,9 +22,6 @@ function App() {
               <Route path="/resources" element={<Resources />} />
               <Route path="/initialize-cluster" element={<InitializeCluster />} />
               <Route path="/jobs/new" element={<NewJob />} />
-
-              <Route path="/command" element={<Command />} />
-              <Route path="/start" element={<Start />} />
             </Route>
           </Routes>
         </BrowserRouter>
