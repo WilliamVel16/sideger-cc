@@ -11,7 +11,7 @@ import { useAppContext } from '../context/AppContext';
 import VerifiedIcon from '@mui/icons-material/Verified';
 
 function Permissions() {
-  const { resourcesIPs, setResourcesIPs, user, setUser, pass, setPass, LANname, setLANname } = useAppContext();
+  const { resourcesIPs, setResourcesIPs, resourcesUser, setResourcesUser, LANname, setLANname } = useAppContext();
   const [accepted, setAccepted] = useState(false);
   const [successPermissions, setSuccessPermissions] = useState(false);
   const [errorPermissions, setErrorPermissions] = useState("");
@@ -20,6 +20,19 @@ function Permissions() {
   const [numberResources, setNumberResources] = useState(0);
   const [localPass, setLocalPass] = useState("");
   const [interfaces, setInterfaces] = useState([]);
+  const [resourcesPass, setResourcesPass] = useState();
+
+  // scans the network interfaces
+  useEffect(() => {
+    (async () => {
+      try {
+      const output = await scanInterfaces();
+      setInterfaces(output);
+      } catch (err) {
+        console.error("Error to obtain interfaces:", err);
+      }
+    })();
+  }, []);
 
   // get the permissions to execute scripts to deploy the cluster
   const handleAccept = async () => {
@@ -36,7 +49,7 @@ function Permissions() {
   };
 
   // executes the resources scanning in the LAN
-  const handleScanResources = async (localPass) => {
+  const handleScanResources = async () => {
     try {
       const allDevicesFound = await scanLanResources(LANname, localPass);
       const thisResourceIp = await getMyIp(LANname);
@@ -49,6 +62,7 @@ function Permissions() {
         console.error("no ok 1", err);
         setErrorScan(err);
       } else if (err && err.message) {
+        //console.log("Error 2 during ssh connection:", JSON.stringify(err, null, 2));
         console.error("no ok 2", err.message);
         setErrorScan(err.message);
       } else {
@@ -60,22 +74,10 @@ function Permissions() {
 
   // executes ssh connection after resources scanning
   useEffect(() => {
-    (async () => {
-      try {
-      const output = await scanInterfaces();
-      setInterfaces(output);
-      } catch (err) {
-        console.error("Error al obtener interfaces:", err);
-      }
-    })();
-  }, []);
-
-  // executes ssh connection after resources scanning
-  useEffect(() => {
     if (successScan && resourcesIPs.length > 0) {
       (async () => {
         try {
-          const output = await startSshConnection(user, pass, resourcesIPs);
+          const output = await startSshConnection(resourcesUser, resourcesPass, resourcesIPs);
           console.log("results ssh connection:", output);
         } catch (err) {
           console.log("Error during ssh connection:", err);
@@ -163,9 +165,30 @@ function Permissions() {
               onChange={(e) => setLocalPass(e.target.value)}
             />
           </Grid>
+          <Grid item xs={12} md={6} sx={{ width: '30%' }}>
+            <TextField
+              label="Usuario de los recursos"
+              variant="outlined"
+              fullWidth
+              size="small"
+              value={resourcesUser}
+              onChange={(e) => setResourcesUser(e.target.value)}
+            />
+          </Grid>
+          <Grid item xs={12} md={6} sx={{ width: '30%' }}>
+            <TextField
+              label="Contraseña de los recursos"
+              variant="outlined"
+              type="password"
+              fullWidth
+              size="small"
+              value={resourcesPass}
+              onChange={(e) => setResourcesPass(e.target.value)}
+            />
+          </Grid>
         </Grid>
         <Box sx={{ textAlign: 'center', mt: 5 }}>
-          <Button variant="contained" color="black" onClick={() => handleScanResources(localPass)}>
+          <Button variant="contained" color="black" onClick={() => handleScanResources()}>
             Buscar Recursos
           </Button>
         </Box>
@@ -185,9 +208,9 @@ function Permissions() {
         <Snackbar
           open={Boolean(errorScan)}
           autoHideDuration={6000}
-          onClose={() => setErrorPermissions("")}
+          onClose={() => setErrorScan("")}
         >
-          <Alert onClose={() => setErrorPermissions("")} severity="error" sx={{ width: '100%' }}>
+          <Alert onClose={() => setErrorScan("")} severity="error" sx={{ width: '100%' }}>
             {errorScan}
           </Alert>
         </Snackbar>

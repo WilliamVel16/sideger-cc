@@ -4,8 +4,8 @@ const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
 	const [resourcesIPs, setResourcesIPs] = useState([])
-	const [user, setUser] = useState("usuario");
-	const [pass, setPass] = useState("pass123"); // temporal
+	const [resourcesUser, setResourcesUser] = useState("usuario");
+	const [containersPass, setContainersPass] = useState("pass123"); // temporals
 	const [clusterState, setClusterState] = useState("inactive");
 	const [LANname, setLANname] = useState("");
 	const [clusterNodesConfig, setClusterNodesConfig] = useState();
@@ -14,8 +14,8 @@ export const AppProvider = ({ children }) => {
 	return (
 		<AppContext.Provider value={{
 			resourcesIPs, setResourcesIPs,
-			user, setUser,
-			pass, setPass,
+			resourcesUser, setResourcesUser,
+			containersPass, setContainersPass,
 			clusterState, setClusterState,
 			LANname, setLANname,
 			clusterNodesConfig, setClusterNodesConfig,

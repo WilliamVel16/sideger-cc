@@ -12,7 +12,7 @@ import { showResourcesSpecs, initializeCluster, showMySpecs } from "../utils/tau
 import { useAppContext } from '../context/AppContext';
 
 function InitializeCluster() {
-  const { resourcesIPs, user, setUser, setClusterState, LANname, setClusterNodesConfig, overlayNetworkName, setOverlayNetworkName } = useAppContext();
+  const { resourcesIPs, resourcesUser, setClusterState, LANname, setClusterNodesConfig, overlayNetworkName, setOverlayNetworkName } = useAppContext();
   const [checkedServers, setCheckedServers] = useState([]);
   const [servers, setServers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -26,9 +26,9 @@ function InitializeCluster() {
     setLoading(true);
     console.log(resourcesIPs)
     try {
-      const remoteData = await showResourcesSpecs(resourcesIPs, user);
+      const resourcesData = await showResourcesSpecs(resourcesIPs, resourcesUser);
       const myData = await showMySpecs(LANname);
-      setServers(remoteData);
+      setServers(resourcesData);
       setCheckedServers([...checkedServers, {...myData, role: "sub"}]);
     } catch (err) {
       console.error("Script error showResourcesSpecs: ", err);
@@ -62,13 +62,13 @@ function InitializeCluster() {
   const handleSendRequest = async () => {
     const dataCheckedServers = checkedServers.map(s => ({ ip: s.ip, role: s.role, }));
     try {
-      const response = await initializeCluster(dataCheckedServers, user, overlayNetworkName);
+      const response = await initializeCluster(dataCheckedServers, resourcesUser, overlayNetworkName);
       setClusterState("active");
       console.log(response);
       console.log(response[0].config);
       setClusterNodesConfig(response.map(node => node.config));
     } catch (err) {
-      console.error("Error setting roles:", err);
+      console.error("Error deploying:", err);
     }
   };
 
@@ -256,7 +256,7 @@ function InitializeCluster() {
               variant="contained"
               color="black"
               onClick={handleSendRequest}
-              disabled={checkedServers.length === 0 || checkedServers.some(s => !s.role)}
+              disabled={checkedServers.length < 3 || checkedServers.some(s => !s.role)}
             >
               Inicializar Clúster
             </Button>
