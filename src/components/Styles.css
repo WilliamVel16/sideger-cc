@@ -38,13 +38,13 @@
   }
 
   .logo {
-    width: 40px;
-    height: 40px;
+    width: 50px;
+    height: 50px;
     margin-right: 0.5rem;
   }
 
   .tool-name {
-    font-size: 1.9rem;
+    font-size: 1.6rem;
     font-weight: bold;
     margin-top: 0.6rem;
   }
@@ -136,6 +136,7 @@
     cursor: pointer;
   }
  
+  
 /* main content (big space or center and topbar) - shows the "pages" */
 .main-content {
     flex: 1;

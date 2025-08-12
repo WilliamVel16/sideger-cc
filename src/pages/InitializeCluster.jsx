@@ -1,18 +1,18 @@
-import { useEffect, useState } from 'react';
 import {
   Box, Grid, Paper, Typography, List, ListItem, ListItemIcon, Container,
   ListItemText, Select, MenuItem, FormControl, FormGroup, TextField,
   FormControlLabel, InputLabel, IconButton, Button, Switch, Tooltip
 } from '@mui/material';
+import { useState } from 'react';
 import ComputerIcon from '@mui/icons-material/Computer';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { showResourcesSpecs, initializeCluster } from "../utils/tauriApi";
+import { showResourcesSpecs, initializeCluster, showMySpecs } from "../utils/tauriApi";
 import { useAppContext } from '../context/AppContext';
 
 function InitializeCluster() {
-  const { resourcesIPs, user, setUser, pass, setPass } = useAppContext();
+  const { resourcesIPs, resourcesUser, setClusterState, LANname, setClusterNodesConfig, overlayNetworkName, setOverlayNetworkName } = useAppContext();
   const [checkedServers, setCheckedServers] = useState([]);
   const [servers, setServers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -20,15 +20,16 @@ function InitializeCluster() {
   const [numExecutionNodes, setNumExecutionNodes] = useState(1);
   const [sysDefineResources, setSysDefineResources] = useState(false);
   const [keepCluster, setKeepCluster] = useState(false);
-  const [onetName, setOnetName] = useState("sidegerOnet");  
 
-  // requests to backend for all available resources
+  // requests to backend for view all available resources
   const fetchData = async () => {
     setLoading(true);
     console.log(resourcesIPs)
     try {
-      const data = await showResourcesSpecs(resourcesIPs, user);
-      setServers(data);
+      const resourcesData = await showResourcesSpecs(resourcesIPs, resourcesUser);
+      const myData = await showMySpecs(LANname);
+      setServers(resourcesData);
+      setCheckedServers([...checkedServers, {...myData, role: "sub"}]);
     } catch (err) {
       console.error("Script error showResourcesSpecs: ", err);
     }
@@ -59,14 +60,15 @@ function InitializeCluster() {
   // sends the request ([{ip:role},]) to asign roles to every selected resource
   // and start cluster
   const handleSendRequest = async () => {
-    console.log(checkedServers)
     const dataCheckedServers = checkedServers.map(s => ({ ip: s.ip, role: s.role, }));
-
     try {
-      const response = await initializeCluster(dataCheckedServers, user, onetName);
+      const response = await initializeCluster(dataCheckedServers, resourcesUser, overlayNetworkName);
+      setClusterState("active");
       console.log(response);
+      console.log(response[0].config);
+      setClusterNodesConfig(response.map(node => node.config));
     } catch (err) {
-      console.error("Error al asignar roles:", err);
+      console.error("Error deploying:", err);
     }
   };
 
@@ -89,9 +91,9 @@ function InitializeCluster() {
           </Button>
         </Grid>
         
-        {/* cluster options and settings */}
         <Grid item size={{ xs:6, md:8}}>
           <Typography variant="h6" mb={1}> Opciones </Typography>
+          {/* options */}
           <Grid container spacing={2}>
             <Grid item size={{ xs:6, md:6.5}}>
               <Typography variant="body1" sx={{ mb: 2 }}>
@@ -101,6 +103,8 @@ function InitializeCluster() {
                 Nombre: Ingresa un nombre para identificar tu cluster
               </Typography>
             </Grid>
+
+            {/* controls */}
             <Grid item size={{ xs:6, md:4}}>
               <Typography variant="h6" mb={1}> Gestiónar Cluster </Typography>
               <FormGroup sx={{ ml: 1, mb: 1 }}>
@@ -167,8 +171,8 @@ function InitializeCluster() {
                   variant="outlined"
                   size="small"
                   fullWidth
-                  value={onetName}
-                  onChange={(e) => setOnetName(e.target.value)}
+                  value={overlayNetworkName}
+                  onChange={(e) => setOverlayNetworkName(e.target.value)}
                 />
               </FormGroup>
             </Grid>
@@ -224,17 +228,18 @@ function InitializeCluster() {
 
                   <Select
                     value={server.role || ""}
+                    disabled={server.role === "sub"}
                     onChange={(e) => handleRoleChange(server.ip, e.target.value)}
                     displayEmpty
                     size="small"
                     sx={{ mr: 1 }}
                   >
-                    <MenuItem value="">Elegir rol</MenuItem>
-                    <MenuItem value="sub">Envío</MenuItem>
-                    <MenuItem value="exe">Ejecución</MenuItem>
-                    <MenuItem value="cm">Administrador</MenuItem>
+                    <MenuItem value=""> Elegir rol </MenuItem>
+                    <MenuItem value="sub"> Envío </MenuItem>
+                    <MenuItem value="cm"> Administrador </MenuItem>
+                    <MenuItem value="exe"> Ejecución </MenuItem>
                   </Select>
-                  <IconButton edge="end" onClick={() => handleRemove(server)}>
+                  <IconButton edge="end" onClick={() => handleRemove(server)} disabled={server.role === "sub"}>
                     <DeleteIcon />
                   </IconButton>
                 </ListItem>
@@ -244,7 +249,6 @@ function InitializeCluster() {
         </Grid>
       </Grid>
 
-      {/* controls */}
       <Grid container spacing={2} sx={{ mb: 2}}>
         <Grid item size={12} >
           <Box sx={{ mt: 3, textAlign: 'center' }}>
@@ -252,7 +256,7 @@ function InitializeCluster() {
               variant="contained"
               color="black"
               onClick={handleSendRequest}
-              disabled={checkedServers.length === 0 || checkedServers.some(s => !s.role)}
+              disabled={checkedServers.length < 3 || checkedServers.some(s => !s.role)}
             >
               Inicializar Clúster
             </Button>
