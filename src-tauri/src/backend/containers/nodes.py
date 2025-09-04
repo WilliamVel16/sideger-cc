@@ -1,12 +1,14 @@
 import subprocess
 from cluster.models import ContainerConfig
 from fastapi import HTTPException
+import os
+
 
 def create_container_config(ip: str, role: str, onetwork_name: str, hostname: str, user: str) -> ContainerConfig:
     if role == "cm":
         image = "wvel/sideger-cm:1.0.2"
     elif role == "sub":
-        image = "wvel/sideger-sub:1.0.2"
+        image = "wvel/sideger-sub:4.1.7"
     elif role == "exe":
         image = "wvel/sideger-exe:1.0.2"
     else:
@@ -44,9 +46,15 @@ def run_single_node(config: ContainerConfig) -> str:
         f"docker container run -d --rm -it --name {config.container_name} "
         f"--net {config.onetwork_name} --hostname {config.hostname} {config.image}"
     )
-
+    
     try:
         if config.role == "sub":
+            
+            HOME_DIR = os.path.expanduser("~")
+            jobs_directory_path = os.path.join(HOME_DIR, "sideger_jobs")
+            command = command.replace(f"{config.image}", f"-v {jobs_directory_path}:/sideger-jobs {config.image}")
+            print(command)
+
             output = subprocess.run(
                 ["sh", "-c", command],
                 capture_output=True,
