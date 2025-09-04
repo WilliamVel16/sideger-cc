@@ -51,23 +51,23 @@ function NewJob() {
     const fileNames = inputFiles.map((file) => file.name).join(", ");
 
     const classAd = `
-universe = ${universe}
-executable = ${executable}
-arguments = ${argumentsStr}
-input = ${input}
-output = ${output}
-error = ${error}
-log = ${log}
-should_transfer_files = ${shouldTransferFiles ? "YES" : "NO"}
-transfer_input_files = ${fileNames}
-when_to_transfer_output = ${whenToTransferOutput}
+      universe = ${universe}
+      executable = ${executable}
+      arguments = ${argumentsStr}
+      input = ${input}
+      output = ${output}
+      error = ${error}
+      log = ${log}
+      should_transfer_files = ${shouldTransferFiles ? "YES" : "NO"}
+      transfer_input_files = ${fileNames}
+      when_to_transfer_output = ${whenToTransferOutput}
 
-request_cpus = ${cpus}
-request_memory = ${memory}
-request_disk = ${disk}
-requirements = (OpSys == "${osRequirement}")
+      request_cpus = ${cpus}
+      request_memory = ${memory}
+      request_disk = ${disk}
+      requirements = (OpSys == "${osRequirement}")
 
-queue ${queueCount}
+      queue ${queueCount}
     `.trim();
 
     console.log("generated classAd:\n", classAd);

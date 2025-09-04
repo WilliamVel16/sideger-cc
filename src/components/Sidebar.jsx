@@ -33,11 +33,6 @@ function Sidebar() {
           <NavLink to="/jobs/queue" className="nav-link"> Estado de Trabajos </NavLink>
           <NavLink to="/jobs/finished" className="nav-link"> Finalizados </NavLink>
         </div>
-
-        <div className="section">
-          <div className="section-title">Temporales</div>
-
-        </div>
       </nav>
     </div>
   );

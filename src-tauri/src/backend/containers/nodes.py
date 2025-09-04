@@ -8,7 +8,7 @@ def create_container_config(ip: str, role: str, onetwork_name: str, hostname: st
     if role == "cm":
         image = "wvel/sideger-cm:1.0.2"
     elif role == "sub":
-        image = "wvel/sideger-sub:1.0.2"
+        image = "wvel/sideger-sub:4.1.7"
     elif role == "exe":
         image = "wvel/sideger-exe:1.0.2"
     else:
@@ -111,8 +111,3 @@ def stop_single_node(node_config: ContainerConfig) -> str:
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error in stop node on {node_config.ip}: {str(e)}")
-    
-
-# HOME_DIR = os.path.expanduser("~")
-# jobs_path = os.path.join(HOME_DIR, "sideger_jobs")
-# print(jobs_path)
