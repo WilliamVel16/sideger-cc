@@ -29,6 +29,7 @@ function NewJob() {
   const [shouldTransferFiles, setShouldTransferFiles] = useState(true);
   const [whenToTransferOutput, setWhenToTransferOutput] = useState("ON_EXIT");
   // job data status
+  const [jobType, setJobType] = useState("script");
   const [universe, setUniverse] = useState("vanilla");
   const [executable, setExecutable] = useState("");
   const [argumentsStr, setArgumentsStr] = useState("");
@@ -39,8 +40,8 @@ function NewJob() {
   const [queueCount, setQueueCount] = useState(1);
   // job requeriments status
   const [cpus, setCpus] = useState(1);
-  const [memory, setMemory] = useState("512MB");
-  const [disk, setDisk] = useState("1GB");
+  const [memory, setMemory] = useState("512M");
+  const [disk, setDisk] = useState("1G");
   const [osRequirement, setOsRequirement] = useState("LINUX");
 
   const handleFileChange = (e) => {
@@ -50,25 +51,35 @@ function NewJob() {
   const handleNewJob = async () => {
     const fileNames = inputFiles.map((file) => file.name).join(", ");
 
-    const classAd = `
+    let classAd = `
       universe = ${universe}
       executable = ${executable}
-      arguments = ${argumentsStr}
-      input = ${input}
+      log = ${log}
       output = ${output}
       error = ${error}
-      log = ${log}
-      should_transfer_files = ${shouldTransferFiles ? "YES" : "NO"}
-      transfer_input_files = ${fileNames}
-      when_to_transfer_output = ${whenToTransferOutput}
+    `;
 
-      request_cpus = ${cpus}
-      request_memory = ${memory}
-      request_disk = ${disk}
-      requirements = (OpSys == "${osRequirement}")
+    if (jobType === "args" || jobType === "advanced") {
+      classAd += `\narguments = ${argumentsStr}`;
+    }
 
-      queue ${queueCount}
-    `.trim();
+    if (jobType === "files" || jobType === "advanced") {
+      const fileNames = inputFiles.map((file) => file.name).join(", ");
+      classAd += `\ninput = ${input}`;
+      classAd += `\ntransfer_input_files = ${fileNames}`;
+    }
+
+    if (jobType === "advanced") {
+      classAd += `\nrequest_cpus = ${cpus}`;
+      classAd += `\nrequest_memory = ${memory}`;
+      classAd += `\nrequest_disk = ${disk}`;
+      classAd += `\nrequirements = (OpSys == "${osRequirement}")`;
+    }
+
+    classAd += `\nshould_transfer_files = ${shouldTransferFiles ? "YES" : "NO"}`;
+    classAd += `\nwhen_to_transfer_output = ${whenToTransferOutput}`;
+    classAd += `\nqueue ${queueCount}`;
+
 
     console.log("generated classAd:\n", classAd);
   };
@@ -95,55 +106,64 @@ function NewJob() {
             direction={"row"}
             sx={{ alignItems: "stretch", justifyContent: "space-around" }}
           >
-            {/** load files */}
-            <Grid item size={{ xs: 12, md: 2.5 }}>
-              <Typography variant="h6"> Archivos </Typography>
-              <Button
-                component="label"
-                variant="outlined"
-                startIcon={<UploadIcon />}
-                sx={{ mt: 1 }}
-              >
-                Seleccionar Archivos
-                <input
-                  hidden
-                  multiple
-                  type="file"
-                  onChange={handleFileChange}
-                />
-              </Button>
-              <Box sx={{ mt: 1 }}>
-                {inputFiles.length > 0 &&
-                  inputFiles.map((file, i) => (
-                    <Typography key={i} variant="body2">
-                      {file.name}
-                    </Typography>
-                  ))}
-              </Box>
 
-              <FormGroup sx={{ mt: 2 }}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={shouldTransferFiles}
-                      onChange={() => setShouldTransferFiles((prev) => !prev)}
-                    />
-                  }
-                  label="Transferir archivos"
-                />
-              </FormGroup>
+            {/** load files and type of job */}
+            <Grid item size={{ xs: 12, md: 2.5 }}>
+              <Typography variant="h6"> Tipo de Trabajo </Typography>
+
               <FormControl fullWidth size="small" sx={{ mt: 2 }}>
-                <InputLabel> Cuando transferir salida </InputLabel>
+                <InputLabel>Tipo de Trabajo</InputLabel>
                 <Select
-                  value={whenToTransferOutput}
-                  label="Cuando transferir salida"
-                  onChange={(e) => setWhenToTransferOutput(e.target.value)}
+                  value={jobType}
+                  label="Tipo de Trabajo"
+                  onChange={(e) => setJobType(e.target.value)}
                 >
-                  <MenuItem value={"ON_EXIT"}> Al salir </MenuItem>
-                  <MenuItem value={"ON_SUCCESS"}> Al tener éxito </MenuItem>
-                  <MenuItem value={"ON_ERROR"}> Solo en error </MenuItem>
+                  <MenuItem value="script">Script</MenuItem>
+                  <MenuItem value="script-files">Script con Archivos</MenuItem>
+                  <MenuItem value="args">Con Argumentos</MenuItem>
+                  <MenuItem value="files">Con Archivos de Entrada</MenuItem>
+                  <MenuItem value="advanced">Avanzado</MenuItem>
                 </Select>
               </FormControl>
+
+              {(jobType === "files" || jobType === "script" || jobType === "script-files") && (
+                <>
+                <Button
+                  component="label"
+                  variant="outlined"
+                  startIcon={<UploadIcon />}
+                  sx={{ mt: 3 }}
+                >
+                  Seleccionar Archivos
+                  <input
+                    hidden
+                    multiple
+                    type="file"
+                    onChange={handleFileChange}
+                  />
+                </Button>
+                <Box sx={{ mt: 1 }}>
+                  {inputFiles.length > 0 &&
+                    inputFiles.map((file, i) => (
+                      <Typography key={i} variant="body2">
+                        {file.name}
+                      </Typography>
+                    ))}
+                </Box>
+                <FormGroup sx={{ mt: 2 }}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={shouldTransferFiles}
+                        onChange={() => setShouldTransferFiles((prev) => !prev)}
+                      />
+                    }
+                    label="Transferir archivos"
+                  />
+                </FormGroup>
+                </>
+              )}
+
             </Grid>
 
             {/** data about the job*/}
@@ -169,46 +189,32 @@ function NewJob() {
                 value={executable}
                 onChange={(e) => setExecutable(e.target.value)}
               />
-              <TextField
-                label="Argumentos"
-                fullWidth
-                size="small"
-                sx={{ mt: 2 }}
-                value={argumentsStr}
-                onChange={(e) => setArgumentsStr(e.target.value)}
-              />
-              <TextField
-                label="Archivo de entrada"
-                fullWidth
-                size="small"
-                sx={{ mt: 2 }}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-              />
-              <TextField
-                label="Salida"
-                fullWidth
-                size="small"
-                sx={{ mt: 2 }}
-                value={output}
-                onChange={(e) => setOutput(e.target.value)}
-              />
-              <TextField
-                label="Error"
-                fullWidth
-                size="small"
-                sx={{ mt: 2 }}
-                value={error}
-                onChange={(e) => setError(e.target.value)}
-              />
-              <TextField
-                label="Log"
-                fullWidth
-                size="small"
-                sx={{ mt: 2 }}
-                value={log}
-                onChange={(e) => setLog(e.target.value)}
-              />
+
+              {(jobType === "args" || jobType === "advanced" || jobType === "script-files") && (
+                <TextField
+                  label="Argumentos"
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 2 }}
+                  value={argumentsStr}
+                  onChange={(e) => setArgumentsStr(e.target.value)}
+                />
+              )}
+
+              {(jobType === "files" || jobType === "advanced" || jobType === "script-files") && (
+                <>
+                  <TextField
+                    label="Archivo de entrada"
+                    fullWidth
+                    size="small"
+                    sx={{ mt: 2 }}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                  />
+                  {/* se mantiene el cargador de archivos */}
+                </>
+              )}
+
               <TextField
                 label="Instancias a ejecutar"
                 type="number"
@@ -233,7 +239,7 @@ function NewJob() {
                 onChange={(e) => setCpus(e.target.value)}
               />
               <TextField
-                label="Memoria RAM (ej: 1GB)"
+                label="Memoria RAM (ej: 1M)"
                 size="small"
                 fullWidth
                 sx={{ mt: 2 }}
@@ -241,25 +247,14 @@ function NewJob() {
                 onChange={(e) => setMemory(e.target.value)}
               />
               <TextField
-                label="Disco (ej: 1GB)"
+                label="Disco (ej: 1G)"
                 size="small"
                 fullWidth
                 sx={{ mt: 2 }}
                 value={disk}
                 onChange={(e) => setDisk(e.target.value)}
               />
-              <FormControl fullWidth size="small" sx={{ mt: 2 }}>
-                <InputLabel>Sistema Operativo</InputLabel>
-                <Select
-                  value={osRequirement}
-                  label="Sistema Operativo"
-                  onChange={(e) => setOsRequirement(e.target.value)}
-                >
-                  <MenuItem value={"LINUX"}>Linux</MenuItem>
-                  <MenuItem value={"WINDOWS"}>Windows</MenuItem>
-                  <MenuItem value={"MACOS"}>MacOS</MenuItem>
-                </Select>
-              </FormControl>
+              
             </Grid>
           </Grid>
         </Grid>
