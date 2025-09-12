@@ -22,66 +22,65 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import UploadIcon from "@mui/icons-material/Upload";
+import DeleteIcon from "@mui/icons-material/Delete";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+
+
+import ClassAdBuilder from "../utils/classAdBuilder";
 
 function NewJob() {
   // files status
   const [inputFiles, setInputFiles] = useState([]);
-  const [shouldTransferFiles, setShouldTransferFiles] = useState(true);
-  const [whenToTransferOutput, setWhenToTransferOutput] = useState("ON_EXIT");
+
   // job data status
   const [jobType, setJobType] = useState("script");
-  const [universe, setUniverse] = useState("vanilla");
-  const [executable, setExecutable] = useState("");
-  const [argumentsStr, setArgumentsStr] = useState("");
+  const [transferInputFiles, setTransferInputFiles] = useState([]);
   const [input, setInput] = useState("");
-  const [output, setOutput] = useState("");
-  const [error, setError] = useState("");
-  const [log, setLog] = useState("");
-  const [queueCount, setQueueCount] = useState(1);
-  // job requeriments status
-  const [cpus, setCpus] = useState(1);
-  const [memory, setMemory] = useState("512M");
-  const [disk, setDisk] = useState("1G");
-  const [osRequirement, setOsRequirement] = useState("LINUX");
 
-  const handleFileChange = (e) => {
-    setInputFiles(Array.from(e.target.files));
+  // fields to construct the new ClassAd
+  const [formData, setFormData] = useState({})
+
+  const handleFormChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleNewJob = async () => {
-    const fileNames = inputFiles.map((file) => file.name).join(", ");
+  const handleSelectFile = (e) => {
+    const newFiles = Array.from(e.target.files);
+    console.log("Archivos seleccionados:", newFiles);
 
-    let classAd = `
-      universe = ${universe}
-      executable = ${executable}
-      log = ${log}
-      output = ${output}
-      error = ${error}
-    `;
+    // Evitar duplicados usando nombres de archivo
+    const allFiles = [...inputFiles, ...newFiles];
+    const uniqueFiles = Array.from(new Set(allFiles.map(f => f.name)))
+      .map(name => allFiles.find(f => f.name === name));
 
-    if (jobType === "args" || jobType === "advanced") {
-      classAd += `\narguments = ${argumentsStr}`;
-    }
+    // Actualiza estado de archivos
+    setInputFiles(uniqueFiles);
 
-    if (jobType === "files" || jobType === "advanced") {
-      const fileNames = inputFiles.map((file) => file.name).join(", ");
-      classAd += `\ninput = ${input}`;
-      classAd += `\ntransfer_input_files = ${fileNames}`;
-    }
+    // Construye el string con nombres separados por coma
+    const fileNames = uniqueFiles.map((file) => file.name).join(", ");
 
-    if (jobType === "advanced") {
-      classAd += `\nrequest_cpus = ${cpus}`;
-      classAd += `\nrequest_memory = ${memory}`;
-      classAd += `\nrequest_disk = ${disk}`;
-      classAd += `\nrequirements = (OpSys == "${osRequirement}")`;
-    }
+    // Actualiza formData
+    setFormData((prev) => ({
+      ...prev,
+      transfer_input_files: fileNames,
+    }));
+  };
 
-    classAd += `\nshould_transfer_files = ${shouldTransferFiles ? "YES" : "NO"}`;
-    classAd += `\nwhen_to_transfer_output = ${whenToTransferOutput}`;
-    classAd += `\nqueue ${queueCount}`;
+  const handleRemoveFile = (fileNameToRemove) => {
+    const updatedFiles = inputFiles.filter((file) => file.name !== fileNameToRemove);
+    setInputFiles(updatedFiles);
+
+    const updatedFileNames = updatedFiles.map((file) => file.name).join(", ");
+
+    setFormData((prev) => ({
+      ...prev,
+      transfer_input_files: updatedFileNames,
+    }));
+  };
 
 
-    console.log("generated classAd:\n", classAd);
+  const handleSubmitNewJob = async () => {
+    console.log("formData:\n", formData);
   };
 
   return (
@@ -118,49 +117,61 @@ function NewJob() {
                   label="Tipo de Trabajo"
                   onChange={(e) => setJobType(e.target.value)}
                 >
-                  <MenuItem value="script">Script</MenuItem>
+                  <MenuItem value="script">Archivo</MenuItem>
+                  <MenuItem value="script-args">Archivo con Argumentos</MenuItem>
                   <MenuItem value="script-files">Script con Archivos</MenuItem>
-                  <MenuItem value="args">Con Argumentos</MenuItem>
                   <MenuItem value="files">Con Archivos de Entrada</MenuItem>
                   <MenuItem value="advanced">Avanzado</MenuItem>
                 </Select>
               </FormControl>
 
-              {(jobType === "files" || jobType === "script" || jobType === "script-files") && (
+              {(jobType === "files" || jobType === "script" || jobType === "script-args" || jobType === "script-files") && (
                 <>
-                <Button
-                  component="label"
-                  variant="outlined"
-                  startIcon={<UploadIcon />}
-                  sx={{ mt: 3 }}
-                >
-                  Seleccionar Archivos
-                  <input
-                    hidden
-                    multiple
-                    type="file"
-                    onChange={handleFileChange}
-                  />
-                </Button>
-                <Box sx={{ mt: 1 }}>
-                  {inputFiles.length > 0 &&
-                    inputFiles.map((file, i) => (
-                      <Typography key={i} variant="body2">
-                        {file.name}
-                      </Typography>
-                    ))}
-                </Box>
-                <FormGroup sx={{ mt: 2 }}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={shouldTransferFiles}
-                        onChange={() => setShouldTransferFiles((prev) => !prev)}
+                  <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+                    <Button
+                      component="label"
+                      variant="outlined"
+                      startIcon={<UploadIcon />}
+                      sx={{ mt: 3 }}
+                    >
+                      Subir Archivo
+                      <input
+                        hidden
+                        multiple
+                        type="file"
+                        onChange={handleSelectFile}
                       />
-                    }
-                    label="Transferir archivos"
-                  />
-                </FormGroup>
+                    </Button>
+                  </Box>
+                  <Box sx={{ mt: 2 }}>
+                    {inputFiles.length > 0 &&
+                      inputFiles.map((file, i) => (
+                        <Box
+                          key={i}
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            border: "1px solid #ccc",
+                            borderRadius: 1,
+                            padding: "4px 8px",
+                            mb: 1,
+                          }}
+                        >
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <InsertDriveFileIcon fontSize="small" />
+                            <Typography variant="body2">{file.name}</Typography>
+                          </Box>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleRemoveFile(file.name)}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      ))}
+                  </Box>
                 </>
               )}
 
@@ -169,90 +180,99 @@ function NewJob() {
             {/** data about the job*/}
             <Grid item size={{ xs: 12, md: 4 }}>
               <Typography variant="h6"> Trabajo </Typography>
-              <FormControl fullWidth size="small" sx={{ mt: 2 }}>
+              <FormControl fullWidth size="small" sx={{ mt: 2 }}>                                         {/** UNIVERSE */}
                 <InputLabel>Universo</InputLabel>
                 <Select
-                  value={universe}
+                  value={formData.universe || ""}
                   label="Universo"
-                  onChange={(e) => setUniverse(e.target.value)}
+                  onChange={(e) => handleFormChange("universe", e.target.value)}
                 >
                   <MenuItem value={"vanilla"}>Vanilla</MenuItem>
                   <MenuItem value={"docker"}>Docker</MenuItem>
                   <MenuItem value={"scheduler"}>Scheduler</MenuItem>
                 </Select>
               </FormControl>
-              <TextField
+
+              <TextField                                                                                 // EXECUTABLE
                 label="Ejecutable"
                 fullWidth
                 size="small"
                 sx={{ mt: 2 }}
-                value={executable}
-                onChange={(e) => setExecutable(e.target.value)}
+                value={formData.executable || ""}
+                onChange={(e) => handleFormChange("executable", e.target.value)}
               />
 
-              {(jobType === "args" || jobType === "advanced" || jobType === "script-files") && (
+              {(jobType === "advanced" || jobType === "script-args") && (                                 // ARGUMENTS
                 <TextField
                   label="Argumentos"
                   fullWidth
                   size="small"
                   sx={{ mt: 2 }}
-                  value={argumentsStr}
-                  onChange={(e) => setArgumentsStr(e.target.value)}
+                  value={formData.arguments || ""}
+                  onChange={(e) => handleFormChange("arguments", e.target.value)}
                 />
               )}
 
-              {(jobType === "files" || jobType === "advanced" || jobType === "script-files") && (
+              <TextField                                                                                 // TRANSFER_INPUT_FILES
+                label="Archivos a transfeir"
+                fullWidth
+                size="small"
+                sx={{ mt: 2 }}
+                value={formData.transfer_input_files || ""}
+                disabled={true}
+              />
+
+              {(jobType === "files" || jobType === "advanced" || jobType === "script-files") && (         // INPUT
                 <>
                   <TextField
                     label="Archivo de entrada"
                     fullWidth
                     size="small"
                     sx={{ mt: 2 }}
-                    value={input}
+                    value={"ninguno por ahora"}
                     onChange={(e) => setInput(e.target.value)}
                   />
-                  {/* se mantiene el cargador de archivos */}
                 </>
               )}
 
-              <TextField
+              <TextField                                                                                   // QUEUE
                 label="Instancias a ejecutar"
                 type="number"
                 fullWidth
                 size="small"
                 sx={{ mt: 2 }}
-                value={queueCount}
-                onChange={(e) => setQueueCount(e.target.value)}
+                value={formData.queue || 1}
+                onChange={(e) => handleFormChange("queue", e.target.value)}
               />
             </Grid>
 
             {/** job's requirements (computing power) */}
-            <Grid item size={{ xs: 12, md: 4 }}>
-              <Typography variant="h6"> Requerimietnos </Typography>
+            <Grid item size={{ xs: 12, md: 4 }}>                                                           {/** CPU */}
+              <Typography variant="h6"> Requerimientos </Typography>
               <TextField
                 label="CPUs"
                 type="number"
                 size="small"
                 fullWidth
                 sx={{ mt: 2 }}
-                value={cpus}
-                onChange={(e) => setCpus(e.target.value)}
+                value={formData.cpu || ""}
+                onChange={(e) => handleFormChange("cpu", e.target.value)}
               />
-              <TextField
+              <TextField                                                                                   // RAM
                 label="Memoria RAM (ej: 1M)"
                 size="small"
                 fullWidth
                 sx={{ mt: 2 }}
-                value={memory}
-                onChange={(e) => setMemory(e.target.value)}
+                value={formData.memory || ""}
+                onChange={(e) => handleFormChange("memory", e.target.value)}
               />
-              <TextField
+              <TextField                                                                                   // DISK
                 label="Disco (ej: 1G)"
                 size="small"
                 fullWidth
                 sx={{ mt: 2 }}
-                value={disk}
-                onChange={(e) => setDisk(e.target.value)}
+                value={formData.disk || ""}
+                onChange={(e) => handleFormChange("disk", e.target.value)}
               />
               
             </Grid>
@@ -264,8 +284,8 @@ function NewJob() {
           <Button
             variant="contained"
             color="black"
-            onClick={handleNewJob}
-            disabled="true"
+            onClick={handleSubmitNewJob}
+            
           >
             Ejecutar Trabajo
           </Button>
