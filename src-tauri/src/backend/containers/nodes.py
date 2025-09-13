@@ -51,7 +51,7 @@ def run_single_node(config: ContainerConfig) -> str:
         if config.role == "sub":
             
             HOME_DIR = os.path.expanduser("~")
-            jobs_directory_path = os.path.join(HOME_DIR, "sideger_jobs")
+            jobs_directory_path = os.path.join(HOME_DIR, "sideger-jobs")
             command = command.replace(f"{config.image}", f"-v {jobs_directory_path}:/sideger-jobs {config.image}")
             print(command)
 

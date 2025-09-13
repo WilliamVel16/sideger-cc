@@ -140,3 +140,22 @@ export const shutdownCluster = async (clusterNodesConfig) => {
   }
   return response.json();
 };
+
+// -------------------------- jobs -----------------------------
+
+// to submit a new job to the cluster [NewJob.jsx]
+export const submitJob = async (formData) => {
+  const response = await fetch(`${BACKEND_URL}/jobs/submit`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(formData)
+  });
+  console.log(response)
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Submit new job failed: ${err}`);
+  }
+  return response.json();
+};

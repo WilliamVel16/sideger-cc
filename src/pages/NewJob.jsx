@@ -24,9 +24,7 @@ import { useState } from "react";
 import UploadIcon from "@mui/icons-material/Upload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-
-
-import ClassAdBuilder from "../utils/classAdBuilder";
+import { submitJob } from "../utils/tauriApi";
 
 function NewJob() {
   // files status
@@ -81,6 +79,13 @@ function NewJob() {
 
   const handleSubmitNewJob = async () => {
     console.log("formData:\n", formData);
+    try {
+      const response = await submitJob(formData);
+      console.log(response);
+    } catch (err) {
+      console.log("Error trying submit the new job:", err);
+    }
+
   };
 
   return (
@@ -241,7 +246,7 @@ function NewJob() {
                 fullWidth
                 size="small"
                 sx={{ mt: 2 }}
-                value={formData.queue || 1}
+                value={formData.queue || ""}
                 onChange={(e) => handleFormChange("queue", e.target.value)}
               />
             </Grid>
@@ -255,24 +260,24 @@ function NewJob() {
                 size="small"
                 fullWidth
                 sx={{ mt: 2 }}
-                value={formData.cpu || ""}
-                onChange={(e) => handleFormChange("cpu", e.target.value)}
+                value={formData.request_cpus || ""}
+                onChange={(e) => handleFormChange("request_cpus", e.target.value)}
               />
               <TextField                                                                                   // RAM
                 label="Memoria RAM (ej: 1M)"
                 size="small"
                 fullWidth
                 sx={{ mt: 2 }}
-                value={formData.memory || ""}
-                onChange={(e) => handleFormChange("memory", e.target.value)}
+                value={formData.request_memory || ""}
+                onChange={(e) => handleFormChange("request_memory", e.target.value)}
               />
               <TextField                                                                                   // DISK
                 label="Disco (ej: 1G)"
                 size="small"
                 fullWidth
                 sx={{ mt: 2 }}
-                value={formData.disk || ""}
-                onChange={(e) => handleFormChange("disk", e.target.value)}
+                value={formData.request_disk || ""}
+                onChange={(e) => handleFormChange("request_disk", e.target.value)}
               />
               
             </Grid>
