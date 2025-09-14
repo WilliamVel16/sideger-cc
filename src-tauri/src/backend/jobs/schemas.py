@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 class JobData(BaseModel):
     executable: str
-    log: Optional[str] = None
+    log: Optional[str] = "/logs"
     output: Optional[str] = None
     error: Optional[str] = None
     queue: Optional[int] 
@@ -22,3 +22,8 @@ class JobData(BaseModel):
     max_retries: Optional[int] = None
     periodic_remove: Optional[str] = None
     universe: Optional[str] = None
+
+
+class JobSubmitRequest(BaseModel):
+    job_data: JobData
+    submit_role_container_name: str

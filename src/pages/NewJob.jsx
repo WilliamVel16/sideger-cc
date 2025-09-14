@@ -1,41 +1,28 @@
 import {
   Box,
   Grid,
-  Paper,
   Typography,
-  List,
-  ListItem,
-  ListItemIcon,
   Container,
-  ListItemText,
   Select,
   MenuItem,
   FormControl,
-  FormGroup,
   TextField,
-  FormControlLabel,
   InputLabel,
   IconButton,
   Button,
-  Switch,
-  Tooltip,
 } from "@mui/material";
 import { useState } from "react";
 import UploadIcon from "@mui/icons-material/Upload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import { useAppContext } from "../context/AppContext";
 import { submitJob } from "../utils/tauriApi";
 
 function NewJob() {
-  // files status
+  const { clusterNodesConfig } = useAppContext();
   const [inputFiles, setInputFiles] = useState([]);
-
-  // job data status
   const [jobType, setJobType] = useState("script");
-  const [transferInputFiles, setTransferInputFiles] = useState([]);
   const [input, setInput] = useState("");
-
-  // fields to construct the new ClassAd
   const [formData, setFormData] = useState({})
 
   const handleFormChange = (field, value) => {
@@ -46,18 +33,15 @@ function NewJob() {
     const newFiles = Array.from(e.target.files);
     console.log("Archivos seleccionados:", newFiles);
 
-    // Evitar duplicados usando nombres de archivo
     const allFiles = [...inputFiles, ...newFiles];
     const uniqueFiles = Array.from(new Set(allFiles.map(f => f.name)))
       .map(name => allFiles.find(f => f.name === name));
 
-    // Actualiza estado de archivos
     setInputFiles(uniqueFiles);
 
-    // Construye el string con nombres separados por coma
     const fileNames = uniqueFiles.map((file) => file.name).join(", ");
 
-    // Actualiza formData
+    // updates formData
     setFormData((prev) => ({
       ...prev,
       transfer_input_files: fileNames,
@@ -79,14 +63,23 @@ function NewJob() {
 
   const handleSubmitNewJob = async () => {
     console.log("formData:\n", formData);
+
+    // find the node with submit role
+    const submitContainer = clusterNodesConfig
+      .filter(node => node.container_name.startsWith("sub_"))
+      .map(node => node.container_name);
+    console.log(submitContainer[0]);
+
     try {
-      const response = await submitJob(formData);
+      const response = await submitJob(formData, submitContainer[0]);
       console.log(response);
     } catch (err) {
       console.log("Error trying submit the new job:", err);
     }
 
   };
+
+
 
   return (
     <Container maxWidth="xl" sx={{ mt: 2, mx: "auto" }}>
