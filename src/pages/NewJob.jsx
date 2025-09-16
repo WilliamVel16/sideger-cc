@@ -191,6 +191,15 @@ function NewJob() {
                 </Select>
               </FormControl>
 
+              <TextField                                                                                 // BATCH_NAME
+                label="Nombre de la ejecución"
+                fullWidth
+                size="small"
+                sx={{ mt: 2 }}
+                value={formData.batch_name || ""}
+                onChange={(e) => handleFormChange("batch_name", e.target.value)}
+              />
+              
               <TextField                                                                                 // EXECUTABLE
                 label="Ejecutable"
                 fullWidth
@@ -199,6 +208,28 @@ function NewJob() {
                 value={formData.executable || ""}
                 onChange={(e) => handleFormChange("executable", e.target.value)}
               />
+
+              <TextField                                                                                 // SHELL
+                label="Comando a ejecutar"
+                fullWidth
+                size="small"
+                sx={{ mt: 2 }}
+                value={formData.shell || ""}
+                onChange={(e) => handleFormChange("shell", e.target.value)}
+              />
+
+              {(jobType === "files" || jobType === "advanced" || jobType === "script-files") && (         // INPUT
+                <>
+                  <TextField
+                    label="Archivo de entrada"
+                    fullWidth
+                    size="small"
+                    sx={{ mt: 2 }}
+                    value={"ninguno por ahora"}
+                    onChange={(e) => setInput(e.target.value)}
+                  />
+                </>
+              )}
 
               {(jobType === "advanced" || jobType === "script-args") && (                                 // ARGUMENTS
                 <TextField
@@ -220,18 +251,7 @@ function NewJob() {
                 disabled={true}
               />
 
-              {(jobType === "files" || jobType === "advanced" || jobType === "script-files") && (         // INPUT
-                <>
-                  <TextField
-                    label="Archivo de entrada"
-                    fullWidth
-                    size="small"
-                    sx={{ mt: 2 }}
-                    value={"ninguno por ahora"}
-                    onChange={(e) => setInput(e.target.value)}
-                  />
-                </>
-              )}
+              {/** SHOULD_TRANSFER_FILES will be managed from backend*/} 
 
               <TextField                                                                                   // QUEUE
                 label="Instancias a ejecutar"
@@ -243,6 +263,10 @@ function NewJob() {
                 onChange={(e) => handleFormChange("queue", e.target.value)}
               />
             </Grid>
+
+            {/** TRANSFER_OUTPUT_FILES run jobs and then identify if it's necesary */}
+
+            {/** WHEN_TO_TRANSFER_FILES study streaming for the "manage jobs" page */}
 
             {/** job's requirements (computing power) */}
             <Grid item size={{ xs: 12, md: 4 }}>                                                           {/** CPU */}
@@ -272,6 +296,24 @@ function NewJob() {
                 value={formData.request_disk || ""}
                 onChange={(e) => handleFormChange("request_disk", e.target.value)}
               />
+              <TextField                                                                                   // GPUs
+                label="GPUs"
+                size="small"
+                fullWidth
+                sx={{ mt: 2 }}
+                value={formData.request_gpus || ""}
+                onChange={(e) => handleFormChange("request_gpus", e.target.value)}
+              />
+
+              {/** OUTPUT will be managed from backend*/} 
+              
+              {/** ERROR will be managed from backend*/} 
+
+              {/** LOG will be managed from backend*/} 
+
+              {/** MAX_RETRIES will be managed from backend*/}
+
+              {/** PERIODIC_REMOVE will be managed from backend*/}
               
             </Grid>
           </Grid>
