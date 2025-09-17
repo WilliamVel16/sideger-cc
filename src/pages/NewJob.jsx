@@ -186,8 +186,8 @@ function NewJob() {
                   onChange={(e) => handleFormChange("universe", e.target.value)}
                 >
                   <MenuItem value={"vanilla"}>Vanilla</MenuItem>
-                  <MenuItem value={"docker"}>Docker</MenuItem>
-                  <MenuItem value={"scheduler"}>Scheduler</MenuItem>
+                  <MenuItem value={"java"}>Java</MenuItem>
+                  <MenuItem value={"parallel"}>Parallel</MenuItem>
                 </Select>
               </FormControl>
 
@@ -209,14 +209,17 @@ function NewJob() {
                 onChange={(e) => handleFormChange("executable", e.target.value)}
               />
 
-              <TextField                                                                                 // SHELL
-                label="Comando a ejecutar"
-                fullWidth
-                size="small"
-                sx={{ mt: 2 }}
-                value={formData.shell || ""}
-                onChange={(e) => handleFormChange("shell", e.target.value)}
-              />
+              {(jobType === "advanced") && (
+                <TextField                                                                                 // SHELL (no implemented)
+                  label="Comando a ejecutar"
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 2 }}
+                  value={formData.shell || ""}
+                  onChange={(e) => handleFormChange("shell", e.target.value)}
+                />
+              )}
+              
 
               {(jobType === "files" || jobType === "advanced" || jobType === "script-files") && (         // INPUT
                 <>
@@ -242,16 +245,49 @@ function NewJob() {
                 />
               )}
 
-              <TextField                                                                                 // TRANSFER_INPUT_FILES
-                label="Archivos a transfeir"
-                fullWidth
-                size="small"
-                sx={{ mt: 2 }}
-                value={formData.transfer_input_files || ""}
-                disabled={true}
-              />
+              {(jobType === "script-args") && (
+                <TextField                                                                                 // TRANSFER_INPUT_FILES
+                  label="Archivos a transfeir"
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 2 }}
+                  value={formData.transfer_input_files || ""}
+                  disabled={true}
+                />
+              )}
 
-              {/** SHOULD_TRANSFER_FILES will be managed from backend*/} 
+              {(jobType === "advanced") && (                                                               // SHOULD_TRANSFER_FILES (advanced)         
+                <TextField                                                                                 
+                  label="¿Se deben transferir archivos?" 
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 2 }}
+                  value={formData.should_transfer_files || ""}
+                  onChange={(e) => handleFormChange("should_transfer_files", e.target.value)}
+                />
+              )}
+
+              {(jobType === "advanced") && (                                                                // TRANSFER_OUTPUT_FILES (advanced)         
+                <TextField                                                                                 
+                  label="Archivos de subdirectorios (traer)" 
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 2 }}
+                  value={formData.transfer_output_files || ""}
+                  onChange={(e) => handleFormChange("transfer_output_files", e.target.value)}
+                />
+              )}
+
+              {(jobType === "advanced") && (                                                                // WHEN_TO_TRANSFER_FILES (advanced)         
+                <TextField                                                                                 
+                  label="Cuando transferir los archivos" 
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 2 }}
+                  value={formData.when_to_transfer_files || ""}
+                  onChange={(e) => handleFormChange("when_to_transfer_files", e.target.value)}
+                />
+              )}
 
               <TextField                                                                                   // QUEUE
                 label="Instancias a ejecutar"
@@ -263,10 +299,6 @@ function NewJob() {
                 onChange={(e) => handleFormChange("queue", e.target.value)}
               />
             </Grid>
-
-            {/** TRANSFER_OUTPUT_FILES run jobs and then identify if it's necesary */}
-
-            {/** WHEN_TO_TRANSFER_FILES study streaming for the "manage jobs" page */}
 
             {/** job's requirements (computing power) */}
             <Grid item size={{ xs: 12, md: 4 }}>                                                           {/** CPU */}
@@ -280,6 +312,7 @@ function NewJob() {
                 value={formData.request_cpus || ""}
                 onChange={(e) => handleFormChange("request_cpus", e.target.value)}
               />
+
               <TextField                                                                                   // RAM
                 label="Memoria RAM (ej: 1M)"
                 size="small"
@@ -288,6 +321,7 @@ function NewJob() {
                 value={formData.request_memory || ""}
                 onChange={(e) => handleFormChange("request_memory", e.target.value)}
               />
+
               <TextField                                                                                   // DISK
                 label="Disco (ej: 1G)"
                 size="small"
@@ -296,6 +330,7 @@ function NewJob() {
                 value={formData.request_disk || ""}
                 onChange={(e) => handleFormChange("request_disk", e.target.value)}
               />
+
               <TextField                                                                                   // GPUs
                 label="GPUs"
                 size="small"
@@ -305,16 +340,61 @@ function NewJob() {
                 onChange={(e) => handleFormChange("request_gpus", e.target.value)}
               />
 
-              {/** OUTPUT will be managed from backend*/} 
-              
-              {/** ERROR will be managed from backend*/} 
+              {(jobType === "advanced") && (
+                <TextField                                                                                 // OUTPUT (advanced)
+                  label="Directorio para la salida"
+                  size="small"
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  value={formData.output || ""}
+                  onChange={(e) => handleFormChange("output", e.target.value)}
+                />
+              )}
 
-              {/** LOG will be managed from backend*/} 
+              {(jobType === "advanced") && (
+                <TextField                                                                                 // ERROR (advanced)
+                  label="Directorio para el error"
+                  size="small"
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  value={formData.error || ""}
+                  onChange={(e) => handleFormChange("error", e.target.value)}
+                />
+              )}
 
-              {/** MAX_RETRIES will be managed from backend*/}
+              {(jobType === "advanced") && (
+                <TextField                                                                                 // LOG (advanced)
+                  label="Directorio para los logs"
+                  size="small"
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  value={formData.log || ""}
+                  onChange={(e) => handleFormChange("log", e.target.value)}
+                />
+              )}
 
-              {/** PERIODIC_REMOVE will be managed from backend*/}
-              
+              {(jobType === "advanced") && (
+                <TextField                                                                                 // MAX_RETRIES (advanced) no implemented
+                  label="Cuantas veces reintentar trabajo"
+                  size="small"
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  value={formData.max_retries || ""}
+                  onChange={(e) => handleFormChange("max_retries", e.target.value)}
+                />
+              )}
+
+              {/**  will be managed from backend*/}
+              {(jobType === "advanced") && (
+                <TextField                                                                                 // PERIODIC_REMOVE (advanced)
+                  label="Eliminar trabajos retenidos (en segundos)"
+                  size="small"
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  value={formData.max_retries || ""}
+                  onChange={(e) => handleFormChange("max_retries", e.target.value)}
+                />
+              )}
             </Grid>
           </Grid>
         </Grid>
