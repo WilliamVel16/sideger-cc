@@ -32,6 +32,9 @@ def show_resources_specs(resources_ips: List[str], resources_user: str) -> Union
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Failed to execute show other specs script in {ip}: {e}")
 
+        if result.returncode == 99: #resource no available for the cluster
+            continue
+
         if result.returncode != 0:
             raise HTTPException(status_code=500, detail=f"SSH to {ip} failed: {result.stderr.decode('utf-8')}")
 

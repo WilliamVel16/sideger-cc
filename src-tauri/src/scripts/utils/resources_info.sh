@@ -1,5 +1,13 @@
 #!/bin/bash
 
+if command -v docker &>/dev/null; then
+  SWARM_STATE=$(docker info --format '{{.Swarm.LocalNodeState}}' 2>/dev/null)
+  if [ "$SWARM_STATE" = "active" ]; then
+    exit 99
+  fi
+
+fi
+
 HOSTNAME=$(hostname)
 IP=$(hostname -I | awk '{print $1}')
 OS=$(grep PRETTY_NAME /etc/os-release | cut -d= -f2 | tr -d '"')

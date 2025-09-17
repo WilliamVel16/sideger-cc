@@ -32,7 +32,7 @@ function Topbar() {
   };
 
   const handleShutdownCluster = async () => {
-    // send as arguments: nodes, onetName, and user
+    // sends as arguments: nodes, onetName, and user
     try {
       const response = await shutdownCluster(clusterNodesConfig);
       console.log(response);

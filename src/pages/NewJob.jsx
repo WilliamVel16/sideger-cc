@@ -1,77 +1,85 @@
 import {
   Box,
   Grid,
-  Paper,
   Typography,
-  List,
-  ListItem,
-  ListItemIcon,
   Container,
-  ListItemText,
   Select,
   MenuItem,
   FormControl,
-  FormGroup,
   TextField,
-  FormControlLabel,
   InputLabel,
   IconButton,
   Button,
-  Switch,
-  Tooltip,
 } from "@mui/material";
 import { useState } from "react";
 import UploadIcon from "@mui/icons-material/Upload";
+import DeleteIcon from "@mui/icons-material/Delete";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import { useAppContext } from "../context/AppContext";
+import { submitJob } from "../utils/tauriApi";
 
 function NewJob() {
-  // files status
+  const { clusterNodesConfig } = useAppContext();
   const [inputFiles, setInputFiles] = useState([]);
-  const [shouldTransferFiles, setShouldTransferFiles] = useState(true);
-  const [whenToTransferOutput, setWhenToTransferOutput] = useState("ON_EXIT");
-  // job data status
-  const [universe, setUniverse] = useState("vanilla");
-  const [executable, setExecutable] = useState("");
-  const [argumentsStr, setArgumentsStr] = useState("");
+  const [jobType, setJobType] = useState("script");
   const [input, setInput] = useState("");
-  const [output, setOutput] = useState("");
-  const [error, setError] = useState("");
-  const [log, setLog] = useState("");
-  const [queueCount, setQueueCount] = useState(1);
-  // job requeriments status
-  const [cpus, setCpus] = useState(1);
-  const [memory, setMemory] = useState("512MB");
-  const [disk, setDisk] = useState("1GB");
-  const [osRequirement, setOsRequirement] = useState("LINUX");
+  const [formData, setFormData] = useState({})
 
-  const handleFileChange = (e) => {
-    setInputFiles(Array.from(e.target.files));
+  const handleFormChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleNewJob = async () => {
-    const fileNames = inputFiles.map((file) => file.name).join(", ");
+  const handleSelectFile = (e) => {
+    const newFiles = Array.from(e.target.files);
+    console.log("Archivos seleccionados:", newFiles);
 
-    const classAd = `
-      universe = ${universe}
-      executable = ${executable}
-      arguments = ${argumentsStr}
-      input = ${input}
-      output = ${output}
-      error = ${error}
-      log = ${log}
-      should_transfer_files = ${shouldTransferFiles ? "YES" : "NO"}
-      transfer_input_files = ${fileNames}
-      when_to_transfer_output = ${whenToTransferOutput}
+    const allFiles = [...inputFiles, ...newFiles];
+    const uniqueFiles = Array.from(new Set(allFiles.map(f => f.name)))
+      .map(name => allFiles.find(f => f.name === name));
 
-      request_cpus = ${cpus}
-      request_memory = ${memory}
-      request_disk = ${disk}
-      requirements = (OpSys == "${osRequirement}")
+    setInputFiles(uniqueFiles);
 
-      queue ${queueCount}
-    `.trim();
+    const fileNames = uniqueFiles.map((file) => file.name).join(", ");
 
-    console.log("generated classAd:\n", classAd);
+    // updates formData
+    setFormData((prev) => ({
+      ...prev,
+      transfer_input_files: fileNames,
+    }));
   };
+
+  const handleRemoveFile = (fileNameToRemove) => {
+    const updatedFiles = inputFiles.filter((file) => file.name !== fileNameToRemove);
+    setInputFiles(updatedFiles);
+
+    const updatedFileNames = updatedFiles.map((file) => file.name).join(", ");
+
+    setFormData((prev) => ({
+      ...prev,
+      transfer_input_files: updatedFileNames,
+    }));
+  };
+
+
+  const handleSubmitNewJob = async () => {
+    console.log("formData:\n", formData);
+
+    // find the node with submit role
+    const submitContainer = clusterNodesConfig
+      .filter(node => node.container_name.startsWith("sub_"))
+      .map(node => node.container_name);
+    console.log(submitContainer[0]);
+
+    try {
+      const response = await submitJob(formData, submitContainer[0]);
+      console.log(response);
+    } catch (err) {
+      console.log("Error trying submit the new job:", err);
+    }
+
+  };
+
+
 
   return (
     <Container maxWidth="xl" sx={{ mt: 2, mx: "auto" }}>
@@ -95,171 +103,298 @@ function NewJob() {
             direction={"row"}
             sx={{ alignItems: "stretch", justifyContent: "space-around" }}
           >
-            {/** load files */}
-            <Grid item size={{ xs: 12, md: 2.5 }}>
-              <Typography variant="h6"> Archivos </Typography>
-              <Button
-                component="label"
-                variant="outlined"
-                startIcon={<UploadIcon />}
-                sx={{ mt: 1 }}
-              >
-                Seleccionar Archivos
-                <input
-                  hidden
-                  multiple
-                  type="file"
-                  onChange={handleFileChange}
-                />
-              </Button>
-              <Box sx={{ mt: 1 }}>
-                {inputFiles.length > 0 &&
-                  inputFiles.map((file, i) => (
-                    <Typography key={i} variant="body2">
-                      {file.name}
-                    </Typography>
-                  ))}
-              </Box>
 
-              <FormGroup sx={{ mt: 2 }}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={shouldTransferFiles}
-                      onChange={() => setShouldTransferFiles((prev) => !prev)}
-                    />
-                  }
-                  label="Transferir archivos"
-                />
-              </FormGroup>
+            {/** load files and type of job */}
+            <Grid item size={{ xs: 12, md: 2.5 }}>
+              <Typography variant="h6"> Tipo de Trabajo </Typography>
+
               <FormControl fullWidth size="small" sx={{ mt: 2 }}>
-                <InputLabel> Cuando transferir salida </InputLabel>
+                <InputLabel>Tipo de Trabajo</InputLabel>
                 <Select
-                  value={whenToTransferOutput}
-                  label="Cuando transferir salida"
-                  onChange={(e) => setWhenToTransferOutput(e.target.value)}
+                  value={jobType}
+                  label="Tipo de Trabajo"
+                  onChange={(e) => setJobType(e.target.value)}
                 >
-                  <MenuItem value={"ON_EXIT"}> Al salir </MenuItem>
-                  <MenuItem value={"ON_SUCCESS"}> Al tener éxito </MenuItem>
-                  <MenuItem value={"ON_ERROR"}> Solo en error </MenuItem>
+                  <MenuItem value="script">Archivo</MenuItem>
+                  <MenuItem value="script-args">Archivo con Argumentos</MenuItem>
+                  <MenuItem value="script-files">Script con Archivos</MenuItem>
+                  <MenuItem value="files">Con Archivos de Entrada</MenuItem>
+                  <MenuItem value="advanced">Avanzado</MenuItem>
                 </Select>
               </FormControl>
+
+              {(jobType === "files" || jobType === "script" || jobType === "script-args" || jobType === "script-files") && (
+                <>
+                  <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+                    <Button
+                      component="label"
+                      variant="outlined"
+                      startIcon={<UploadIcon />}
+                      sx={{ mt: 3 }}
+                    >
+                      Subir Archivo
+                      <input
+                        hidden
+                        multiple
+                        type="file"
+                        onChange={handleSelectFile}
+                      />
+                    </Button>
+                  </Box>
+                  <Box sx={{ mt: 2 }}>
+                    {inputFiles.length > 0 &&
+                      inputFiles.map((file, i) => (
+                        <Box
+                          key={i}
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            border: "1px solid #ccc",
+                            borderRadius: 1,
+                            padding: "4px 8px",
+                            mb: 1,
+                          }}
+                        >
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <InsertDriveFileIcon fontSize="small" />
+                            <Typography variant="body2">{file.name}</Typography>
+                          </Box>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleRemoveFile(file.name)}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      ))}
+                  </Box>
+                </>
+              )}
+
             </Grid>
 
             {/** data about the job*/}
             <Grid item size={{ xs: 12, md: 4 }}>
               <Typography variant="h6"> Trabajo </Typography>
-              <FormControl fullWidth size="small" sx={{ mt: 2 }}>
+              <FormControl fullWidth size="small" sx={{ mt: 2 }}>                                         {/** UNIVERSE */}
                 <InputLabel>Universo</InputLabel>
                 <Select
-                  value={universe}
+                  value={formData.universe || ""}
                   label="Universo"
-                  onChange={(e) => setUniverse(e.target.value)}
+                  onChange={(e) => handleFormChange("universe", e.target.value)}
                 >
                   <MenuItem value={"vanilla"}>Vanilla</MenuItem>
-                  <MenuItem value={"docker"}>Docker</MenuItem>
-                  <MenuItem value={"scheduler"}>Scheduler</MenuItem>
+                  <MenuItem value={"java"}>Java</MenuItem>
+                  <MenuItem value={"parallel"}>Parallel</MenuItem>
                 </Select>
               </FormControl>
-              <TextField
+
+              <TextField                                                                                 // BATCH_NAME
+                label="Nombre de la ejecución"
+                fullWidth
+                size="small"
+                sx={{ mt: 2 }}
+                value={formData.batch_name || ""}
+                onChange={(e) => handleFormChange("batch_name", e.target.value)}
+              />
+              
+              <TextField                                                                                 // EXECUTABLE
                 label="Ejecutable"
                 fullWidth
                 size="small"
                 sx={{ mt: 2 }}
-                value={executable}
-                onChange={(e) => setExecutable(e.target.value)}
+                value={formData.executable || ""}
+                onChange={(e) => handleFormChange("executable", e.target.value)}
               />
-              <TextField
-                label="Argumentos"
-                fullWidth
-                size="small"
-                sx={{ mt: 2 }}
-                value={argumentsStr}
-                onChange={(e) => setArgumentsStr(e.target.value)}
-              />
-              <TextField
-                label="Archivo de entrada"
-                fullWidth
-                size="small"
-                sx={{ mt: 2 }}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-              />
-              <TextField
-                label="Salida"
-                fullWidth
-                size="small"
-                sx={{ mt: 2 }}
-                value={output}
-                onChange={(e) => setOutput(e.target.value)}
-              />
-              <TextField
-                label="Error"
-                fullWidth
-                size="small"
-                sx={{ mt: 2 }}
-                value={error}
-                onChange={(e) => setError(e.target.value)}
-              />
-              <TextField
-                label="Log"
-                fullWidth
-                size="small"
-                sx={{ mt: 2 }}
-                value={log}
-                onChange={(e) => setLog(e.target.value)}
-              />
-              <TextField
+
+              {(jobType === "advanced") && (
+                <TextField                                                                                 // SHELL (no implemented)
+                  label="Comando a ejecutar"
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 2 }}
+                  value={formData.shell || ""}
+                  onChange={(e) => handleFormChange("shell", e.target.value)}
+                />
+              )}
+              
+
+              {(jobType === "files" || jobType === "advanced" || jobType === "script-files") && (         // INPUT
+                <>
+                  <TextField
+                    label="Archivo de entrada"
+                    fullWidth
+                    size="small"
+                    sx={{ mt: 2 }}
+                    value={"ninguno por ahora"}
+                    onChange={(e) => setInput(e.target.value)}
+                  />
+                </>
+              )}
+
+              {(jobType === "advanced" || jobType === "script-args") && (                                 // ARGUMENTS
+                <TextField
+                  label="Argumentos"
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 2 }}
+                  value={formData.arguments || ""}
+                  onChange={(e) => handleFormChange("arguments", e.target.value)}
+                />
+              )}
+
+              {(jobType === "script-args") && (
+                <TextField                                                                                 // TRANSFER_INPUT_FILES
+                  label="Archivos a transfeir"
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 2 }}
+                  value={formData.transfer_input_files || ""}
+                  disabled={true}
+                />
+              )}
+
+              {(jobType === "advanced") && (                                                               // SHOULD_TRANSFER_FILES (advanced)         
+                <TextField                                                                                 
+                  label="¿Se deben transferir archivos?" 
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 2 }}
+                  value={formData.should_transfer_files || ""}
+                  onChange={(e) => handleFormChange("should_transfer_files", e.target.value)}
+                />
+              )}
+
+              {(jobType === "advanced") && (                                                                // TRANSFER_OUTPUT_FILES (advanced)         
+                <TextField                                                                                 
+                  label="Archivos de subdirectorios (traer)" 
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 2 }}
+                  value={formData.transfer_output_files || ""}
+                  onChange={(e) => handleFormChange("transfer_output_files", e.target.value)}
+                />
+              )}
+
+              {(jobType === "advanced") && (                                                                // WHEN_TO_TRANSFER_FILES (advanced)         
+                <TextField                                                                                 
+                  label="Cuando transferir los archivos" 
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 2 }}
+                  value={formData.when_to_transfer_files || ""}
+                  onChange={(e) => handleFormChange("when_to_transfer_files", e.target.value)}
+                />
+              )}
+
+              <TextField                                                                                   // QUEUE
                 label="Instancias a ejecutar"
                 type="number"
                 fullWidth
                 size="small"
                 sx={{ mt: 2 }}
-                value={queueCount}
-                onChange={(e) => setQueueCount(e.target.value)}
+                value={formData.queue || ""}
+                onChange={(e) => handleFormChange("queue", e.target.value)}
               />
             </Grid>
 
             {/** job's requirements (computing power) */}
-            <Grid item size={{ xs: 12, md: 4 }}>
-              <Typography variant="h6"> Requerimietnos </Typography>
+            <Grid item size={{ xs: 12, md: 4 }}>                                                           {/** CPU */}
+              <Typography variant="h6"> Requerimientos </Typography>
               <TextField
                 label="CPUs"
                 type="number"
                 size="small"
                 fullWidth
                 sx={{ mt: 2 }}
-                value={cpus}
-                onChange={(e) => setCpus(e.target.value)}
+                value={formData.request_cpus || ""}
+                onChange={(e) => handleFormChange("request_cpus", e.target.value)}
               />
-              <TextField
-                label="Memoria RAM (ej: 1GB)"
+
+              <TextField                                                                                   // RAM
+                label="Memoria RAM (ej: 1M)"
                 size="small"
                 fullWidth
                 sx={{ mt: 2 }}
-                value={memory}
-                onChange={(e) => setMemory(e.target.value)}
+                value={formData.request_memory || ""}
+                onChange={(e) => handleFormChange("request_memory", e.target.value)}
               />
-              <TextField
-                label="Disco (ej: 1GB)"
+
+              <TextField                                                                                   // DISK
+                label="Disco (ej: 1G)"
                 size="small"
                 fullWidth
                 sx={{ mt: 2 }}
-                value={disk}
-                onChange={(e) => setDisk(e.target.value)}
+                value={formData.request_disk || ""}
+                onChange={(e) => handleFormChange("request_disk", e.target.value)}
               />
-              <FormControl fullWidth size="small" sx={{ mt: 2 }}>
-                <InputLabel>Sistema Operativo</InputLabel>
-                <Select
-                  value={osRequirement}
-                  label="Sistema Operativo"
-                  onChange={(e) => setOsRequirement(e.target.value)}
-                >
-                  <MenuItem value={"LINUX"}>Linux</MenuItem>
-                  <MenuItem value={"WINDOWS"}>Windows</MenuItem>
-                  <MenuItem value={"MACOS"}>MacOS</MenuItem>
-                </Select>
-              </FormControl>
+
+              <TextField                                                                                   // GPUs
+                label="GPUs"
+                size="small"
+                fullWidth
+                sx={{ mt: 2 }}
+                value={formData.request_gpus || ""}
+                onChange={(e) => handleFormChange("request_gpus", e.target.value)}
+              />
+
+              {(jobType === "advanced") && (
+                <TextField                                                                                 // OUTPUT (advanced)
+                  label="Directorio para la salida"
+                  size="small"
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  value={formData.output || ""}
+                  onChange={(e) => handleFormChange("output", e.target.value)}
+                />
+              )}
+
+              {(jobType === "advanced") && (
+                <TextField                                                                                 // ERROR (advanced)
+                  label="Directorio para el error"
+                  size="small"
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  value={formData.error || ""}
+                  onChange={(e) => handleFormChange("error", e.target.value)}
+                />
+              )}
+
+              {(jobType === "advanced") && (
+                <TextField                                                                                 // LOG (advanced)
+                  label="Directorio para los logs"
+                  size="small"
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  value={formData.log || ""}
+                  onChange={(e) => handleFormChange("log", e.target.value)}
+                />
+              )}
+
+              {(jobType === "advanced") && (
+                <TextField                                                                                 // MAX_RETRIES (advanced) no implemented
+                  label="Cuantas veces reintentar trabajo"
+                  size="small"
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  value={formData.max_retries || ""}
+                  onChange={(e) => handleFormChange("max_retries", e.target.value)}
+                />
+              )}
+
+              {/**  will be managed from backend*/}
+              {(jobType === "advanced") && (
+                <TextField                                                                                 // PERIODIC_REMOVE (advanced)
+                  label="Eliminar trabajos retenidos (en segundos)"
+                  size="small"
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  value={formData.max_retries || ""}
+                  onChange={(e) => handleFormChange("max_retries", e.target.value)}
+                />
+              )}
             </Grid>
           </Grid>
         </Grid>
@@ -269,8 +404,8 @@ function NewJob() {
           <Button
             variant="contained"
             color="black"
-            onClick={handleNewJob}
-            disabled="true"
+            onClick={handleSubmitNewJob}
+            
           >
             Ejecutar Trabajo
           </Button>
