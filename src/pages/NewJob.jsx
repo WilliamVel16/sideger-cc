@@ -78,8 +78,6 @@ function NewJob() {
     }
   };
 
-
-
   return (
     <Container maxWidth="xl" sx={{ mt: 2, mx: "auto" }}>
       <Grid container spacing={2} sx={{ mb: 2 }}>
@@ -129,11 +127,12 @@ function NewJob() {
                   <MenuItem value="script-args">Archivo con argumentos</MenuItem>
                   <MenuItem value="script-files">Script con archivos</MenuItem>
                   <MenuItem value="files">Con Archivos de entrada</MenuItem>
+                  <MenuItem value="shell">Shell</MenuItem>
                   <MenuItem value="advanced">Avanzado</MenuItem>
                 </Select>
               </FormControl>
 
-              {(jobType === "files" || jobType === "script" || jobType === "script-args" || jobType === "script-files") && (
+              {(jobType === "files" || jobType === "script" || jobType === "script-args" || jobType === "script-files" || jobType === "advanced") && (
                 <>
                   <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
                     <Button
@@ -210,18 +209,20 @@ function NewJob() {
                 onChange={(e) => handleFormChange("batch_name", e.target.value)}
               />
               
-              <TextField                                                                                 // EXECUTABLE
-                label="Ejecutable"
-                fullWidth
-                size="small"
-                sx={{ mt: 2 }}
-                value={formData.executable || ""}
-                onChange={(e) => handleFormChange("executable", e.target.value)}
-              />
+              {(jobType !== "shell") && (
+                <TextField                                                                                 // EXECUTABLE
+                  label="Ejecutable"
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 2 }}
+                  value={formData.executable || ""}
+                  onChange={(e) => handleFormChange("executable", e.target.value)}
+                />
+              )}            
 
-              {(jobType === "advanced") && (
+              {(jobType === "advanced" || jobType === "shell") && (
                 <TextField                                                                                 // SHELL (no implemented)
-                  label="Comando a ejecutar"
+                  label="Instrucción a ejecutar (shell)"
                   fullWidth
                   size="small"
                   sx={{ mt: 2 }}
@@ -230,18 +231,15 @@ function NewJob() {
                 />
               )}
               
-
               {(jobType === "files" || jobType === "advanced" || jobType === "script-files") && (         // INPUT
-                <>
-                  <TextField
-                    label="Archivo de entrada"
-                    fullWidth
-                    size="small"
-                    sx={{ mt: 2 }}
-                    value={"ninguno por ahora"}
-                    onChange={(e) => setInput(e.target.value)}
-                  />
-                </>
+                <TextField
+                  label="Archivo de entrada"
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 2 }}
+                  value={formData.input}
+                  onChange={(e) => handleFormChange("input", e.target.value)}
+                />
               )}
 
               {(jobType === "advanced" || jobType === "script-args") && (                                 // ARGUMENTS
@@ -255,7 +253,7 @@ function NewJob() {
                 />
               )}
 
-              {(jobType === "script-args") && (
+              {(jobType === "script-args" || "shell") && (
                 <TextField                                                                                 // TRANSFER_INPUT_FILES
                   label="Archivos a transfeir"
                   fullWidth
@@ -324,7 +322,7 @@ function NewJob() {
               />
 
               <TextField                                                                                   // RAM
-                label="Memoria RAM (ej: 1M)"
+                label="Memoria RAM (ej: 512M)"
                 size="small"
                 fullWidth
                 sx={{ mt: 2 }}
