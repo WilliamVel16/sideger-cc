@@ -24,6 +24,7 @@ function NewJob() {
   const [jobType, setJobType] = useState("script");
   const [input, setInput] = useState("");
   const [formData, setFormData] = useState({})
+  const [outputType, setOutputType] = useState("a_directory");
 
   const handleFormChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -62,21 +63,19 @@ function NewJob() {
 
 
   const handleSubmitNewJob = async () => {
-    console.log("formData:\n", formData);
-
-    // find the node with submit role
+    //find the node with submit role
     const submitContainer = clusterNodesConfig
       .filter(node => node.container_name.startsWith("sub_"))
       .map(node => node.container_name);
-    console.log(submitContainer[0]);
+
+    console.log(formData, submitContainer[0], outputType)
 
     try {
-      const response = await submitJob(formData, submitContainer[0]);
+      const response = await submitJob(formData, submitContainer[0], outputType);
       console.log(response);
     } catch (err) {
       console.log("Error trying submit the new job:", err);
     }
-
   };
 
 
@@ -104,10 +103,21 @@ function NewJob() {
             sx={{ alignItems: "stretch", justifyContent: "space-around" }}
           >
 
-            {/** load files and type of job */}
+            {/** load files and type of job and output */}
             <Grid item size={{ xs: 12, md: 2.5 }}>
-              <Typography variant="h6"> Tipo de Trabajo </Typography>
-
+              <Typography variant="h6"> Sobre el Trabajo </Typography>
+              <FormControl fullWidth size="small" sx={{ mt: 2 }}>
+                <InputLabel>Tipo de Salida</InputLabel>
+                <Select
+                  value={outputType}
+                  label="Tipo de Salida"
+                  onChange={(e) => setOutputType(e.target.value)}
+                >
+                  <MenuItem value="a_directory">Unico directorio</MenuItem>
+                  <MenuItem value="n_directories">Multiples directorios</MenuItem>
+                </Select>
+              </FormControl>
+              
               <FormControl fullWidth size="small" sx={{ mt: 2 }}>
                 <InputLabel>Tipo de Trabajo</InputLabel>
                 <Select
@@ -116,9 +126,9 @@ function NewJob() {
                   onChange={(e) => setJobType(e.target.value)}
                 >
                   <MenuItem value="script">Archivo</MenuItem>
-                  <MenuItem value="script-args">Archivo con Argumentos</MenuItem>
-                  <MenuItem value="script-files">Script con Archivos</MenuItem>
-                  <MenuItem value="files">Con Archivos de Entrada</MenuItem>
+                  <MenuItem value="script-args">Archivo con argumentos</MenuItem>
+                  <MenuItem value="script-files">Script con archivos</MenuItem>
+                  <MenuItem value="files">Con Archivos de entrada</MenuItem>
                   <MenuItem value="advanced">Avanzado</MenuItem>
                 </Select>
               </FormControl>
