@@ -3,9 +3,9 @@ from pydantic import BaseModel
 
 class JobData(BaseModel):
     executable: str
-    log: Optional[str] = "logs/cpu_intensive.log"
-    output: Optional[str] = "resultados/cpu_intensive.out"
-    error: Optional[str] = "logs/cpu_intensive.log"
+    log: Optional[str] = None
+    output: Optional[str] = None
+    error: Optional[str] = None
     queue: Optional[int] 
     arguments: Optional[str] = None
     input: Optional[str] = None
@@ -27,3 +27,4 @@ class JobData(BaseModel):
 class JobSubmitRequest(BaseModel):
     job_data: JobData
     submit_role_container_name: str
+    output_type: str
