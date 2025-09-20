@@ -30,7 +30,10 @@ def create_submit_file_service(job: JobData, output_type: str):
 
     else:
         raise ValueError(f"[ERR] in create submit file: Unknown output_type {output_type}")
-        
+    
+    class_ad["should_transfer_files"] = "YES"
+    class_ad["when_to_transfer_output"] = "ON_EXIT"
+
 
     filename = f"{job_name}.sub"
     full_path = os.path.join(working_directory, filename)
