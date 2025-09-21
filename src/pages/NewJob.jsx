@@ -21,7 +21,7 @@ import { submitJob } from "../utils/tauriApi";
 function NewJob() {
   const { clusterNodesConfig } = useAppContext();
   const [inputFiles, setInputFiles] = useState([]);
-  const [jobType, setJobType] = useState("script");
+  const [jobType, setJobType] = useState("executable");
   const [input, setInput] = useState("");
   const [formData, setFormData] = useState({})
   const [outputType, setOutputType] = useState("a_directory");
@@ -123,16 +123,17 @@ function NewJob() {
                   label="Tipo de Trabajo"
                   onChange={(e) => setJobType(e.target.value)}
                 >
-                  <MenuItem value="script">Archivo</MenuItem>
-                  <MenuItem value="script-args">Archivo con argumentos</MenuItem>
-                  <MenuItem value="script-files">Script con archivos</MenuItem>
-                  <MenuItem value="files">Con Archivos de entrada</MenuItem>
-                  <MenuItem value="shell">Shell</MenuItem>
-                  <MenuItem value="advanced">Avanzado</MenuItem>
+                  <MenuItem value="executable">1. Ejecutable</MenuItem>
+                  <MenuItem value="executable-args">2. Con argumentos</MenuItem>
+                  <MenuItem value="executable-files">3. Con archivos de entrada</MenuItem>
+                  <MenuItem value="executable-args-files">4. Incluye  "2" y "3"</MenuItem>
+                  <MenuItem value="shell">5. Shell</MenuItem>
+                  <MenuItem value="advanced">6. Avanzado</MenuItem>
                 </Select>
               </FormControl>
 
-              {(jobType === "files" || jobType === "script" || jobType === "script-args" || jobType === "script-files" || jobType === "advanced") && (
+              {(jobType === "executable-args" || jobType === "executable-files" || 
+              jobType === "advanced" || jobType === "shell" || jobType === "executable-args-files") && (
                 <>
                   <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
                     <Button
@@ -140,6 +141,7 @@ function NewJob() {
                       variant="outlined"
                       startIcon={<UploadIcon />}
                       sx={{ mt: 3 }}
+                      color="black"
                     >
                       Subir Archivo
                       <input
@@ -221,7 +223,7 @@ function NewJob() {
               )}            
 
               {(jobType === "advanced" || jobType === "shell") && (
-                <TextField                                                                                 // SHELL (no implemented)
+                <TextField                                                                                 // SHELL
                   label="Instrucción a ejecutar (shell)"
                   fullWidth
                   size="small"
@@ -231,7 +233,7 @@ function NewJob() {
                 />
               )}
               
-              {(jobType === "files" || jobType === "advanced" || jobType === "script-files") && (         // INPUT
+              {(jobType === "advanced" || jobType === "executable-files" || jobType === "executable-args-files") && (         // INPUT
                 <TextField
                   label="Archivo de entrada"
                   fullWidth
@@ -242,7 +244,7 @@ function NewJob() {
                 />
               )}
 
-              {(jobType === "advanced" || jobType === "script-args") && (                                 // ARGUMENTS
+              {(jobType === "advanced" || jobType === "executable-args" || jobType === "executable-args-files") && (                                 // ARGUMENTS
                 <TextField
                   label="Argumentos"
                   fullWidth
@@ -253,7 +255,7 @@ function NewJob() {
                 />
               )}
 
-              {(jobType === "script-args" || "shell") && (
+              {(jobType === "executable-args" || "shell") && (
                 <TextField                                                                                 // TRANSFER_INPUT_FILES
                   label="Archivos a transfeir"
                   fullWidth
