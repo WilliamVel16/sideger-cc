@@ -163,3 +163,16 @@ export const submitJob = async (formData, nodeSubmitRole, outputType) => {
   }
   return response.json();
 };
+
+
+export const jobsQueue = async (nodeSubmitRole) => {
+  const response = await fetch(
+    `${BACKEND_URL}/jobs/queue?submit_container_name=${encodeURIComponent(nodeSubmitRole)}`
+  );
+  
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`get state jobs failed: ${err}`);
+  }
+  return response.json();
+}

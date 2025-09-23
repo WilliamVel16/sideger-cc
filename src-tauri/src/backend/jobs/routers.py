@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-from .schemas import JobSubmitRequest
-from .services import create_submit_file_service, submit_job_service
+from .schemas import JobSubmitRequest, SubmitContainer
+from .services import create_submit_file_service, submit_job_service, jobs_state_service
 
 router = APIRouter()
 
@@ -14,3 +14,10 @@ async def submit_job(request: JobSubmitRequest):
 
     output = submit_job_service(filename_classad, submit_container_name)
     return {"message": "job received", "output": output}
+
+
+@router.get("/queue")
+async def get_state_jobs(request: SubmitContainer):
+    jobs_state = await jobs_state_service(request.submit_container_name)
+    print(jobs_state)
+    return {"jobs": jobs_state}
