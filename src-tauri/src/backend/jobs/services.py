@@ -5,6 +5,7 @@ import json
 from fastapi import HTTPException
 from .submit_builder import HTCondorSubmit
 from .schemas import JobData
+from .utils import summarize_jobs
 
 def create_submit_file_service(job: JobData, output_type: str):
     """
@@ -72,10 +73,12 @@ def submit_job_service(filename_sub_classad: str, sub_container_name: str):
 
 async def jobs_state_service(sub_container_name: str):
     '''
-    permits retrieve the state of the jobs that are in the cluster queue
+    retrieve the current state of the jobs from HTCondor inside the given container.
+    returns a summarized JSON (using summarize_jobs) ready for the frontend.
     '''
 
-    command = f"docker exec {sub_container_name} sh -c 'condor_q -json'"
+    attributes = "Owner,JobBatchName,QDate,JobStatus,ClusterId,ProcId,Cmd"
+    command = f"docker exec {sub_container_name} sh -c 'condor_q -json -attributes \"{attributes}\"'"
     try:
         process = await asyncio.create_subprocess_shell(
             command,
@@ -84,13 +87,16 @@ async def jobs_state_service(sub_container_name: str):
         )
         stdout, stderr = await process.communicate()
 
-        if process.returncode == 0:
-            try:
-                state_jobs = json.loads(stdout)
-            except json.JSONDecodeError:
-                raise HTTPException(status_code=500, detail="Error parsing condor_q output")
-            return state_jobs
-        else:
+        if process.returncode != 0:
             raise HTTPException(status_code=400, detail=stderr.decode())
+        
+        try:
+            jobs_json = json.loads(stdout)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=500, detail="Error parsing condor_q output")
+        
+        final_jobs_info = summarize_jobs(jobs_json)
+        return final_jobs_info
+            
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error trying to get jobs state: {str(e)}")

@@ -17,7 +17,7 @@ async def submit_job(request: JobSubmitRequest):
 
 
 @router.get("/queue")
-async def get_state_jobs(request: SubmitContainer):
-    jobs_state = await jobs_state_service(request.submit_container_name)
+async def get_state_jobs(submit_container_name: str):
+    jobs_state = await jobs_state_service(submit_container_name)
     print(jobs_state)
     return {"jobs": jobs_state}
