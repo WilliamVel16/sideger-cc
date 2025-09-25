@@ -8,20 +8,19 @@ import {
   Paper,
 } from "@mui/material";
 import { useState, useEffect } from "react";
+import { useAppContext } from "../context/AppContext";
 import { jobsQueue } from "../utils/tauriApi";
 
 function JobQueue() {
   const { clusterNodesConfig } = useAppContext();
-  const [jobsData, setJobsData] = useState({
-    total: [],
-    done: [],
-    run: [],
-    held: [],
-    idle: [],
-  });
   const [jobId, setJobId] = useState("");
   const [jobInfo, setJobInfo] = useState(null);
-
+  const [jobsData, setJobsData] = useState({
+    timerequest: null,
+    batches: [],
+    totals: {total: 0, done: 0, running: 0, idle: 0, held: 0},
+  });
+  
   useEffect(() => {
     const fetchJobs = async () => {
       //find the node with submit role
@@ -31,20 +30,8 @@ function JobQueue() {
 
       try {
         const data = await jobsQueue(submitContainer[0]);
-        const jobs = data.jobs;
-
-        const done = jobs.filter(j => j.JobStatus === 4);
-        const run = jobs.filter(j => j.JobStatus === 2);
-        const held = jobs.filter(j => j.JobStatus === 5);
-        const idle = jobs.filter(j => j.JobStatus === 1);
-
-        setJobsData({
-          total: jobs,
-          done,
-          run,
-          held,
-          idle,
-        });
+        console.log(data)
+        setJobsData(data)
       } catch (err) {
         console.error(err);
       }
@@ -52,15 +39,8 @@ function JobQueue() {
 
     const interval = setInterval(fetchJobs, 5000); // then try with webSockets
     return () => clearInterval(interval);
-  }, []);
+  }, [clusterNodesConfig]); // REVIEW THIS
 
-  const tempData = [
-            { label: "Enviados", data: jobsData.total },
-            { label: "Finalizados", data: jobsData.done },
-            { label: "En ejecución", data: jobsData.run },
-            { label: "Retenidos", data: jobsData.held },
-            { label: "En espera", data: jobsData.idle },
-  ]
 
   const handleCancelAll = () => {
     console.log("Cancelar todos los trabajos");
@@ -75,29 +55,65 @@ function JobQueue() {
   };
 
   const handleViewInfo = () => {
-    const jobFound = jobsData.total.find((j) => j.id === jobId);
-    if (jobFound) {
+    // search job id for evey batch
+    let found = null;
+    for (const batch of jobsData.batches) {
+      found = batch.jobs.find(j => j.job_id === jobId);
+      if (found) break;
+    }
+
+    if (found) {
       setJobInfo({
-        id: jobId,
-        estado: "En ejecución",
-        nodo: "Nodo-01",
-        descripcion: "Este es un trabajo de prueba para mostrar información",
+        id: found.job_id,
+        estado: found.status,
+        nodo: found.node || "Nodo desconocido",
+        descripcion: `Trabajo ${found.job_id} en lote ${found.batch_name}`,
       });
     } else {
       setJobInfo(null);
     }
   };
 
+  // jobs by state
+  const jobsByState = {
+    running: [],
+    idle: [],
+    held: [],
+    done: []
+  };
+  jobsData.batches.forEach(batch => {
+    batch.jobs.forEach(job => {
+      const state = job.status.toLowerCase(); 
+      if (jobsByState[state]) {
+        jobsByState[state].push({ id: job.job_id, batch: batch.batch_name });
+      }
+    });
+  });
+
+  const dataToShow = [
+    { label: "En ejecución", data: jobsByState.running },
+    { label: "En espera", data: jobsByState.idle },
+    { label: "Retenidos", data: jobsByState.held },
+    { label: "Finalizados", data: jobsByState.done },
+  ];
+
   return (
     <Container maxWidth="md" sx={{ mt: 2, mx: "auto" }}>
       {/* jobs list panel */}
       <Typography variant="h6" sx={{ mb: 2 }}>
-        Lista de Trabajos
+        Estado de la cola de Trabajos
       </Typography>
 
+      {jobsData.timerequest && (
+        <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+          Ultima actualización: {new Date(jobsData.timerequest).toLocaleString()}
+        </Typography>
+      )}
+
+      {/** totals */}
       <Paper center elevation={3} sx={{ p: 2, mb: 4 }}>
         <Grid container margin={2} spacing={2} justifyContent={"center"} sx={{ display: "flex" }}>
-          {tempData.map((col, idx) => (
+          {dataToShow.map((item, idx) => (
             <Grid key={idx} item xs={12} md  sx={{ flex: 1 }}>
               <Box
                 sx={{
@@ -111,10 +127,10 @@ function JobQueue() {
                 }}
               >
                 <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                  {col.label}
+                  {item.label}
                 </Typography>
                 <Typography variant="inherit" sx={{  }}>
-                  {col.data.length}
+                  {item.data.length}
                 </Typography>
               </Box>
               <Box
@@ -127,9 +143,9 @@ function JobQueue() {
                   overflowY: "auto",
                 }}
               >
-                {col.data.map((job) => (
+                {item.data.map((job, jdx) => (
                   <Box
-                    key={job.id}
+                    key={`${job.id}-${jdx}`}
                     sx={{
                       backgroundColor: "white",
                       border: "1px solid #ccc",
@@ -150,95 +166,57 @@ function JobQueue() {
         </Grid>
       </Paper>
 
-      {/* control panel */}
-      <Typography variant="h6" sx={{ mb: 2 }}>
+      {/** all batches */}
+      <Box sx={{ mt: 4 }}>
+        <Typography variant="h6">Batches de trabajos</Typography>
+        {jobsData.batches.map((batch, idx) => (
+          <Paper key={idx} sx={{ p: 2, mt: 1 }}>
+            <Typography variant="subtitle1">
+              {batch.batch_name} — Total: {batch.total} (Ejecutando: {batch.running}, Espera: {batch.idle})
+            </Typography>
+            <ul>
+              {batch.jobs.map(job => (
+                <li key={job.job_id}>
+                  Job {job.job_id} — Estado: {job.status}
+                </li>
+              ))}
+            </ul>
+          </Paper>
+        ))}
+      </Box>
+
+      {/** control panel */}
+      <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
         Panel de Control
       </Typography>
 
-      <Grid container direction={"column"} justifyContent={"center"} spacing={2}>
-        <Grid item xs={12}>
-          <Paper elevation={2} sx={{ p: 2, display: "flex", alignItems: "center", gap: 2  }} >
-            <Typography variant="body1" sx={{ flex: 1 }}>
-              Cancelar todos los trabajos de la cola
-            </Typography>
-            <Button
-              variant="outlined"
-              color="error"
-              onClick={handleCancelAll}
-            >
-              Cancelar
-            </Button>
-          </Paper>
-        </Grid>
+      <Box sx={{ mt: 4 }}>
+        <TextField
+          label="ID del Trabajo"
+          size="small"
+          value={jobId}
+          onChange={(e) => setJobId(e.target.value)}
+          sx={{ mr: 4 }}
+        />
+        <Button variant="outlined" color="" onClick={handleViewInfo} sx={{ mr: 1 }}>
+          Ver más información
+        </Button>
+        <Button variant="outlined" color="" onClick={handleCheckNode} sx={{ mr: 1 }}>
+          Consultar Nodo
+        </Button>
+        <Button variant="outlined" color="error" onClick={handleDeleteJob} >
+          Eliminar Trabajo
+        </Button>
+      </Box>
 
-        <Grid item xs={12}>
-          <Paper elevation={2} sx={{ p: 2, display: "flex", alignItems: "center", gap: 2 }}>
-            <Typography variant="body1" sx={{ flex: 1 }}>
-              Ingresa el ID del trabajo
-            </Typography>
-            <TextField
-              label="ID del trabajo"
-              size="small"
-              value={jobId}
-              onChange={(e) => setJobId(e.target.value)}
-            />
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12}>
-          <Paper elevation={2} sx={{ p: 2, display: "flex", alignItems: "center", gap: 2 }}>
-            <Typography variant="body1" sx={{ flex: 1 }}>
-              Eliminar el trabajo de la lista
-            </Typography>
-            <Button variant="outlined" color="error" onClick={handleDeleteJob}>
-              Eliminar
-            </Button>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12}>
-          <Paper elevation={2} sx={{ p: 2, display: "flex", alignItems: "center", gap: 2 }}>
-            <Typography variant="body1" sx={{ flex: 1 }}>
-              Ver en qué nodo se ejecuta el trabajo
-            </Typography>
-            <Button variant="outlined" color="black" onClick={handleCheckNode}>
-              Consultar
-            </Button>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12}>
-          <Paper elevation={2} sx={{ p: 2, display: "flex", alignItems: "center", gap: 2 }}>
-            <Typography variant="body1" sx={{ flex: 1 }}>
-              Ver más información del trabajo
-            </Typography>
-            <Button variant="outlined" color="black" onClick={handleViewInfo}>
-              Consultar
-            </Button>
-          </Paper>
-        </Grid>
-      </Grid>
-
-      {/* view more */}
       {jobInfo && (
-        <Box
-          sx={{
-            mt: 3,
-            p: 2,
-            border: "1px solid #ccc",
-            borderRadius: 1,
-            backgroundColor: "#f7cbcbff",
-          }}
-        >
-          <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-            Información del Trabajo ID: {jobInfo.id}
-          </Typography>
-          <Typography variant="body2">Estado: {jobInfo.estado}</Typography>
-          <Typography variant="body2">Nodo: {jobInfo.nodo}</Typography>
-          <Typography variant="body2">
-            Descripción: {jobInfo.descripcion}
-          </Typography>
-        </Box>
+        <Paper sx={{ mt: 3, p: 2 }}>
+          <Typography variant="h6">Información del Trabajo</Typography>
+          <Typography>ID: {jobInfo.id}</Typography>
+          <Typography>Estado: {jobInfo.estado}</Typography>
+          <Typography>Nodo: {jobInfo.nodo}</Typography>
+          <Typography>Descripción: {jobInfo.descripcion}</Typography>
+        </Paper>
       )}
     </Container>
   );

@@ -164,7 +164,7 @@ export const submitJob = async (formData, nodeSubmitRole, outputType) => {
   return response.json();
 };
 
-
+// to retrieve the jobs data in execution (includes state) [JobQueue.jsx]
 export const jobsQueue = async (nodeSubmitRole) => {
   const response = await fetch(
     `${BACKEND_URL}/jobs/queue?submit_container_name=${encodeURIComponent(nodeSubmitRole)}`
@@ -172,7 +172,7 @@ export const jobsQueue = async (nodeSubmitRole) => {
   
   if (!response.ok) {
     const err = await response.text();
-    throw new Error(`get state jobs failed: ${err}`);
+    throw new Error(`get data and state jobs failed: ${err}`);
   }
   return response.json();
 }
