@@ -22,6 +22,7 @@ function JobQueue() {
   });
   
   useEffect(() => {
+    let interval;
     const fetchJobs = async () => {
       //find the node with submit role
       const submitContainer = clusterNodesConfig
@@ -30,14 +31,20 @@ function JobQueue() {
 
       try {
         const data = await jobsQueue(submitContainer[0]);
-        console.log(data)
-        setJobsData(data)
+        console.log(data.jobs)
+        setJobsData(data.jobs)
+
+        if (data.totals.total_jobs === 0) {
+          clearInterval(interval);
+          interval = null;
+        }
       } catch (err) {
         console.error(err);
       }
     };
 
-    const interval = setInterval(fetchJobs, 5000); // then try with webSockets
+    fetchJobs();
+    interval = setInterval(fetchJobs, 15000); // then try with webSockets
     return () => clearInterval(interval);
   }, [clusterNodesConfig]); // REVIEW THIS
 
@@ -74,24 +81,28 @@ function JobQueue() {
     }
   };
 
-  // jobs by state
+  // jobs by state and build job id with returned data
   const jobsByState = {
-    running: [],
+    run: [],
     idle: [],
     held: [],
-    done: []
+    done: [],
+    //suspended: [],
   };
   jobsData.batches.forEach(batch => {
     batch.jobs.forEach(job => {
-      const state = job.status.toLowerCase(); 
+      const state = job.status.toLowerCase();
       if (jobsByState[state]) {
-        jobsByState[state].push({ id: job.job_id, batch: batch.batch_name });
+        jobsByState[state].push({
+        id: `${job.cluster_id}.${job.proc_id}`,
+        batch: batch.batch_name,
+      });
       }
     });
   });
 
   const dataToShow = [
-    { label: "En ejecución", data: jobsByState.running },
+    { label: "En ejecución", data: jobsByState.run },
     { label: "En espera", data: jobsByState.idle },
     { label: "Retenidos", data: jobsByState.held },
     { label: "Finalizados", data: jobsByState.done },
@@ -111,7 +122,7 @@ function JobQueue() {
       )}
 
       {/** totals */}
-      <Paper center elevation={3} sx={{ p: 2, mb: 4 }}>
+      <Paper elevation={3} sx={{ p: 2, mb: 4 }}>
         <Grid container margin={2} spacing={2} justifyContent={"center"} sx={{ display: "flex" }}>
           {dataToShow.map((item, idx) => (
             <Grid key={idx} item xs={12} md  sx={{ flex: 1 }}>

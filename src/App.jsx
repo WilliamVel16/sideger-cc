@@ -3,7 +3,7 @@ import "./App.css";
 import Layout from "./components/Layout";
 import Resources from "./pages/Resources";
 import InitializeCluster from "./pages/InitializeCluster";
-//import FinishedJobs from "./pages/FinishedJobs";
+import FinishedJobs from "./pages/FinishedJobs";
 import { AppProvider } from "./context/AppContext";
 import NewJob from "./pages/NewJob";
 import JobQueue from "./pages/JobQueue";
@@ -22,6 +22,7 @@ function App() {
               <Route path="/initialize-cluster" element={<InitializeCluster />} />
               <Route path="/jobs/new" element={<NewJob />} />
               <Route path="/jobs/queue" element={<JobQueue />} />
+              <Route path="/jobs/finished" element={<FinishedJobs />} />
             </Route>
           </Routes>
         </BrowserRouter>
