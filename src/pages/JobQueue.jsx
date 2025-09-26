@@ -18,7 +18,7 @@ function JobQueue() {
   const [jobsData, setJobsData] = useState({
     timerequest: null,
     batches: [],
-    totals: {total: 0, done: 0, running: 0, idle: 0, held: 0},
+    totals: {total: 0, done: 0, running: 0, idle: 0, held: 0, suspended: 0},
   });
   
   useEffect(() => {
@@ -73,7 +73,6 @@ function JobQueue() {
       setJobInfo({
         id: found.job_id,
         estado: found.status,
-        nodo: found.node || "Nodo desconocido",
         descripcion: `Trabajo ${found.job_id} en lote ${found.batch_name}`,
       });
     } else {
@@ -86,8 +85,8 @@ function JobQueue() {
     run: [],
     idle: [],
     held: [],
-    done: [],
-    //suspended: [],
+    suspended: [],
+    //done: [],
   };
   jobsData.batches.forEach(batch => {
     batch.jobs.forEach(job => {
@@ -105,14 +104,15 @@ function JobQueue() {
     { label: "En ejecución", data: jobsByState.run },
     { label: "En espera", data: jobsByState.idle },
     { label: "Retenidos", data: jobsByState.held },
-    { label: "Finalizados", data: jobsByState.done },
+    { label: "Suspendidos", data: jobsByState.suspended },
+    //{ label: "Finalizados", data: jobsByState.done }
   ];
 
   return (
     <Container maxWidth="md" sx={{ mt: 2, mx: "auto" }}>
       {/* jobs list panel */}
       <Typography variant="h6" sx={{ mb: 2 }}>
-        Estado de la cola de Trabajos
+        Estado de la Cola de Trabajos
       </Typography>
 
       {jobsData.timerequest && (
@@ -174,26 +174,66 @@ function JobQueue() {
               </Box>
             </Grid>
           ))}
+          <Box
+                sx={{
+                  backgroundColor: "#fa5c5cff",
+                  color: "white",
+                  borderRadius: 1,
+                  p: 2,
+                  minHeight: 40,
+                  maxHeight: 50,
+                  textAlign: "center",
+                  mb: 1,
+                }}
+              >
+                <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                  Total trabajos
+                </Typography>
+                <Typography variant="inherit" sx={{  }}>
+                  {jobsData.totals.total_jobs || 0}
+                </Typography>
+              </Box>
         </Grid>
       </Paper>
 
       {/** all batches */}
       <Box sx={{ mt: 4 }}>
-        <Typography variant="h6">Batches de trabajos</Typography>
-        {jobsData.batches.map((batch, idx) => (
-          <Paper key={idx} sx={{ p: 2, mt: 1 }}>
-            <Typography variant="subtitle1">
-              {batch.batch_name} — Total: {batch.total} (Ejecutando: {batch.running}, Espera: {batch.idle})
-            </Typography>
-            <ul>
-              {batch.jobs.map(job => (
-                <li key={job.job_id}>
-                  Job {job.job_id} — Estado: {job.status}
-                </li>
-              ))}
-            </ul>
-          </Paper>
-        ))}
+        <Typography variant="h6">Lotes de Trabajos</Typography>
+        {jobsData.batches.map((batch, idx) => {
+          const ids = batch.job_ids.split(',').map(id => id.trim());
+          const range_ids = ids[0];
+
+          return (
+            <Paper key={idx} sx={{ p: 2, mt: 1 }}>
+              <Typography variant="subtitle1" marginBottom={1}>
+                Lote: {batch.batch_name} ({batch.submitted})
+              </Typography>
+              <Typography variant="body2" marginBottom={1}>
+                IDs del lote: {range_ids} --- Zona de prueba: {batch.job_ids}
+              </Typography>
+              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt:1 }}>
+                {[
+                  { label: "Total", value: batch.total, color:"#1976d2" },
+                  { label: "Ejecutando", value: batch.run, color:"#2e7d32" },
+                  { label: "Espera", value: batch.idle, color:"#ed6c02" },
+                  { label: "Retenidos", value: batch.held, color:"#6d1b7b" },
+                  { label: "Suspendidos", value: batch.suspended, color:"#fa5c5cff" },
+                ].map((item,i)=>(
+                  <Box key={i} sx={{
+                    backgroundColor:item.color,
+                    color:"white",
+                    borderRadius:1,
+                    px:1.5,
+                    py:0.5,
+                    fontSize:"0.8rem"
+                  }}>
+                    {item.label}: {item.value ?? 0}
+                  </Box>
+                ))}
+              </Box>
+            </Paper>
+          );
+        })}
       </Box>
 
       {/** control panel */}
@@ -217,6 +257,9 @@ function JobQueue() {
         </Button>
         <Button variant="outlined" color="error" onClick={handleDeleteJob} >
           Eliminar Trabajo
+        </Button>
+        <Button variant="outlined" color="error" onClick={handleCancelAll} sx={{ mt: 1 }} >
+          Cancelar Todo
         </Button>
       </Box>
 
