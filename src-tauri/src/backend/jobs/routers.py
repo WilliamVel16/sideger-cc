@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from .schemas import JobSubmitRequest, SubmitContainer
+from .schemas import JobSubmitRequest
 from .services import create_submit_file_service, submit_job_service, jobs_state_service
 
 router = APIRouter()
