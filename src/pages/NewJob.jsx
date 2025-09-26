@@ -21,9 +21,10 @@ import { submitJob } from "../utils/tauriApi";
 function NewJob() {
   const { clusterNodesConfig } = useAppContext();
   const [inputFiles, setInputFiles] = useState([]);
-  const [jobType, setJobType] = useState("script");
+  const [jobType, setJobType] = useState("executable");
   const [input, setInput] = useState("");
   const [formData, setFormData] = useState({})
+  const [outputType, setOutputType] = useState("a_directory");
 
   const handleFormChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -62,24 +63,20 @@ function NewJob() {
 
 
   const handleSubmitNewJob = async () => {
-    console.log("formData:\n", formData);
-
-    // find the node with submit role
+    //find the node with submit role
     const submitContainer = clusterNodesConfig
       .filter(node => node.container_name.startsWith("sub_"))
       .map(node => node.container_name);
-    console.log(submitContainer[0]);
+
+    console.log(formData, submitContainer[0], outputType)
 
     try {
-      const response = await submitJob(formData, submitContainer[0]);
+      const response = await submitJob(formData, submitContainer[0], outputType);
       console.log(response);
     } catch (err) {
       console.log("Error trying submit the new job:", err);
     }
-
   };
-
-
 
   return (
     <Container maxWidth="xl" sx={{ mt: 2, mx: "auto" }}>
@@ -104,10 +101,21 @@ function NewJob() {
             sx={{ alignItems: "stretch", justifyContent: "space-around" }}
           >
 
-            {/** load files and type of job */}
+            {/** load files and type of job and output */}
             <Grid item size={{ xs: 12, md: 2.5 }}>
-              <Typography variant="h6"> Tipo de Trabajo </Typography>
-
+              <Typography variant="h6"> Sobre el Trabajo </Typography>
+              <FormControl fullWidth size="small" sx={{ mt: 2 }}>
+                <InputLabel>Tipo de Salida</InputLabel>
+                <Select
+                  value={outputType}
+                  label="Tipo de Salida"
+                  onChange={(e) => setOutputType(e.target.value)}
+                >
+                  <MenuItem value="a_directory">Unico directorio</MenuItem>
+                  <MenuItem value="n_directories">Multiples directorios</MenuItem>
+                </Select>
+              </FormControl>
+              
               <FormControl fullWidth size="small" sx={{ mt: 2 }}>
                 <InputLabel>Tipo de Trabajo</InputLabel>
                 <Select
@@ -115,15 +123,17 @@ function NewJob() {
                   label="Tipo de Trabajo"
                   onChange={(e) => setJobType(e.target.value)}
                 >
-                  <MenuItem value="script">Archivo</MenuItem>
-                  <MenuItem value="script-args">Archivo con Argumentos</MenuItem>
-                  <MenuItem value="script-files">Script con Archivos</MenuItem>
-                  <MenuItem value="files">Con Archivos de Entrada</MenuItem>
-                  <MenuItem value="advanced">Avanzado</MenuItem>
+                  <MenuItem value="executable">1. Ejecutable</MenuItem>
+                  <MenuItem value="executable-args">2. Con argumentos</MenuItem>
+                  <MenuItem value="executable-files">3. Con archivos de entrada</MenuItem>
+                  <MenuItem value="executable-args-files">4. Incluye  "2" y "3"</MenuItem>
+                  <MenuItem value="shell">5. Shell</MenuItem>
+                  <MenuItem value="advanced">6. Avanzado</MenuItem>
                 </Select>
               </FormControl>
 
-              {(jobType === "files" || jobType === "script" || jobType === "script-args" || jobType === "script-files") && (
+              {(jobType === "executable-args" || jobType === "executable-files" || 
+              jobType === "advanced" || jobType === "shell" || jobType === "executable-args-files") && (
                 <>
                   <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
                     <Button
@@ -131,6 +141,7 @@ function NewJob() {
                       variant="outlined"
                       startIcon={<UploadIcon />}
                       sx={{ mt: 3 }}
+                      color="black"
                     >
                       Subir Archivo
                       <input
@@ -200,18 +211,20 @@ function NewJob() {
                 onChange={(e) => handleFormChange("batch_name", e.target.value)}
               />
               
-              <TextField                                                                                 // EXECUTABLE
-                label="Ejecutable"
-                fullWidth
-                size="small"
-                sx={{ mt: 2 }}
-                value={formData.executable || ""}
-                onChange={(e) => handleFormChange("executable", e.target.value)}
-              />
+              {(jobType !== "shell") && (
+                <TextField                                                                                 // EXECUTABLE
+                  label="Ejecutable"
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 2 }}
+                  value={formData.executable || ""}
+                  onChange={(e) => handleFormChange("executable", e.target.value)}
+                />
+              )}            
 
-              {(jobType === "advanced") && (
-                <TextField                                                                                 // SHELL (no implemented)
-                  label="Comando a ejecutar"
+              {(jobType === "advanced" || jobType === "shell") && (
+                <TextField                                                                                 // SHELL
+                  label="Instrucción a ejecutar (shell)"
                   fullWidth
                   size="small"
                   sx={{ mt: 2 }}
@@ -220,21 +233,18 @@ function NewJob() {
                 />
               )}
               
-
-              {(jobType === "files" || jobType === "advanced" || jobType === "script-files") && (         // INPUT
-                <>
-                  <TextField
-                    label="Archivo de entrada"
-                    fullWidth
-                    size="small"
-                    sx={{ mt: 2 }}
-                    value={"ninguno por ahora"}
-                    onChange={(e) => setInput(e.target.value)}
-                  />
-                </>
+              {(jobType === "advanced" || jobType === "executable-files" || jobType === "executable-args-files") && (         // INPUT
+                <TextField
+                  label="Archivo de entrada"
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 2 }}
+                  value={formData.input}
+                  onChange={(e) => handleFormChange("input", e.target.value)}
+                />
               )}
 
-              {(jobType === "advanced" || jobType === "script-args") && (                                 // ARGUMENTS
+              {(jobType === "advanced" || jobType === "executable-args" || jobType === "executable-args-files") && (                                 // ARGUMENTS
                 <TextField
                   label="Argumentos"
                   fullWidth
@@ -245,7 +255,7 @@ function NewJob() {
                 />
               )}
 
-              {(jobType === "script-args") && (
+              {(jobType === "executable-args" || "shell") && (
                 <TextField                                                                                 // TRANSFER_INPUT_FILES
                   label="Archivos a transfeir"
                   fullWidth
@@ -314,7 +324,7 @@ function NewJob() {
               />
 
               <TextField                                                                                   // RAM
-                label="Memoria RAM (ej: 1M)"
+                label="Memoria RAM (ej: 512M)"
                 size="small"
                 fullWidth
                 sx={{ mt: 2 }}

@@ -144,7 +144,7 @@ export const shutdownCluster = async (clusterNodesConfig) => {
 // -------------------------- jobs -----------------------------
 
 // to submit a new job to the cluster [NewJob.jsx]
-export const submitJob = async (formData, nodeSubmitRole) => {
+export const submitJob = async (formData, nodeSubmitRole, outputType) => {
   const response = await fetch(`${BACKEND_URL}/jobs/submit`, {
     method: "POST",
     headers: {
@@ -152,7 +152,8 @@ export const submitJob = async (formData, nodeSubmitRole) => {
     },
     body: JSON.stringify({
       job_data: formData,
-      submit_role_container_name: nodeSubmitRole
+      submit_role_container_name: nodeSubmitRole,
+      output_type: outputType
     })
   });
   console.log(response)
@@ -162,3 +163,16 @@ export const submitJob = async (formData, nodeSubmitRole) => {
   }
   return response.json();
 };
+
+// to retrieve the jobs data in execution (includes state) [JobQueue.jsx]
+export const jobsQueue = async (nodeSubmitRole) => {
+  const response = await fetch(
+    `${BACKEND_URL}/jobs/queue?submit_container_name=${encodeURIComponent(nodeSubmitRole)}`
+  );
+  
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`get data and state jobs failed: ${err}`);
+  }
+  return response.json();
+}

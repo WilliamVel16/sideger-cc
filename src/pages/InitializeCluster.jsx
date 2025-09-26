@@ -1,7 +1,7 @@
 import {
   Box, Grid, Paper, Typography, List, ListItem, ListItemIcon, Container,
   ListItemText, Select, MenuItem, FormControl, FormGroup, TextField,
-  FormControlLabel, InputLabel, IconButton, Button, Switch, Tooltip
+  FormControlLabel, InputLabel, IconButton, Button, Switch, Tooltip, CircularProgress
 } from '@mui/material';
 import { useState } from 'react';
 import ComputerIcon from '@mui/icons-material/Computer';
@@ -86,8 +86,8 @@ function InitializeCluster() {
           {/*<Typography variant="body1" sx={{ mb: 2 }}>
             Para ver los recursos disponibles actualmente da click en el siguiente botón.
           </Typography>*/}
-          <Button variant='contained' color='gray' endIcon={<VisibilityIcon />}  disabled={loading} onClick={fetchData}>
-            {loading ? 'Cargando...' : 'Ver Recursos'}
+          <Button variant='outlined' color='' disabled={loading} onClick={fetchData} sx={{ minWidth: 150 }}>
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Ver Recursos'}
           </Button>
         </Grid>
         

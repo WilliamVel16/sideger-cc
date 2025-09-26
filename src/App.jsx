@@ -3,11 +3,10 @@ import "./App.css";
 import Layout from "./components/Layout";
 import Resources from "./pages/Resources";
 import InitializeCluster from "./pages/InitializeCluster";
-//import FinishedJobs from "./pages/FinishedJobs";
-//import JobQueue from "./pages/JobQueue";
-//import NewJob from "./pages/NewJob";
+import FinishedJobs from "./pages/FinishedJobs";
 import { AppProvider } from "./context/AppContext";
 import NewJob from "./pages/NewJob";
+import JobQueue from "./pages/JobQueue";
 
 function App() {
   // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -22,6 +21,8 @@ function App() {
               <Route path="/resources" element={<Resources />} />
               <Route path="/initialize-cluster" element={<InitializeCluster />} />
               <Route path="/jobs/new" element={<NewJob />} />
+              <Route path="/jobs/queue" element={<JobQueue />} />
+              <Route path="/jobs/finished" element={<FinishedJobs />} />
             </Route>
           </Routes>
         </BrowserRouter>
