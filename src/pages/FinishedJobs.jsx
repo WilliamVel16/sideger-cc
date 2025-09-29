@@ -12,6 +12,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useState, useEffect } from "react";
 import { useAppContext } from "../context/AppContext";
+import { jobsResults } from "../utils/tauriApi";
 
 export default function ResultadosLotes() {
   const { state } = useAppContext();
@@ -20,10 +21,14 @@ export default function ResultadosLotes() {
 
   useEffect(() => {
     setLoading(true);
-    // fetch("/api/lotes")  // aquí irá tu endpoint real
-    //   .then(res => res.json())
-    //   .then(data => setLotes(data))
-    //   .finally(() => setLoading(false));
+    // try {
+    //   const data = await jobsResults();
+    //   console.log(data)
+    //   setLotes(data)
+
+    // } catch (err) {
+    //   console.error(err);
+    // }
 
     setTimeout(() => {
       setLotes([

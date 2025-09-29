@@ -176,3 +176,10 @@ export const jobsQueue = async (nodeSubmitRole) => {
   }
   return response.json();
 }
+
+// to view the reesults of the runnings in the htcondor cluster
+export const jobsResults = async (outputType) => {
+  const response = await fetch(
+    `${BACKEND_URL}/jobs/results?output_type=${encodeURIComponent(outputType)}`
+  )
+}

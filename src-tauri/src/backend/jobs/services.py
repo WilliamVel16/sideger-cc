@@ -3,6 +3,7 @@ import asyncio
 import subprocess
 import json
 from fastapi import HTTPException
+from pathlib import Path
 from .submit_builder import HTCondorSubmit
 from .schemas import JobData
 from .utils import summarize_jobs
@@ -100,3 +101,44 @@ async def jobs_state_service(sub_container_name: str):
             
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error trying to get jobs state: {str(e)}")
+
+
+async def jobs_results_service(output_type: str):
+    """
+    this function iterates the sideger's working directory (sideger-jobs), and returns the
+    results depending on the 'output_type' -defined by the user previusly-.
+    ignores the files, only works with directories.
+    output_type: 'a_directory' o 'n_directories'
+    """
+
+    working_directory = Path(os.path.expanduser("~/sideger-jobs"))
+    if not working_directory.exists():
+        return {"error": "working directory doesn't exists"}
+    
+    jobs_results = {}
+
+    for item in working_directory.iterdir():
+        if not item.is_dir():
+            continue 
+
+        if "_resultados_" not in item.name:
+            continue # ignore logs and errors directories (erros could be included)
+
+        job_name = item.name.split("_resultados_")[0]
+
+        if output_type == "a_directory":
+            files = [str(f) for f in item.glob("*") if f.is_file()]
+            jobs_results[job_name] = files
+
+        elif output_type == "n_directories":
+            runs_data = {}
+            for sub in item.iterdir():
+                if sub.is_dir():
+                    salida_files = [str(f) for f in sub.glob("*") if f.is_file()]
+                    runs_data[sub.name] = salida_files
+            jobs_results[job_name] = runs_data
+
+        else:
+            print("error with directories")
+
+    return jobs_results
