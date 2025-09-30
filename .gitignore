@@ -36,3 +36,6 @@ venv/
 pip-log.txt
 
 # Databases files
+*.db
+*.sqlite
+*.sqlite3
