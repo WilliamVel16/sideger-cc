@@ -4,7 +4,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { Box, Container, FormControl, InputLabel, OutlinedInput, InputAdornment, FormHelperText, Button, Typography } from "@mui/material";
 import { FiUser, FiMail, FiLock } from "react-icons/fi";
 import useAuth from "../hooks/useAuth";
-import Logo from "../assets/logo.png";
+import Logo from "../assets/logo-secondary.png";
 import { emailPattern, passwordRules, confirmPasswordRules } from "../utils";
 
 /**
@@ -44,137 +44,151 @@ export default function Signup() {
   };
 
   return (
-    <Container
-      maxWidth="sm"
-      component="form"
-      onSubmit={handleSubmit(onSubmit)}
-      noValidate
+    <Box
       sx={{
-        height: "100vh",
+        minHeight: "100vh",
         display: "flex",
-        flexDirection: "column",
         justifyContent: "center",
-        gap: 2,
-        alignItems: "stretch",
+        alignItems: "center",
+        backgroundImage: "url('/tauri.svg')",  
+        backgroundSize: "cover",               
+        backgroundPosition: "center",          
+        backgroundRepeat: "no-repeat",
       }}
     >
-      <Box sx={{ textAlign: "center", mb: 2 }}>
-        <img src={Logo} alt="Logo" style={{ maxWidth: 120 }} />
-      </Box>
-
-      {/* Nombre */}
-      <FormControl fullWidth variant="outlined" error={!!errors.name}>
-        <InputLabel htmlFor="name">Nombre</InputLabel>
-        <OutlinedInput
-          id="name"
-          type="text"
-          {...register("name", { required: "El nombre es requerido", minLength: { value: 3, message: "Mínimo 3 caracteres" } })}
-          startAdornment={
-            <InputAdornment position="start">
-              <FiUser />
-            </InputAdornment>
-          }
-          label="Nombre"
-        />
-        <FormHelperText>{errors.name?.message}</FormHelperText>
-      </FormControl>
-
-      {/* Apellidos */}
-      <FormControl fullWidth variant="outlined" error={!!errors.lastname}>
-        <InputLabel htmlFor="lastname">Apellidos</InputLabel>
-        <OutlinedInput
-          id="lastname"
-          type="text"
-          {...register("lastname", { required: "Campo apellidos requerido", minLength: { value: 3, message: "Mínimo 3 caracteres" } })}
-          startAdornment={
-            <InputAdornment position="start">
-              <FiUser />
-            </InputAdornment>
-          }
-          label="Apellidos"
-        />
-        <FormHelperText>{errors.lastname?.message}</FormHelperText>
-      </FormControl>
-
-      {/* Email */}
-      <FormControl fullWidth variant="outlined" error={!!errors.email}>
-        <InputLabel htmlFor="email">Correo</InputLabel>
-        <OutlinedInput
-          id="email"
-          type="email"
-          {...register("email", {
-            required: "El correo es requerido",
-            pattern: emailPattern,
-          })}
-          startAdornment={
-            <InputAdornment position="start">
-              <FiMail />
-            </InputAdornment>
-          }
-          label="Correo"
-        />
-        <FormHelperText>{errors.email?.message}</FormHelperText>
-      </FormControl>
-
-      {/* Contraseña */}
-      <FormControl fullWidth variant="outlined" error={!!errors.password}>
-        <InputLabel htmlFor="password">Contraseña</InputLabel>
-        <OutlinedInput
-          id="password"
-          type="password"
-          {...register("password", passwordRules())}
-          startAdornment={
-            <InputAdornment position="start">
-              <FiLock />
-            </InputAdornment>
-          }
-          label="Contraseña"
-        />
-        <FormHelperText>{errors.password?.message}</FormHelperText>
-      </FormControl>
-
-      {/* Confirmación de contraseña */}
-      <FormControl fullWidth variant="outlined" error={!!errors.passwordConfirmation}>
-        <InputLabel htmlFor="passwordConfirmation">Confirmar Contraseña</InputLabel>
-        <OutlinedInput
-          id="passwordConfirmation"
-          type="password"
-          {...register("passwordConfirmation", confirmPasswordRules(getValues))}
-          startAdornment={
-            <InputAdornment position="start">
-              <FiLock />
-            </InputAdornment>
-          }
-          label="Confirmar Contraseña"
-        />
-        <FormHelperText>{errors.passwordConfirmation?.message}</FormHelperText>
-      </FormControl>
-
-      {/* Botón de registro */}
-      <Button
-        variant="contained"
-        color="primary"
-        type="submit"
-        disabled={isSubmitting || isLoading}
-        fullWidth
+      <Container
+        maxWidth="sm"
+        component="form"
+        onSubmit={handleSubmit(onSubmit)}
+        noValidate
+        sx={{
+          height: "80vh",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          gap: 2,
+          bgcolor: "rgba(255,255,255,0.95)", 
+          p:4, 
+          borderRadius: 30, 
+          boxShadow: 3,
+        }}
       >
-        {isSubmitting || isLoading ? "Cargando..." : "Registrarme"}
-      </Button>
+        <Box sx={{ textAlign: "center", mb: 2 }}>
+          <img src={Logo} alt="Logo" style={{ maxWidth: 120, borderRadius: "12px", }} />
+        </Box>
 
-      {/* Error global */}
-      {error && (
-        <Typography color="error" variant="body2" textAlign="center">
-          {error}
+        {/* name */}
+        <FormControl fullWidth variant="outlined" error={!!errors.name}>
+          <InputLabel htmlFor="name">Nombre</InputLabel>
+          <OutlinedInput
+            id="name"
+            type="text"
+            {...register("name", { required: "El nombre es requerido", minLength: { value: 3, message: "Mínimo 3 caracteres" } })}
+            startAdornment={
+              <InputAdornment position="start">
+                <FiUser />
+              </InputAdornment>
+            }
+            label="Nombre"
+          />
+          <FormHelperText>{errors.name?.message}</FormHelperText>
+        </FormControl>
+
+        {/** lastname */}
+        <FormControl fullWidth variant="outlined" error={!!errors.lastname}>
+          <InputLabel htmlFor="lastname">Apellidos</InputLabel>
+          <OutlinedInput
+            id="lastname"
+            type="text"
+            {...register("lastname", { required: "Campo apellidos requerido", minLength: { value: 3, message: "Mínimo 3 caracteres" } })}
+            startAdornment={
+              <InputAdornment position="start">
+                <FiUser />
+              </InputAdornment>
+            }
+            label="Apellidos"
+          />
+          <FormHelperText>{errors.lastname?.message}</FormHelperText>
+        </FormControl>
+
+        {/* email */}
+        <FormControl fullWidth variant="outlined" error={!!errors.email}>
+          <InputLabel htmlFor="email">Correo</InputLabel>
+          <OutlinedInput
+            id="email"
+            type="email"
+            {...register("email", {
+              required: "El correo es requerido",
+              pattern: emailPattern,
+            })}
+            startAdornment={
+              <InputAdornment position="start">
+                <FiMail />
+              </InputAdornment>
+            }
+            label="Correo"
+          />
+          <FormHelperText>{errors.email?.message}</FormHelperText>
+        </FormControl>
+
+        {/** pass */}
+        <FormControl fullWidth variant="outlined" error={!!errors.password}>
+          <InputLabel htmlFor="password">Contraseña</InputLabel>
+          <OutlinedInput
+            id="password"
+            type="password"
+            {...register("password", passwordRules())}
+            startAdornment={
+              <InputAdornment position="start">
+                <FiLock />
+              </InputAdornment>
+            }
+            label="Contraseña"
+          />
+          <FormHelperText>{errors.password?.message}</FormHelperText>
+        </FormControl>
+        <FormControl fullWidth variant="outlined" error={!!errors.passwordConfirmation}>
+          <InputLabel htmlFor="passwordConfirmation">Confirmar Contraseña</InputLabel>
+          <OutlinedInput
+            id="passwordConfirmation"
+            type="password"
+            {...register("passwordConfirmation", confirmPasswordRules(getValues))}
+            startAdornment={
+              <InputAdornment position="start">
+                <FiLock />
+              </InputAdornment>
+            }
+            label="Confirmar Contraseña"
+          />
+          <FormHelperText>{errors.passwordConfirmation?.message}</FormHelperText>
+        </FormControl>
+
+        {/** main button */}
+        <Button
+          variant="contained"
+          color="error"
+          type="submit"
+          disabled={isSubmitting || isLoading}
+          sx={{ alignSelf: "center", width: "50%" }}
+        >
+          {isSubmitting || isLoading ? "Cargando..." : "Registrarme"}
+        </Button>
+
+        {/** global error */}
+        {error && (
+          <Typography color="error" variant="body2" textAlign="center">
+            {error}
+          </Typography>
+        )}
+
+        {/* link to login */}
+        <Typography textAlign="center">
+          ¿Tiene cuenta?{" "}
+          <RouterLink to="/login" style={{ textDecoration: "none", color: "#1976d2" }}>
+            Inicie Sesión
+          </RouterLink>
         </Typography>
-      )}
-
-      {/* Link a login */}
-      <Typography textAlign="center">
-        ¿Tiene cuenta?{" "}
-        <RouterLink to="/login" style={{ textDecoration: "none", color: "#1976d2" }}>
-          Inicie Sesión
-        </RouterLink>
-      </Typography>
-    </Container>
+      </Container>
+    </Box> 
   );
 }
