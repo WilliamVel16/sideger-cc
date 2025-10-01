@@ -36,6 +36,7 @@ export default function Signup() {
   const onSubmit = async (data) => {
     const { passwordConfirmation, ...requestData } = data;
     try {
+      console.log(requestData)
       await signUp(requestData);
     } catch (_) {
       // useAuth hook maneja errores

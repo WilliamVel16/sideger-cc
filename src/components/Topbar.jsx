@@ -6,8 +6,10 @@ import CloseIcon from "@mui/icons-material/Close";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import { useAppContext } from "../context/AppContext";
 import { shutdownCluster } from "../utils/tauriApi";
+import useAuth from "../hooks/useAuth";
 
 function Topbar() {
+  const {logout, isLoading } = useAuth();
   const { clusterState, setClusterState, clusterNodesConfig, user, overlayNetworkName } = useAppContext();
   const [anchorMenu, setAnchorMenu] = useState(null);
   const [anchorNotif, setAnchorNotif] = useState(null);
@@ -30,6 +32,14 @@ function Topbar() {
     setAnchorMenu(null);
     setAnchorNotif(null);
   };
+
+  const handleSessionClose = async () => {
+    try {
+      await logout();
+    } catch (_) {
+      //useAuth manages errors
+    }
+  }
 
   const handleShutdownCluster = async () => {
     // sends as arguments: nodes, onetName, and user
@@ -115,7 +125,7 @@ function Topbar() {
       </IconButton>
       </Tooltip>
       <Menu anchorEl={anchorMenu} open={Boolean(anchorMenu)} onClose={handleClose}>
-        <MenuItem onClick={handleClose}>Reiniciar</MenuItem>
+        <MenuItem onClick={handleSessionClose}>Cerrar Sesión</MenuItem>
         <MenuItem onClick={handleShutdownCluster}>Dar de Baja</MenuItem>
         <MenuItem onClick={handleClose}>Salir</MenuItem>
       </Menu>

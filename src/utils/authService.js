@@ -2,7 +2,6 @@ import { getToken, setToken, removeToken } from './tokenService';
 
 const BASE_URL =  import.meta.env.VITE_API_URL;
 
-
 /**
  * Logs in a user by sending email and password to the API.
  * Handles server responses including errors (500, 400) and 
@@ -13,7 +12,7 @@ const BASE_URL =  import.meta.env.VITE_API_URL;
  * @throws error if there is a 500 or 400 error with specific details.
  */
 export const login = async (email, password) => {
-  const request = new Request(`${BASE_URL}/auth/login`, {
+  const request = new Request(`${BASE_URL}/user/login`, {
     method: 'POST',
     headers: {
     'Content-Type': 'application/json',
@@ -64,10 +63,9 @@ export const register = async (name, lastname, email, password) => {
     "lastname": lastname,
     "email": email,
     "password": password,
-    "role_id": 4 // role by default
   }
 
-  const request = new Request(`${BASE_URL}/users/create-user`, {
+  const request = new Request(`${BASE_URL}/user/create-user`, {
     method: 'POST',
     headers: {
     'Content-Type': 'application/json',
@@ -88,7 +86,6 @@ export const register = async (name, lastname, email, password) => {
     }
     throw data;
   }
-  
   return data;
 };
 
@@ -109,7 +106,7 @@ export const logout = () => {
 export const getUser = async () => {
   const token = localStorage.getItem('access_token');
   
-  const request = new Request('http://localhost:8000/auth/users/me', {
+  const request = new Request(`${BASE_URL}/auth/users/me`, {
     method: 'GET',
     headers: {'Authorization': `Bearer ${token}`}
   });
