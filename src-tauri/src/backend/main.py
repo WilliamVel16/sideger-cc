@@ -10,9 +10,14 @@ from user_authentication.routers import router as user_auth_router
 from core.database import Base, engine
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:1420",  # front
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

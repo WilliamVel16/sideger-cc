@@ -15,8 +15,6 @@ class UserResponse(BaseModel):
     name: str
     lastname: str
     email: EmailStr
-    role_id: int
-    is_disabled: bool
 
     class Config:
         orm_mode = True
@@ -24,7 +22,5 @@ class UserResponse(BaseModel):
 class LoginResponse(BaseModel):
     id: int
     full_name: str
-    role_id: int
-    is_disabled: bool
     access_token: str
     token_type: str

@@ -15,8 +15,6 @@ def login(user_data: schemas.UserLogin, db: Session = Depends(database.get_db)):
     return {
         "id": user.id,
         "full_name": f"{user.name} {user.lastname}",
-        "role_id": user.role_id,
-        "is_disabled": user.is_disabled,
         "access_token": access_token,
         "token_type": "bearer"
     }
