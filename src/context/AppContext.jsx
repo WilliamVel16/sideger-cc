@@ -1,29 +1,31 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext } from "react";
+import { usePersistentState } from "../hooks/usePersistentSate";
 
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
-	const [resourcesIPs, setResourcesIPs] = useState([])
-	const [resourcesUser, setResourcesUser] = useState("usuario");
-	const [containersPass, setContainersPass] = useState("pass123"); // temporals
-	const [clusterState, setClusterState] = useState("inactive");
-	const [LANname, setLANname] = useState("");
-	const [clusterNodesConfig, setClusterNodesConfig] = useState();
-	const [overlayNetworkName, setOverlayNetworkName] = useState("sidegerOnet");
-
+	const [resourcesIPs, setResourcesIPs] = usePersistentState("resourcesIPs", []);
+	const [resourcesUser, setResourcesUser] = usePersistentState("resourcesUser", "usuario"); // temporals
+	const [containersPass, setContainersPass] = usePersistentState("containersPass", "pass123"); // temporals
+	const [clusterState, setClusterState] = usePersistentState("clusterState", "inactive");
+	const [LANname, setLANname] = usePersistentState("LANname", "");
+	const [clusterNodesConfig, setClusterNodesConfig] =  usePersistentState("clusterNodesConfig", null);
+	const [overlayNetworkName, setOverlayNetworkName] = usePersistentState("overlayNetworkName", "sidegerOnet"); // temporals
 	return (
-		<AppContext.Provider value={{
-			resourcesIPs, setResourcesIPs,
-			resourcesUser, setResourcesUser,
-			containersPass, setContainersPass,
-			clusterState, setClusterState,
-			LANname, setLANname,
-			clusterNodesConfig, setClusterNodesConfig,
-			overlayNetworkName, setOverlayNetworkName
-			}}>
-			{ children }
+		<AppContext.Provider
+      value={{
+        resourcesIPs, setResourcesIPs,
+        resourcesUser, setResourcesUser,
+        containersPass, setContainersPass,
+        clusterState, setClusterState,
+        LANname, setLANname,
+        clusterNodesConfig, setClusterNodesConfig,
+        overlayNetworkName, setOverlayNetworkName
+        }}
+      >
+        { children }
 		</AppContext.Provider>
-	)
-}
+	);
+};
 
 export const useAppContext = () => useContext(AppContext);

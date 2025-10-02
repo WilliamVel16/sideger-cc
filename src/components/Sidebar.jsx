@@ -33,10 +33,11 @@ function Sidebar() {
           <NavLink to="/jobs/queue" className="nav-link"> Estado de Trabajos </NavLink>
           <NavLink to="/jobs/finished" className="nav-link"> Finalizados </NavLink>
         </div>
+        
         <div className="section">
-          <div className="section-title">Autenticación</div>
-          <NavLink to="/login" className="nav-link"> Login </NavLink>
-          <NavLink to="/signup" className="nav-link"> Registro </NavLink>
+          <div className="section-title">Registros</div>
+          <NavLink to="/registers/jobs" className="nav-link"> Historial </NavLink>
+          <NavLink to="/registers/clusters" className="nav-link"> Clusters  </NavLink>
         </div>
       </nav>
     </div>
