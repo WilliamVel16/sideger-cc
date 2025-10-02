@@ -28,3 +28,8 @@ class JobSubmitRequest(BaseModel):
     job_data: JobData
     submit_role_container_name: str
     output_type: str
+
+
+class JobResultsRequest(BaseModel):
+    batch_name: str
+    output_type: str

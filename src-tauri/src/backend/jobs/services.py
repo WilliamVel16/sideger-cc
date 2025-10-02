@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from pathlib import Path
 from .submit_builder import HTCondorSubmit
 from .schemas import JobData
-from .utils import summarize_jobs
+from .utils import summarize_jobs, find_result_directories, build_results_a_directory, build_results_n_directories
 
 def create_submit_file_service(job: JobData, output_type: str):
     """
@@ -14,7 +14,6 @@ def create_submit_file_service(job: JobData, output_type: str):
     sideger-jobs directory (shared volume).
     Identifies the job and output type to create his respective class_ad.
     """
-
     class_ad = job.model_dump()
     job_name = class_ad.get("batch_name")
 
@@ -52,7 +51,6 @@ def submit_job_service(filename_sub_classad: str, sub_container_name: str):
     - filename_sub_classad, the name of the submit file (classAd) created
     - sub_container_name, the name of the container with role 'sub'
     '''
-
     command = f"docker exec -w /sideger-jobs {sub_container_name} sh -c 'condor_submit {filename_sub_classad}'"
     try: 
         output = subprocess.run(
@@ -77,7 +75,6 @@ async def jobs_state_service(sub_container_name: str):
     retrieve the current state of the jobs from HTCondor inside the given container.
     returns a summarized JSON (using summarize_jobs) ready for the frontend.
     '''
-
     attributes = "Owner,JobBatchName,QDate,JobStatus,ClusterId,ProcId,Cmd"
     command = f"docker exec {sub_container_name} sh -c 'condor_q -json -attributes \"{attributes}\"'"
     try:
@@ -103,42 +100,35 @@ async def jobs_state_service(sub_container_name: str):
         raise HTTPException(status_code=400, detail=f"Error trying to get jobs state: {str(e)}")
 
 
-async def jobs_results_service(output_type: str):
+
+    
+
+async def jobs_results_service(job_name: str, output_type: str):
     """
-    this function iterates the sideger's working directory (sideger-jobs), and returns the
-    results depending on the 'output_type' -defined by the user previusly-.
+    this function orchestra the build of jobs results, iterates the sideger's
+    working directory (sideger-jobs), and returns the results depending
+    on the 'output_type' -defined by the user previusly-.
     ignores the files, only works with directories.
     output_type: 'a_directory' o 'n_directories'
     """
-
     working_directory = Path(os.path.expanduser("~/sideger-jobs"))
     if not working_directory.exists():
-        return {"error": "working directory doesn't exists"}
-    
-    jobs_results = {}
+        return {"error": "Directorio de trabajo no existe"}
+
+    job_dir = None
 
     for item in working_directory.iterdir():
-        if not item.is_dir():
-            continue 
+        if item.is_dir() and item.name.startswith(f"{job_name}_resultados_"):
+            job_dir = item
+            break
+    if not job_dir:
+        return {"name": job_name, "executions": [], "error": "Job not found"}
+    
+    if output_type == "a_directory":
+        executions = build_results_a_directory(job_dir)
+    elif output_type == "n_directories":
+        executions = build_results_n_directories(job_dir)
+    else:
+        raise ValueError(f"[ERR] output_type desconocido: {output_type}")
 
-        if "_resultados_" not in item.name:
-            continue # ignore logs and errors directories (erros could be included)
-
-        job_name = item.name.split("_resultados_")[0]
-
-        if output_type == "a_directory":
-            files = [str(f) for f in item.glob("*") if f.is_file()]
-            jobs_results[job_name] = files
-
-        elif output_type == "n_directories":
-            runs_data = {}
-            for sub in item.iterdir():
-                if sub.is_dir():
-                    salida_files = [str(f) for f in sub.glob("*") if f.is_file()]
-                    runs_data[sub.name] = salida_files
-            jobs_results[job_name] = runs_data
-
-        else:
-            print("error with directories")
-
-    return jobs_results
+    return {"id": job_name, "batch_name": job_name, "total_time": "N/A", "executions": executions}

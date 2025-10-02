@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Query
-from .schemas import JobSubmitRequest
+from fastapi import APIRouter
+from typing import List
+from .schemas import JobSubmitRequest, JobResultsRequest
 from .services import create_submit_file_service, submit_job_service, jobs_state_service, jobs_results_service
 
 router = APIRouter()
@@ -23,8 +24,11 @@ async def get_state_jobs(submit_container_name: str):
     return {"jobs": jobs_state}
 
 
-@router.get("/results")
-async def get_jobs_results(output_type: str = Query(..., description="a_directory o n_directories")):
-    jobs_results = await jobs_results_service(output_type)
+@router.post("/results")
+async def get_jobs_results(jobs_submitted: List[JobResultsRequest]):
+    jobs_results = []
+    for batch in jobs_submitted:
+        job_result = await jobs_results_service(batch.batch_name, batch.output_type)
+        jobs_results.append(job_result)
     print(jobs_results)
     return {"results": jobs_results}

@@ -13,6 +13,7 @@ app = FastAPI()
 
 origins = [
     "http://localhost:1420",  # front
+    # --then vpn--
 ]
 
 app.add_middleware(
