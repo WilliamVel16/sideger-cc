@@ -15,68 +15,27 @@ import { useAppContext } from "../context/AppContext";
 import { jobsResults } from "../utils/tauriApi";
 
 export default function ResultadosLotes() {
-  const { state } = useAppContext();
-  const [lotes, setLotes] = useState([]);
+  const { sessionJobsSubmitted } = useAppContext();
+  const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
-    // try {
-    //   const data = await jobsResults();
-    //   console.log(data)
-    //   setLotes(data)
+    const fetchResults = async () => {
+      setLoading(true);
+      try {
+        const { data } = await jobsResults(sessionJobsSubmitted);
+        console.log(data)
+        setBatches(data)
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // } catch (err) {
-    //   console.error(err);
-    // }
-
-    setTimeout(() => {
-      setLotes([
-        {
-          id: 1,
-          nombre: "analisis1",
-          ejecuciones: [
-            {
-              tiempo: "170s",
-              resultados: [
-                { trabajo: "ejecución 1", resultado: "23" },
-                { trabajo: "ejecución 2", resultado: "8" },
-              ],
-            },
-          ],
-        },
-        {
-          id: 2,
-          nombre: "analisis2",
-          ejecuciones: [
-            {
-              tiempo: "224s",
-              resultados: [
-                { trabajo: "trabajo id 3.1", resultado: "5,8" },
-                { trabajo: "trabajo id 3.2", resultado: "9" },
-                { trabajo: "trabajo id 3.3", resultado: "7" },
-              ],
-            },
-          ],
-        },
-        {
-          id: 3,
-          nombre: "python-file",
-          ejecuciones: [
-            {
-              tiempo: "22s",
-              resultados: [
-                { trabajo: "trabajo 4.1", resultado: "235,89" },
-                { trabajo: "trabajo 4.2", resultado: "234,67" },
-                { trabajo: "trabajo 4.3", resultado: "234,66" },
-              ],
-            },
-          ],
-        },
-      ]);
-      setLoading(false);
-    }, 1000);
+    fetchResults();
   }, []);
+    
 
   return (
     <Container maxWidth="md" sx={{ mt: 2, mx: "auto" }}>
@@ -91,17 +50,17 @@ export default function ResultadosLotes() {
       ) : (
         // grid of results
         <Grid container spacing={2}>
-          {lotes.map((lote) => (
-            <Grid item xs={12} sm={6} md={6} key={lote.id} sx={{ minWidth: 400 }}>
+          {batches.map((batch) => (
+            <Grid item xs={12} sm={6} md={6} key={batch.id} sx={{ minWidth: 400 }}>
               <Paper elevation={3} sx={{ p: 2}}>
                 <Accordion sx={{ boxShadow: "none" }}>
                   <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
-                    aria-controls={`panel-${lote.id}-content`}
-                    id={`panel-${lote.id}-header`}
+                    aria-controls={`panel-${batch.id}-content`}
+                    id={`panel-${batch.id}-header`}
                   >
                     <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                      Lote {lote.nombre}
+                      Lote {batch.batch_name} - Tiempo total {batch.total_time}
                     </Typography>
                   </AccordionSummary>
                   <AccordionDetails>
@@ -111,7 +70,7 @@ export default function ResultadosLotes() {
                     >
                       Ejecuciones:
                     </Typography>
-                    {lote.ejecuciones.map((exec, idx) => (
+                    {batch.executions.map((exec, idx) => (
                       <Box
                         key={idx}
                         sx={{
@@ -123,11 +82,11 @@ export default function ResultadosLotes() {
                         }}
                       >
                         <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                          Tiempo de ejecución: {exec.tiempo}
+                          Tiempo de ejecución: {exec.time}
                         </Typography>
 
                         <Box sx={{ mt: 1 }}>
-                          {exec.resultados.map((res, i) => (
+                          {exec.results.map((res, i) => (
                             <Box
                               key={i}
                               sx={{
@@ -141,7 +100,7 @@ export default function ResultadosLotes() {
                                 boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
                               }}
                             >
-                              {res.trabajo}: {res.resultado}
+                              {res.job}: {res.result}
                             </Box>
                           ))}
                         </Box>

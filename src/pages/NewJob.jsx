@@ -19,7 +19,7 @@ import { useAppContext } from "../context/AppContext";
 import { submitJob } from "../utils/tauriApi";
 
 function NewJob() {
-  const { clusterNodesConfig } = useAppContext();
+  const { clusterNodesConfig, setSessionJobsSubmitted } = useAppContext();
   const [inputFiles, setInputFiles] = useState([]);
   const [jobType, setJobType] = useState("executable");
   const [input, setInput] = useState("");
@@ -68,11 +68,15 @@ function NewJob() {
       .filter(node => node.container_name.startsWith("sub_"))
       .map(node => node.container_name);
 
-    console.log(formData, submitContainer[0], outputType)
-
     try {
       const response = await submitJob(formData, submitContainer[0], outputType);
       console.log(response);
+      
+      setSessionJobsSubmitted(prevJobs => {
+      const newJob = { batch_name: formData.batch_name, output_type: outputType };
+      const filtered = prevJobs.filter(job => job.name !== newJob.name);
+      return [...filtered, newJob];
+    });
     } catch (err) {
       console.log("Error trying submit the new job:", err);
     }

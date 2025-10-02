@@ -177,9 +177,18 @@ export const jobsQueue = async (nodeSubmitRole) => {
   return response.json();
 }
 
-// to view the reesults of the runnings in the htcondor cluster
-export const jobsResults = async (outputType) => {
-  const response = await fetch(
-    `${BACKEND_URL}/jobs/results?output_type=${encodeURIComponent(outputType)}`
+// to view the reesults of the runnings in the htcondor cluster [FinishedJobs.jsx]
+export const jobsResults = async (sessionJobsSubmitted) => {
+  const response = await fetch(`${BACKEND_URL}/jobs/results`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(sessionJobsSubmitted)
+    }
   )
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`get jobs results failed: ${err}`);
+  }
+  return response.json();
 }
