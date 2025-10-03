@@ -32,3 +32,4 @@ async def get_jobs_results(jobs_submitted: List[JobResultsRequest]):
         jobs_results.append(job_result)
     print(jobs_results)
     return {"results": jobs_results}
+

@@ -1,4 +1,4 @@
-from cluster.models import *
+from cluster.schemas import *
 from typing import List
 import subprocess
 from containers.nodes import create_container_config, run_single_node

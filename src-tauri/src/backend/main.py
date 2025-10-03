@@ -6,7 +6,7 @@ from cluster.routers import router as cluster_router
 from containers.routers import router as containers_router
 from htcondor.routers import router as htcondor_router
 from jobs.routers import router as jobs_router
-from user_authentication.routers import router as user_auth_router
+from user_data.routers import router as user_auth_router
 from core.database import Base, engine
 
 app = FastAPI()

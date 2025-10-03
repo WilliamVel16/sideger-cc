@@ -1,5 +1,5 @@
 import subprocess
-from cluster.models import ContainerConfig
+from cluster.schemas import ContainerConfig
 from fastapi import HTTPException
 import os
 

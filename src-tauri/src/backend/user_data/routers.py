@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from typing import List
 from . import models, schemas
 from core import security, database
 
@@ -19,6 +20,7 @@ def login(user_data: schemas.UserLogin, db: Session = Depends(database.get_db)):
         "token_type": "bearer"
     }
 
+
 @router.post("/create-user", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
     hashed_password = security.hash_password(user.password)
@@ -32,3 +34,40 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)
     db.commit()
     db.refresh(db_user)
     return db_user
+
+
+# creates a new job with their results
+@router.post("/save-job", response_model=schemas.JobResponse)
+def create_job(job: schemas.JobCreate, db: Session = Depends(database.get_db)):
+    db_job = models.Job(
+        universe=job.universe,
+        job_name=job.job_name,
+        execution_date=job.execution_date,
+        execution_total_time=job.execution_total_time,
+        user_id=job.user_id
+    )
+    db.add(db_job)
+    db.commit()
+    db.refresh(db_job)
+
+    # add results
+    if job.results:
+        db_results = [
+            models.Result(result=res.result, job_id=db_job.id)
+            for res in job.results
+        ]
+        db.add_all(db_results)
+        db.commit()
+        db.refresh(db_job)
+
+    return db_job
+
+
+@router.get("/view-jobs", response_model=List[schemas.JobResponse])
+def get_all_jobs(db: Session = Depends(database.get_db)):
+    return db.query(models.Job).all()
+
+
+@router.get("/user/{user_id}", response_model=List[schemas.JobResponse])
+def get_jobs_by_user(user_id: int, db: Session = Depends(database.get_db)):
+    return db.query(models.Job).filter(models.Job.user_id == user_id).all()

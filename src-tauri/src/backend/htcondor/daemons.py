@@ -1,5 +1,5 @@
 import subprocess
-from cluster.models import ContainerConfig
+from cluster.schemas import ContainerConfig
 
 def start_condor_master(config: ContainerConfig) -> str:
     """

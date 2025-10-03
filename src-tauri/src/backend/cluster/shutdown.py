@@ -1,5 +1,5 @@
 from typing import List
-from cluster.models import ContainerConfig, ShutdownNodeResult
+from cluster.schemas import ContainerConfig, ShutdownNodeResult
 from containers.nodes import stop_single_node
 from resources.onet import leave_swarm, remove_overlay_network
 from fastapi import HTTPException
