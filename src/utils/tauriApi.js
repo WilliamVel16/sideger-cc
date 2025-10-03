@@ -192,3 +192,20 @@ export const jobsResults = async (sessionJobsSubmitted) => {
   }
   return response.json();
 }
+
+// gets the storaged jobs in DB to authenticated user [StoragedJobs.jsx]
+export const getUserJobs = async () => {
+  const response = await fetch(`${BACKEND_URL}/jobs/db`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+    },
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`get user jobs failed: ${err}`);
+  }
+  return response.json();
+};

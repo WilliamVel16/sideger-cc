@@ -22,10 +22,11 @@ export default function ResultadosLotes() {
   useEffect(() => {
     const fetchResults = async () => {
       setLoading(true);
+      console.log(sessionJobsSubmitted)
       try {
-        const { data } = await jobsResults(sessionJobsSubmitted);
+        const data = await jobsResults(sessionJobsSubmitted);
         console.log(data)
-        setBatches(data)
+        setBatches(data.results)
       } catch (err) {
         console.error(err);
       } finally {

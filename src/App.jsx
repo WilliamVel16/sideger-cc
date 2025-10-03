@@ -9,6 +9,7 @@ import NewJob from "./pages/NewJob";
 import JobQueue from "./pages/JobQueue";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import StoragedJobs from "./pages/StoragedJobs";
 import { ProtectedRoute } from "./services/ProtectedRoute"
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
                 <Route path="/jobs/new" element={<NewJob />} />
                 <Route path="/jobs/queue" element={<JobQueue />} />
                 <Route path="/jobs/finished" element={<FinishedJobs />} />
+                <Route path="/registers/jobs" element={<StoragedJobs />} />
               </Route>
             </Route>
           </Routes>
