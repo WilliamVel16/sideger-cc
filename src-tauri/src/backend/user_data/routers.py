@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from . import models, schemas
 from core import security, database
+from . import services
 
 router = APIRouter()
 
@@ -63,11 +64,14 @@ def create_job(job: schemas.JobCreate, db: Session = Depends(database.get_db)):
     return db_job
 
 
-@router.get("/view-jobs", response_model=List[schemas.JobResponse])
+@router.get("/view-jobs-stored", response_model=List[schemas.JobResponse])
 def get_all_jobs(db: Session = Depends(database.get_db)):
     return db.query(models.Job).all()
 
 
-@router.get("/user/{user_id}", response_model=List[schemas.JobResponse])
-def get_jobs_by_user(user_id: int, db: Session = Depends(database.get_db)):
-    return db.query(models.Job).filter(models.Job.user_id == user_id).all()
+@router.get("/jobs/db", response_model=list[schemas.JobResponse])
+async def get_user_jobs(db: Session = Depends(database.get_db), current_user: models.User = Depends(security.get_current_user)):
+    """
+    Devuelve los trabajos guardados en la BD del usuario autenticado.
+    """
+    return services.get_jobs_by_user_id(db, current_user.id)

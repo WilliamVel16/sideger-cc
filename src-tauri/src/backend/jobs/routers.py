@@ -30,6 +30,6 @@ async def get_jobs_results(jobs_submitted: List[JobResultsRequest]):
     for batch in jobs_submitted:
         job_result = await jobs_results_service(batch.batch_name, batch.output_type)
         jobs_results.append(job_result)
-    print(jobs_results)
+    print(jobs_results, "*********")
     return {"results": jobs_results}
 

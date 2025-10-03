@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from pathlib import Path
 from .submit_builder import HTCondorSubmit
 from .schemas import JobData
-from .utils import summarize_jobs, find_result_directories, build_results_a_directory, build_results_n_directories
+from .utils import summarize_jobs, build_results_a_directory, build_results_n_directories
 
 def create_submit_file_service(job: JobData, output_type: str):
     """
@@ -98,8 +98,6 @@ async def jobs_state_service(sub_container_name: str):
             
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error trying to get jobs state: {str(e)}")
-
-
 
     
 
