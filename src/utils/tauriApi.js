@@ -165,16 +165,23 @@ export const submitJob = async (formData, nodeSubmitRole, outputType) => {
 };
 
 // to retrieve the jobs data in execution (includes state) [JobQueue.jsx]
-export const jobsQueue = async (nodeSubmitRole) => {
+export const jobsQueue = async (nodeSubmitRole, sessionJobsSubmitted) => {
+  console.log(JSON.stringify( { session_jobs: sessionJobsSubmitted}))
   const response = await fetch(
-    `${BACKEND_URL}/jobs/queue?submit_container_name=${encodeURIComponent(nodeSubmitRole)}`
+    `${BACKEND_URL}/jobs/data/queue?submit_container_name=${encodeURIComponent(nodeSubmitRole)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_jobs: sessionJobsSubmitted }),
+    }
   );
   
   if (!response.ok) {
     const err = await response.text();
     throw new Error(`get data and state jobs failed: ${err}`);
   }
-  return response.json();
+  const data = await response.json();
+  return data.jobs;
 }
 
 // to view the reesults of the runnings in the htcondor cluster [FinishedJobs.jsx]
@@ -192,6 +199,23 @@ export const jobsResults = async (sessionJobsSubmitted) => {
   }
   return response.json();
 }
+
+// saves a submitted job in the app's database [FinishedJobs.jsx]
+export const saveJob = async (payload) => {
+  const res = await fetch(`${BACKEND_URL}/user/save-job`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`save failed: ${txt}`);
+  }
+  return res.json();
+};
 
 // gets the storaged jobs in DB to authenticated user [StoragedJobs.jsx]
 export const getUserJobs = async () => {

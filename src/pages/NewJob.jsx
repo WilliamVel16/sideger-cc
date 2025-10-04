@@ -68,12 +68,14 @@ function NewJob() {
       .filter(node => node.container_name.startsWith("sub_"))
       .map(node => node.container_name);
 
+    console.log(formData);
+
     try {
       const response = await submitJob(formData, submitContainer[0], outputType);
       console.log(response);
       
       setSessionJobsSubmitted(prevJobs => {
-      const newJob = { batch_name: formData.batch_name, output_type: outputType };
+      const newJob = { batch_name: formData.batch_name, number_jobs: formData.queue, output_type: outputType };
       const filtered = prevJobs.filter(job => job.batch_name !== newJob.batch_name);
       return [...filtered, newJob];
     });

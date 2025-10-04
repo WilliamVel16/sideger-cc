@@ -12,7 +12,7 @@ import { useAppContext } from "../context/AppContext";
 import { jobsQueue } from "../utils/tauriApi";
 
 function JobQueue() {
-  const { clusterNodesConfig } = useAppContext();
+  const { clusterNodesConfig, sessionJobsSubmitted } = useAppContext();
   const [jobId, setJobId] = useState("");
   const [jobInfo, setJobInfo] = useState(null);
   const [jobsData, setJobsData] = useState({
@@ -28,11 +28,14 @@ function JobQueue() {
       const submitContainer = clusterNodesConfig
         .filter(node => node.container_name.startsWith("sub_"))
         .map(node => node.container_name);
+      
+      console.log(sessionJobsSubmitted)
 
       try {
-        const data = await jobsQueue(submitContainer[0]);
+        const data = await jobsQueue(submitContainer[0], sessionJobsSubmitted);
+        console.log(data)
         console.log(data.jobs)
-        setJobsData(data.jobs)
+        setJobsData(data)
 
         if (data.totals.total_jobs === 0) {
           clearInterval(interval);
@@ -206,10 +209,10 @@ function JobQueue() {
           return (
             <Paper key={idx} sx={{ p: 2, mt: 1 }}>
               <Typography variant="subtitle1" marginBottom={1}>
-                Lote: {batch.batch_name} ({batch.submitted})
+                {batch.batch_name} - {batch.submitted} ({batch.initial_total} trabajos enviados)
               </Typography>
               <Typography variant="body2" marginBottom={1}>
-                IDs del lote: {range_ids} --- Zona de prueba: {batch.job_ids}
+                IDs del lote: {range_ids} --- {/*Zona de prueba: {batch.job_ids}*/}
               </Typography>
               <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt:1 }}>
                 {[
