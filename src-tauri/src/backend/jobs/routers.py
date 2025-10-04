@@ -1,10 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from typing import List
 from .schemas import JobSubmitRequest, JobResultsRequest
 from .services import create_submit_file_service, submit_job_service, jobs_state_service, jobs_results_service
 
 router = APIRouter()
 
+# submit a job to the cluster
 @router.post("/submit")
 async def submit_job(request: JobSubmitRequest):
     job = request.job_data
@@ -17,19 +18,22 @@ async def submit_job(request: JobSubmitRequest):
     return {"message": "job received", "output": output}
 
 
-@router.get("/queue")
-async def get_state_jobs(submit_container_name: str):
-    jobs_state = await jobs_state_service(submit_container_name)
-    print(jobs_state)
+# queue state (jobs in the htcondor queue) 
+@router.post("/data/queue")
+async def get_state_jobs(submit_container_name: str, request: Request):
+    body = await request.json()
+    session_jobs = body.get("session_jobs", [])
+    jobs_state = await jobs_state_service(submit_container_name, session_jobs)
     return {"jobs": jobs_state}
 
 
+# results, jobs fnished
 @router.post("/results")
 async def get_jobs_results(jobs_submitted: List[JobResultsRequest]):
     jobs_results = []
     for batch in jobs_submitted:
-        job_result = await jobs_results_service(batch.batch_name, batch.output_type)
+        job_result = await jobs_results_service(batch.batch_name, batch.number_jobs, batch.output_type)
         jobs_results.append(job_result)
-    print(jobs_results, "*********")
     return {"results": jobs_results}
+
 

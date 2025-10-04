@@ -32,4 +32,5 @@ class JobSubmitRequest(BaseModel):
 
 class JobResultsRequest(BaseModel):
     batch_name: str
+    number_jobs: int
     output_type: str

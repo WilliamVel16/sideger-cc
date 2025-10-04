@@ -42,8 +42,6 @@ class Result(Base):
 
 
 
-
-
 # class Cluster(Base):
 #     __tablename__ = "clusters"
 

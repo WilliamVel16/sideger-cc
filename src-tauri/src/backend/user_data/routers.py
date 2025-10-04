@@ -37,7 +37,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)
     return db_user
 
 
-# creates a new job with their results
+# saves into db a new job with their results
 @router.post("/save-job", response_model=schemas.JobResponse)
 def create_job(job: schemas.JobCreate, db: Session = Depends(database.get_db)):
     db_job = models.Job(
@@ -60,7 +60,6 @@ def create_job(job: schemas.JobCreate, db: Session = Depends(database.get_db)):
         db.add_all(db_results)
         db.commit()
         db.refresh(db_job)
-
     return db_job
 
 

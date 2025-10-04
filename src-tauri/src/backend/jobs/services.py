@@ -70,9 +70,9 @@ def submit_job_service(filename_sub_classad: str, sub_container_name: str):
         raise HTTPException(status_code=400, detail=f"Error trying to submit the new job {filename_sub_classad}")
 
 
-async def jobs_state_service(sub_container_name: str):
+async def jobs_state_service(sub_container_name: str, session_jobs: list):
     '''
-    retrieve the current state of the jobs from HTCondor inside the given container.
+    retrieve the current state of the jobs from HTCondor since the given container (submit role).
     returns a summarized JSON (using summarize_jobs) ready for the frontend.
     '''
     attributes = "Owner,JobBatchName,QDate,JobStatus,ClusterId,ProcId,Cmd"
@@ -94,6 +94,12 @@ async def jobs_state_service(sub_container_name: str):
             raise HTTPException(status_code=500, detail="Error parsing condor_q output")
         
         final_jobs_info = summarize_jobs(jobs_json)
+
+        for batch in final_jobs_info["batches"]:
+            for sj in session_jobs:
+                if sj["batch_name"] == batch["batch_name"]:
+                    batch["initial_total"] = int(sj["number_jobs"])
+                    break
         return final_jobs_info
             
     except Exception as e:
@@ -101,7 +107,7 @@ async def jobs_state_service(sub_container_name: str):
 
     
 
-async def jobs_results_service(job_name: str, output_type: str):
+async def jobs_results_service(job_name: str, number_jobs: int, output_type: str):
     """
     this function orchestra the build of jobs results, iterates the sideger's
     working directory (sideger-jobs), and returns the results depending
@@ -129,5 +135,5 @@ async def jobs_results_service(job_name: str, output_type: str):
     else:
         raise ValueError(f"[ERR] output_type desconocido: {output_type}")
 
-    return {"id": job_name, "batch_name": job_name, "total_time": "N/A", "executions": executions}
+    return {"id": job_name, "batch_name": job_name, "number_jobs": number_jobs, "total_time": "N/A", "executions": executions}
 
