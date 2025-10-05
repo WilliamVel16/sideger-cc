@@ -2,6 +2,7 @@ from datetime import datetime
 from collections import defaultdict
 from pathlib import Path
 
+
 def summarize_jobs(jobs):
     """
     summarize HTCondor jobs JSON into a clear structure for frontend display.
@@ -128,7 +129,6 @@ def build_results_a_directory(job_dir: Path):
         })
 
     return [{
-        "time": "N/A",  # could return metadata
         "results": results
     }]
 
@@ -157,7 +157,6 @@ def build_results_n_directories(job_dir: Path):
                 })
 
         executions.append({
-            "time": "N/A",
             "results": results
         })
     return executions

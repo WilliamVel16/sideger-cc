@@ -12,7 +12,7 @@ import { showResourcesSpecs, initializeCluster, showMySpecs } from "../utils/tau
 import { useAppContext } from '../context/AppContext';
 
 function InitializeCluster() {
-  const { resourcesIPs, resourcesUser, setClusterState, LANname, setClusterNodesConfig, overlayNetworkName, setOverlayNetworkName } = useAppContext();
+  const { resourcesIPs, resourcesUser, setClusterState, LANname, setClusterNodesConfig, overlayNetworkName, setOverlayNetworkName, setSubmitContainerName } = useAppContext();
   const [checkedServers, setCheckedServers] = useState([]);
   const [servers, setServers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -67,6 +67,12 @@ function InitializeCluster() {
       console.log(response);
       console.log(response[0].config);
       setClusterNodesConfig(response.map(node => node.config));
+
+      const submitContainer = response
+        .filter(node => node.config.container_name.startsWith("sub_"))
+        .map(node => node.container_name);
+
+      setSubmitContainerName(submitContainer[0])
     } catch (err) {
       console.error("Error deploying:", err);
     }

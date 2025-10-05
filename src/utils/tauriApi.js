@@ -185,8 +185,9 @@ export const jobsQueue = async (nodeSubmitRole, sessionJobsSubmitted) => {
 }
 
 // to view the reesults of the runnings in the htcondor cluster [FinishedJobs.jsx]
-export const jobsResults = async (sessionJobsSubmitted) => {
-  const response = await fetch(`${BACKEND_URL}/jobs/results`, {
+export const jobsResults = async (sessionJobsSubmitted, submitContainerName) => {
+  const response = await fetch(`${BACKEND_URL}/jobs/results?sub_container_name=${encodeURIComponent(submitContainerName)}`,
+  {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(sessionJobsSubmitted)

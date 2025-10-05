@@ -6,6 +6,8 @@ from fastapi import HTTPException
 from pathlib import Path
 from .submit_builder import HTCondorSubmit
 from .schemas import JobData
+import asyncio, json
+from datetime import timedelta
 from .utils import summarize_jobs, build_results_a_directory, build_results_n_directories
 
 def create_submit_file_service(job: JobData, output_type: str):
@@ -106,8 +108,58 @@ async def jobs_state_service(sub_container_name: str, session_jobs: list):
         raise HTTPException(status_code=400, detail=f"Error trying to get jobs state: {str(e)}")
 
     
+async def get_batch_lifetime(batch_name: str, sub_container_name: str) -> str:
+    """
+    obtaine the lifetime (since job submitted to job done)
+    of a batch from HTCondor using condor_history instruction.
+    return a string like '2m 35s' or '1h 12m 4s'.
+    """
+    command = (
+        f"docker exec {sub_container_name} condor_history -json -constraint 'JobBatchName==\"{batch_name}\"' -attributes QDate,CompletionDate"
+    )
+    
+    process = await asyncio.create_subprocess_shell(
+        command,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await process.communicate()
 
-async def jobs_results_service(job_name: str, number_jobs: int, output_type: str):
+    if process.returncode != 0:
+        raise RuntimeError(f"[ERR] in condor history: {stderr}")
+
+    try:
+        jobs = json.loads(stdout)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail=f"[ERR] formatting jobs results")
+
+    
+    q_dates = [j.get("QDate") for j in jobs if j.get("QDate")]
+    completion_dates = [j.get("CompletionDate") for j in jobs if j.get("CompletionDate")]
+
+    start = min(q_dates)
+    end = max(completion_dates)
+    total_seconds = end - start
+
+    if total_seconds <= 0:
+        raise RuntimeError("[ERR] invalid duration (end <= start)")
+
+    # formating to return
+    duration = timedelta(seconds=total_seconds)
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    if hours > 0:
+        formatted = f"{hours}h {minutes}m {seconds}s"
+    elif minutes > 0:
+        formatted = f"{minutes}m {seconds}s"
+    else:
+        formatted = f"{seconds}s"
+
+    return formatted
+    
+
+async def jobs_results_service(job_name: str, number_jobs: int, output_type: str, sub_container_name: str):
     """
     this function orchestra the build of jobs results, iterates the sideger's
     working directory (sideger-jobs), and returns the results depending
@@ -128,6 +180,8 @@ async def jobs_results_service(job_name: str, number_jobs: int, output_type: str
     if not job_dir:
         return {"name": job_name, "executions": [], "error": "Job not found"}
     
+    total_time = await get_batch_lifetime(job_name, sub_container_name)
+    
     if output_type == "a_directory":
         executions = build_results_a_directory(job_dir)
     elif output_type == "n_directories":
@@ -135,5 +189,5 @@ async def jobs_results_service(job_name: str, number_jobs: int, output_type: str
     else:
         raise ValueError(f"[ERR] output_type desconocido: {output_type}")
 
-    return {"id": job_name, "batch_name": job_name, "number_jobs": number_jobs, "total_time": "N/A", "executions": executions}
+    return {"id": job_name, "batch_name": job_name, "number_jobs": number_jobs, "total_time": "N/A", "total_time": total_time, "executions": executions}
 

@@ -23,7 +23,7 @@ const parseExecutionTime = (resultText) => {
 };
 
 export default function ResultadosLotes() {
-  const { sessionJobsSubmitted, token } = useAppContext();
+  const { sessionJobsSubmitted, token, submitContainerName } = useAppContext();
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -32,7 +32,7 @@ export default function ResultadosLotes() {
     const fetchResults = async () => {
       setLoading(true);
       try {
-        const data = await jobsResults(sessionJobsSubmitted);
+        const data = await jobsResults(sessionJobsSubmitted, submitContainerName);
         console.log(data.results)
         setBatches(data.results);
       } catch (err) {
@@ -41,8 +41,8 @@ export default function ResultadosLotes() {
         setLoading(false);
       }
     };
-    fetchResults();
-  }, []);
+    if (submitContainerName) fetchResults();
+  }, [sessionJobsSubmitted, submitContainerName]);
 
   // transform batch in payload to backend
   const buildPayload = (batch) => {
@@ -74,7 +74,7 @@ export default function ResultadosLotes() {
     setSaving(true);
     try {
       const payload = buildPayload(batch);
-      await saveJob(payload, token);
+      await saveJob(payload, localStorage.getItem("access_token"));
       alert("job saved");
     } catch (err) {
       console.error(err);
