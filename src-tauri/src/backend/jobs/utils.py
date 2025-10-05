@@ -1,5 +1,7 @@
 from datetime import datetime
 from collections import defaultdict
+from pathlib import Path
+
 
 def summarize_jobs(jobs):
     """
@@ -14,7 +16,6 @@ def summarize_jobs(jobs):
         dict: a dictionary containing timestamp, batches (list of batches with job details),
               and totals (summary counts for all jobs).
     """
-
     # map jobs state
     status_map = {
         1: 'Idle',
@@ -39,7 +40,7 @@ def summarize_jobs(jobs):
 
         job_entry = {
             "batch_name": batch_name,
-            "submitted": datetime.fromtimestamp(submitted_timestamp).strftime("%m/%d %H:%M"),
+            "submitted": datetime.fromtimestamp(submitted_timestamp).strftime("%d %b %Y, %H:%M:%S"), # format changed
             "status": status_map.get(jobstatus_code, "Unknown"),
             "cluster_id": cluster_id,
             "proc_id": proc_id,
@@ -97,3 +98,65 @@ def summarize_jobs(jobs):
         "batches": batches,
         "totals": totals
     }
+
+
+def find_result_directories(base_dir: Path):
+    """
+    searchs directories *_resultados_* in the working directory (~/sideger-jobs).
+    """
+    jobs = {}
+    for item in base_dir.iterdir():
+        if item.is_dir() and "_resultados_" in item.name:
+            job_name = item.name.split("_resultados_")[0]
+            jobs[job_name] = item
+    return jobs
+
+
+def build_results_a_directory(job_dir: Path):
+    """
+    builds results to output_type = a_directory
+    """
+    results = []
+    for idx, file in enumerate(job_dir.glob("*.out")):
+        try:
+            with open(file, "r") as f:
+                content = f.read().strip()
+        except Exception as e:
+            content = f"[Err] reading file: {e}"
+        results.append({
+            "job": f"Ejecución {idx+1}",
+            "result": content
+        })
+
+    return [{
+        "results": results
+    }]
+
+
+def build_results_n_directories(job_dir: Path):
+    """
+    builds results to output_type = n_directories
+    """
+    executions = []
+    for sub in job_dir.iterdir():
+        if not sub.is_dir():
+            continue
+        results = []
+        for file in sub.glob("*.out"):
+            try:
+                with open(file, "r") as f:
+                    content = f.read().strip()
+                results.append({
+                    "job": file.stem,
+                    "result": content
+                })
+            except Exception as e:
+                results.append({
+                    "job": file.stem,
+                    "result": f"[Err] reading file: {e}"
+                })
+
+        executions.append({
+            "results": results
+        })
+    return executions

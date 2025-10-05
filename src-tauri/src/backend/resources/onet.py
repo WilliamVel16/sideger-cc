@@ -1,5 +1,5 @@
 import subprocess
-from cluster.models import ContainerConfig
+from cluster.schemas import ContainerConfig
 from fastapi import HTTPException
 
 def init_swarm_manager(manager_ip: str, resource_user: str) -> str:

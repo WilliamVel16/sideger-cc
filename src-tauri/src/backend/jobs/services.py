@@ -6,7 +6,9 @@ from fastapi import HTTPException
 from pathlib import Path
 from .submit_builder import HTCondorSubmit
 from .schemas import JobData
-from .utils import summarize_jobs
+import asyncio, json
+from datetime import timedelta
+from .utils import summarize_jobs, build_results_a_directory, build_results_n_directories
 
 def create_submit_file_service(job: JobData, output_type: str):
     """
@@ -14,7 +16,6 @@ def create_submit_file_service(job: JobData, output_type: str):
     sideger-jobs directory (shared volume).
     Identifies the job and output type to create his respective class_ad.
     """
-
     class_ad = job.model_dump()
     job_name = class_ad.get("batch_name")
 
@@ -52,7 +53,6 @@ def submit_job_service(filename_sub_classad: str, sub_container_name: str):
     - filename_sub_classad, the name of the submit file (classAd) created
     - sub_container_name, the name of the container with role 'sub'
     '''
-
     command = f"docker exec -w /sideger-jobs {sub_container_name} sh -c 'condor_submit {filename_sub_classad}'"
     try: 
         output = subprocess.run(
@@ -72,12 +72,11 @@ def submit_job_service(filename_sub_classad: str, sub_container_name: str):
         raise HTTPException(status_code=400, detail=f"Error trying to submit the new job {filename_sub_classad}")
 
 
-async def jobs_state_service(sub_container_name: str):
+async def jobs_state_service(sub_container_name: str, session_jobs: list):
     '''
-    retrieve the current state of the jobs from HTCondor inside the given container.
+    retrieve the current state of the jobs from HTCondor since the given container (submit role).
     returns a summarized JSON (using summarize_jobs) ready for the frontend.
     '''
-
     attributes = "Owner,JobBatchName,QDate,JobStatus,ClusterId,ProcId,Cmd"
     command = f"docker exec {sub_container_name} sh -c 'condor_q -json -attributes \"{attributes}\"'"
     try:
@@ -97,48 +96,133 @@ async def jobs_state_service(sub_container_name: str):
             raise HTTPException(status_code=500, detail="Error parsing condor_q output")
         
         final_jobs_info = summarize_jobs(jobs_json)
+
+        for batch in final_jobs_info["batches"]:
+            for sj in session_jobs:
+                if sj["batch_name"] == batch["batch_name"]:
+                    batch["initial_total"] = int(sj["number_jobs"])
+                    break
         return final_jobs_info
             
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error trying to get jobs state: {str(e)}")
 
-
-async def jobs_results_service(output_type: str):
+    
+async def get_batch_lifetime(batch_name: str, sub_container_name: str) -> str:
     """
-    this function iterates the sideger's working directory (sideger-jobs), and returns the
-    results depending on the 'output_type' -defined by the user previusly-.
+    obtaine the lifetime (since job submitted to job done)
+    of a batch from HTCondor using condor_history instruction.
+    return a string like '2m 35s' or '1h 12m 4s'.
+    """
+    command = (
+        f"docker exec {sub_container_name} condor_history -json -constraint 'JobBatchName==\"{batch_name}\"' -attributes QDate,CompletionDate"
+    )
+    
+    process = await asyncio.create_subprocess_shell(
+        command,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await process.communicate()
+
+    if process.returncode != 0:
+        raise RuntimeError(f"[ERR] in condor history: {stderr}")
+
+    try:
+        jobs = json.loads(stdout)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail=f"[ERR] formatting jobs results")
+
+    
+    q_dates = [j.get("QDate") for j in jobs if j.get("QDate")]
+    completion_dates = [j.get("CompletionDate") for j in jobs if j.get("CompletionDate")]
+
+    start = min(q_dates)
+    end = max(completion_dates)
+    total_seconds = end - start
+
+    if total_seconds <= 0:
+        raise RuntimeError("[ERR] invalid duration (end <= start)")
+
+    # formating to return
+    duration = timedelta(seconds=total_seconds)
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    if hours > 0:
+        formatted = f"{hours}h {minutes}m {seconds}s"
+    elif minutes > 0:
+        formatted = f"{minutes}m {seconds}s"
+    else:
+        formatted = f"{seconds}s"
+
+    return formatted
+    
+
+async def jobs_results_service(job_name: str, number_jobs: int, output_type: str, sub_container_name: str):
+    """
+    this function orchestra the build of jobs results, iterates the sideger's
+    working directory (sideger-jobs), and returns the results depending
+    on the 'output_type' -defined by the user previusly-.
     ignores the files, only works with directories.
     output_type: 'a_directory' o 'n_directories'
     """
-
     working_directory = Path(os.path.expanduser("~/sideger-jobs"))
     if not working_directory.exists():
-        return {"error": "working directory doesn't exists"}
-    
-    jobs_results = {}
+        return {"error": "Directorio de trabajo no existe"}
+
+    job_dir = None
 
     for item in working_directory.iterdir():
-        if not item.is_dir():
-            continue 
+        if item.is_dir() and item.name.startswith(f"{job_name}_resultados_"):
+            job_dir = item
+            break
+    if not job_dir:
+        return {"name": job_name, "executions": [], "error": "Job not found"}
+    
+    total_time = await get_batch_lifetime(job_name, sub_container_name)
+    
+    if output_type == "a_directory":
+        executions = build_results_a_directory(job_dir)
+    elif output_type == "n_directories":
+        executions = build_results_n_directories(job_dir)
+    else:
+        raise ValueError(f"[ERR] output_type desconocido: {output_type}")
 
-        if "_resultados_" not in item.name:
-            continue # ignore logs and errors directories (erros could be included)
+    return {"id": job_name, "batch_name": job_name, "number_jobs": number_jobs, "total_time": total_time, "executions": executions}
 
-        job_name = item.name.split("_resultados_")[0]
 
-        if output_type == "a_directory":
-            files = [str(f) for f in item.glob("*") if f.is_file()]
-            jobs_results[job_name] = files
+async def remove_job_service(job_id: str, submit_container_name: str):
+    """
+    Deletes a specific jof grom HTCondor queue since submit role container
+    """
+    command = f"docker exec {submit_container_name} condor_rm {job_id}"
+    process = await asyncio.create_subprocess_shell(
+        command,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await process.communicate()
 
-        elif output_type == "n_directories":
-            runs_data = {}
-            for sub in item.iterdir():
-                if sub.is_dir():
-                    salida_files = [str(f) for f in sub.glob("*") if f.is_file()]
-                    runs_data[sub.name] = salida_files
-            jobs_results[job_name] = runs_data
+    if process.returncode != 0:
+        raise HTTPException(status_code=500, detail=f"Error al eliminar trabajo: {stderr.decode().strip()}")
 
-        else:
-            print("error with directories")
+    return {"message": f"Trabajo {job_id} eliminado correctamente", "stdout": stdout.decode().strip()}
 
-    return jobs_results
+
+async def remove_batch_service(batch_name: str, submit_container_name: str):
+    """
+    deletes all the jobs from a batch (JobBatchName) in the HTCondor queue
+    """
+    command = f"docker exec {submit_container_name} condor_rm -constraint 'JobBatchName==\"{batch_name}\"'"
+    process = await asyncio.create_subprocess_shell(
+        command,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await process.communicate()
+
+    if process.returncode != 0:
+        raise HTTPException(status_code=500, detail=f"Error al eliminar lote: {stderr.decode().strip()}")
+
+    return {"message": f"Lote {batch_name} eliminado correctamente", "stdout": stdout.decode().strip()}

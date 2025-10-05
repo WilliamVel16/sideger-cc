@@ -8,75 +8,71 @@ import {
   AccordionSummary,
   AccordionDetails,
   CircularProgress,
+  Button,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useState, useEffect } from "react";
 import { useAppContext } from "../context/AppContext";
-import { jobsResults } from "../utils/tauriApi";
+import { jobsResults, saveJob } from "../utils/tauriApi";
 
 export default function ResultadosLotes() {
-  const { state } = useAppContext();
-  const [lotes, setLotes] = useState([]);
+  const { sessionJobsSubmitted, token, submitContainerName } = useAppContext();
+  const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [savingId, setSavingId] = useState(null);
 
   useEffect(() => {
-    setLoading(true);
-    // try {
-    //   const data = await jobsResults();
-    //   console.log(data)
-    //   setLotes(data)
+    const fetchResults = async () => {
+      setLoading(true);
+      try {
+        const data = await jobsResults(sessionJobsSubmitted, submitContainerName);
+        console.log(data.results)
+        setBatches(data.results);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (submitContainerName) fetchResults();
+  }, [sessionJobsSubmitted, submitContainerName]);
 
-    // } catch (err) {
-    //   console.error(err);
-    // }
+  // transform batch in payload to backend
+  const buildPayload = (batch) => {
+    const results = (batch.executions || [])
+      .flatMap((exec) =>
+        (exec.results || []).map((r) => ({
+          result: r.result,
+        }))
+      );
 
-    setTimeout(() => {
-      setLotes([
-        {
-          id: 1,
-          nombre: "analisis1",
-          ejecuciones: [
-            {
-              tiempo: "170s",
-              resultados: [
-                { trabajo: "ejecución 1", resultado: "23" },
-                { trabajo: "ejecución 2", resultado: "8" },
-              ],
-            },
-          ],
-        },
-        {
-          id: 2,
-          nombre: "analisis2",
-          ejecuciones: [
-            {
-              tiempo: "224s",
-              resultados: [
-                { trabajo: "trabajo id 3.1", resultado: "5,8" },
-                { trabajo: "trabajo id 3.2", resultado: "9" },
-                { trabajo: "trabajo id 3.3", resultado: "7" },
-              ],
-            },
-          ],
-        },
-        {
-          id: 3,
-          nombre: "python-file",
-          ejecuciones: [
-            {
-              tiempo: "22s",
-              resultados: [
-                { trabajo: "trabajo 4.1", resultado: "235,89" },
-                { trabajo: "trabajo 4.2", resultado: "234,67" },
-                { trabajo: "trabajo 4.3", resultado: "234,66" },
-              ],
-            },
-          ],
-        },
-      ]);
-      setLoading(false);
-    }, 1000);
-  }, []);
+    return {
+      universe: batch.universe,
+      job_name: batch.batch_name,
+      execution_date: new Date(batch.submitted).toISOString(),
+      execution_total_time: batch.total_time,
+      results,
+    };
+  };
+
+  const handleSaveJob = async (batch) => {
+    const confirmSave = window.confirm(
+      `¿Deseas guardar el trabajo "${batch.batch_name}" en la base de datos?`
+    );
+    if (!confirmSave) return;
+
+    setSavingId(batch.id);
+    try {
+      const payload = buildPayload(batch);
+      await saveJob(payload);
+      alert("job saved");
+    } catch (err) {
+      console.error(err);
+      alert("Error saving job");
+    } finally {
+      setSavingId(null);
+    }
+  };
 
   return (
     <Container maxWidth="md" sx={{ mt: 2, mx: "auto" }}>
@@ -86,22 +82,24 @@ export default function ResultadosLotes() {
 
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-          <CircularProgress color="red" />
+          <CircularProgress color="error" />
         </Box>
       ) : (
-        // grid of results
-        <Grid container spacing={2}>
-          {lotes.map((lote) => (
-            <Grid item xs={12} sm={6} md={6} key={lote.id} sx={{ minWidth: 400 }}>
-              <Paper elevation={3} sx={{ p: 2}}>
-                <Accordion sx={{ boxShadow: "none" }}>
+        <Grid container spacing={2} alignItems="flex-start">
+          {batches.map((batch) => (
+            <Grid item xs={12} sm={6} md={6} key={batch.id}>
+              <Paper
+                elevation={3}
+                sx={{ p: 2, maxHeight: 450, overflowY: "auto" }}
+              >
+                <Accordion sx={{ boxShadow: "none" }} disableGutters>
                   <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
-                    aria-controls={`panel-${lote.id}-content`}
-                    id={`panel-${lote.id}-header`}
+                    aria-controls={`panel-${batch.id}-content`}
+                    id={`panel-${batch.id}-header`}
                   >
                     <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                      Lote {lote.nombre}
+                      {batch.batch_name} - Trabajos enviados: {batch.number_jobs}  - Tiempo total: {batch.total_time}
                     </Typography>
                   </AccordionSummary>
                   <AccordionDetails>
@@ -111,7 +109,7 @@ export default function ResultadosLotes() {
                     >
                       Ejecuciones:
                     </Typography>
-                    {lote.ejecuciones.map((exec, idx) => (
+                    {batch.executions.map((exec, idx) => (
                       <Box
                         key={idx}
                         sx={{
@@ -122,12 +120,8 @@ export default function ResultadosLotes() {
                           backgroundColor: "#f7cbcbff",
                         }}
                       >
-                        <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                          Tiempo de ejecución: {exec.tiempo}
-                        </Typography>
-
                         <Box sx={{ mt: 1 }}>
-                          {exec.resultados.map((res, i) => (
+                          {exec.results.map((res, i) => (
                             <Box
                               key={i}
                               sx={{
@@ -141,19 +135,31 @@ export default function ResultadosLotes() {
                                 boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
                               }}
                             >
-                              {res.trabajo}: {res.resultado}
+                              {res.job}: {res.result}
                             </Box>
                           ))}
                         </Box>
                       </Box>
                     ))}
+
+                    {/* button to save the job */}
+                    <Button
+                      variant="contained"
+                      color="error"
+                      fullWidth
+                      disabled={savingId === batch.id}
+                      onClick={() => handleSaveJob(batch)}
+                      sx={{ mt: 2 }}
+                    >
+                      {savingId ? "Guardando..." : "Guardar este trabajo"}
+                    </Button>
                   </AccordionDetails>
                 </Accordion>
               </Paper>
             </Grid>
           ))}
         </Grid>
-    )}
-  </Container>
-);
+      )}
+    </Container>
+  );
 }

@@ -6,13 +6,19 @@ import CloseIcon from "@mui/icons-material/Close";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import { useAppContext } from "../context/AppContext";
 import { shutdownCluster } from "../utils/tauriApi";
+import { exit } from "@tauri-apps/plugin-process";
+import useAuth from "../hooks/useAuth";
 
 function Topbar() {
-  const { clusterState, setClusterState, clusterNodesConfig, user, overlayNetworkName } = useAppContext();
+  const { logout } = useAuth();
+  const { clusterState, setClusterState, clusterNodesConfig } = useAppContext();
   const [anchorMenu, setAnchorMenu] = useState(null);
   const [anchorNotif, setAnchorNotif] = useState(null);
   const [lastNotification, setLastNotification] = useState("Notificación de prueba");
   const [showNotifText, setShowNotifText] = useState(true);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [showClusterWarning, setShowClusterWarning] = useState(false);
+
   const [notifications] = useState([
     "Cluster iniciado correctamente.",
     "Nuevo trabajo en cola",
@@ -26,9 +32,37 @@ function Topbar() {
 
   const handleMenuClick = (event) => setAnchorMenu(event.currentTarget);
   const handleNotifClick = (event) => setAnchorNotif(event.currentTarget);
-  const handleClose = () => {
-    setAnchorMenu(null);
-    setAnchorNotif(null);
+
+  // verify if cluster is in state "active" to avoid close the app
+  // user must be deactivate the cluster (shutdown)
+  const checkClusterBeforeExit = (action) => {
+    if (clusterState === "active") {
+    const msg =
+      action === "logout"
+        ? "No puedes cerrar sesión mientras el clúster está activo."
+        : "No puedes cerrar la aplicación mientras el clúster está activo.";
+
+    setSnackbarMessage(`${msg} Por favor, da de baja el clúster antes de continuar.`);
+    setShowClusterWarning(true);
+    return false;
+  }
+  return true; 
+  };
+
+  // manage close session
+  const handleSessionClose = async () => {
+    if (!checkClusterBeforeExit("logout")) return;
+    try {
+      await logout();
+    } catch (_) {
+      //useAuth manages errors
+    }
+  }
+
+  // close app
+  const handleAppExit = async () => {
+    if (!checkClusterBeforeExit("exit")) return;
+    await exit(0)
   };
 
   const handleShutdownCluster = async () => {
@@ -102,7 +136,7 @@ function Topbar() {
           <NotificationsIcon />
         </IconButton>
       </Tooltip>
-      <Menu anchorEl={anchorNotif} open={Boolean(anchorNotif)} onClose={handleClose}>
+      <Menu anchorEl={anchorNotif} open={Boolean(anchorNotif)} onClose={() => setAnchorNotif(null)}>
         {notifications.map((note, index) => (
           <MenuItem key={index}>{note}</MenuItem>
         ))}
@@ -114,12 +148,27 @@ function Topbar() {
         <MenuIcon />
       </IconButton>
       </Tooltip>
-      <Menu anchorEl={anchorMenu} open={Boolean(anchorMenu)} onClose={handleClose}>
-        <MenuItem onClick={handleClose}>Reiniciar</MenuItem>
+      <Menu anchorEl={anchorMenu} open={Boolean(anchorMenu)} onClose={() => setAnchorMenu(null)}>
+        <MenuItem onClick={handleSessionClose}>Cerrar Sesión</MenuItem>
         <MenuItem onClick={handleShutdownCluster}>Dar de Baja</MenuItem>
-        <MenuItem onClick={handleClose}>Salir</MenuItem>
+        <MenuItem onClick={handleAppExit}>Salir</MenuItem>
       </Menu>
 
+      {/* Snackbar warning */}
+      <Snackbar
+        open={showClusterWarning}
+        autoHideDuration={5000}
+        onClose={() => setShowClusterWarning(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setShowClusterWarning(false)}
+          severity="warning"
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

@@ -9,11 +9,12 @@ import {
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useAppContext } from "../context/AppContext";
-import { jobsQueue } from "../utils/tauriApi";
+import { jobsQueue, getJobInformation, removeSpecificJob, removeBatch } from "../utils/tauriApi";
 
 function JobQueue() {
-  const { clusterNodesConfig } = useAppContext();
+  const { clusterNodesConfig, sessionJobsSubmitted, submitContainerName } = useAppContext();
   const [jobId, setJobId] = useState("");
+  const [batchName, setBatchName] = useState("");
   const [jobInfo, setJobInfo] = useState(null);
   const [jobsData, setJobsData] = useState({
     timerequest: null,
@@ -24,43 +25,83 @@ function JobQueue() {
   useEffect(() => {
     let interval;
     const fetchJobs = async () => {
-      //find the node with submit role
-      const submitContainer = clusterNodesConfig
-        .filter(node => node.container_name.startsWith("sub_"))
-        .map(node => node.container_name);
+      console.log("[TRABAJOS ENV DE LA SESIÓN]", sessionJobsSubmitted)
 
       try {
-        const data = await jobsQueue(submitContainer[0]);
-        console.log(data.jobs)
-        setJobsData(data.jobs)
+        const data = await jobsQueue(submitContainerName, sessionJobsSubmitted);
+        console.log("[RESPONSE data TRAB ENV SES]",data)
+        console.log("[RESPONSE data.jobs TRAB ENV SES]",data.jobs)
+        setJobsData(data)
 
-        if (data.totals.total_jobs === 0) {
+        if (data.totals.total_jobs === 0 && interval) {
           clearInterval(interval);
           interval = null;
         }
       } catch (err) {
-        console.error(err);
+        console.error("[JobQueue] Error getting jobs:",err);
       }
     };
+
+    if (!submitContainerName) {
+      console.log("[JobQueue] No hay contenedor submit aún, acción: deplegar cluser");
+      return;
+    }
 
     fetchJobs();
     interval = setInterval(fetchJobs, 15000); // then try with webSockets
     return () => clearInterval(interval);
-  }, [clusterNodesConfig]); // REVIEW THIS
+  }, [clusterNodesConfig, sessionJobsSubmitted]); // REVIEW THIS ----------------------------------------------
 
+  // manage remove a specif job from a batch
+  const handleDeleteJob = async () => {
+    if (!jobId.trim()) {
+      alert("Ingrese un ID de trabajo válido (ejemplo: 3.2)");
+      return;
+    }
 
-  const handleCancelAll = () => {
-    console.log("Cancelar todos los trabajos");
+    const validFormat = /^\d+\.\d+$/.test(jobId.trim());
+    if (!validFormat) {
+      alert("El ID debe tener el formato lote.trabajo (ejemplo: 3.2)");
+      return;
+    }
+
+    if (!submitContainerName) {
+      alert("No se encontró el nodo submit para eliminar el trabajo.");
+      return;
+    }
+
+    if (!window.confirm(`¿Seguro que desea eliminar el trabajo ${jobId}?`)) return;
+
+    try {
+      const response = await removeSpecificJob(jobId.trim(), submitContainerName);
+      alert(response.message || `Trabajo ${jobId} eliminado correctamente.`);
+      setJobId("");
+      setJobInfo(null);
+    } catch (err) {
+      console.error(err);
+      alert(`Error al eliminar el trabajo: ${err.message}`);
+    }
   };
 
-  const handleDeleteJob = () => {
-    console.log("Eliminar trabajo ID:", jobId);
+  // remove all jobs from a batch
+  const handleDeleteBatch = async () => {
+    if (!submitContainerName) {
+      alert("No se encontró el nodo submit.");
+      return;
+    }
+
+    if (!window.confirm(`¿Eliminar todos los trabajos del lote "${batchName}"?`)) return;
+
+    try {
+      const response = await removeBatch(batchName, submitContainerName)
+      alert(response.message || `Lote ${batchName} eliminado correctamente.`);
+      setBatchName("");
+    } catch (err) {
+      alert(`Error al eliminar el lote: ${err.message}`);
+    }
   };
 
-  const handleCheckNode = () => {
-    console.log("Consultar nodo de trabajo ID:", jobId);
-  };
-
+  // manage show view more information about a specific job
   const handleViewInfo = () => {
     // search job id for evey batch
     let found = null;
@@ -206,10 +247,10 @@ function JobQueue() {
           return (
             <Paper key={idx} sx={{ p: 2, mt: 1 }}>
               <Typography variant="subtitle1" marginBottom={1}>
-                Lote: {batch.batch_name} ({batch.submitted})
+                {batch.batch_name} - {batch.submitted} ({batch.initial_total} trabajos enviados)
               </Typography>
               <Typography variant="body2" marginBottom={1}>
-                IDs del lote: {range_ids} --- Zona de prueba: {batch.job_ids}
+                IDs del lote en cola: {range_ids} {/*Zona de prueba: {batch.job_ids}*/}
               </Typography>
               <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt:1 }}>
                 {[
@@ -252,14 +293,21 @@ function JobQueue() {
         <Button variant="outlined" color="" onClick={handleViewInfo} sx={{ mr: 1 }}>
           Ver más información
         </Button>
-        <Button variant="outlined" color="" onClick={handleCheckNode} sx={{ mr: 1 }}>
-          Consultar Nodo
+        <Button variant="outlined" color="error" onClick={handleDeleteJob} sx={{ mr: 1 }}>
+          Eliminar trabajo
         </Button>
-        <Button variant="outlined" color="error" onClick={handleDeleteJob} >
-          Eliminar Trabajo
-        </Button>
-        <Button variant="outlined" color="error" onClick={handleCancelAll} sx={{ mt: 1 }} >
-          Cancelar Todo
+      </Box>
+
+      <Box sx={{ mt: 4 }}>
+        <TextField
+          label="Nombre del lote"
+          size="small"
+          value={batchName}
+          onChange={(e) => setBatchName(e.target.value)}
+          sx={{ mr: 4 }}
+        />
+        <Button variant="outlined" color="error" onClick={handleDeleteBatch}>
+          Eliminar lote
         </Button>
       </Box>
 

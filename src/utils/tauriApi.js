@@ -165,21 +165,126 @@ export const submitJob = async (formData, nodeSubmitRole, outputType) => {
 };
 
 // to retrieve the jobs data in execution (includes state) [JobQueue.jsx]
-export const jobsQueue = async (nodeSubmitRole) => {
+export const jobsQueue = async (nodeSubmitRole, sessionJobsSubmitted) => {
+  console.log(JSON.stringify( { session_jobs: sessionJobsSubmitted}))
   const response = await fetch(
-    `${BACKEND_URL}/jobs/queue?submit_container_name=${encodeURIComponent(nodeSubmitRole)}`
+    `${BACKEND_URL}/jobs/data/queue?submit_container_name=${encodeURIComponent(nodeSubmitRole)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_jobs: sessionJobsSubmitted }),
+    }
   );
   
   if (!response.ok) {
     const err = await response.text();
     throw new Error(`get data and state jobs failed: ${err}`);
   }
+  const data = await response.json();
+  return data.jobs;
+}
+
+// to view the reesults of the runnings in the htcondor cluster [FinishedJobs.jsx]
+export const jobsResults = async (sessionJobsSubmitted, submitContainerName) => {
+  const response = await fetch(`${BACKEND_URL}/jobs/results?sub_container_name=${encodeURIComponent(submitContainerName)}`,
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(sessionJobsSubmitted)
+    }
+  )
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`get jobs results failed: ${err}`);
+  }
   return response.json();
 }
 
-// to view the reesults of the runnings in the htcondor cluster
-export const jobsResults = async (outputType) => {
-  const response = await fetch(
-    `${BACKEND_URL}/jobs/results?output_type=${encodeURIComponent(outputType)}`
-  )
+// saves a submitted job in the app's database [FinishedJobs.jsx]
+// WAY TOKEN TEMP
+export const saveJob = async (payload) => {
+  const token = localStorage.getItem("access_token")
+  if (!token) throw new Error("No authentication token found");
+
+  const res = await fetch(`${BACKEND_URL}/user/save-job`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`, 
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`save failed: ${txt}`);
+  }
+  return res.json();
+};
+
+// gets the storaged jobs in DB to authenticated user [StoragedJobs.jsx]
+export const getUserJobs = async () => {
+  const token = localStorage.getItem("access_token")
+  if (!token) throw new Error("No authentication token found");
+
+  const response = await fetch(`${BACKEND_URL}/jobs/db`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`get user jobs failed: ${err}`);
+  }
+  return response.json();
+};
+
+// gets the information of a job [JobQueue.jsx]
+export const getJobInformation = async (job_id) => {
+  // here the logic to do the api request
 }
+
+// deletes a specific job from a batch [JobQueue.jsx]
+export const removeSpecificJob = async (job_id, submit_container_name) => {
+  const token = localStorage.getItem("access_token")
+  if (!token) throw new Error("No authentication token found");
+
+  const res = await fetch(`${BACKEND_URL}/queue/remove-job`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ job_id, submit_container_name }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Error al eliminar trabajo: ${err}`);
+  }
+
+  return res.json();
+}
+
+// deletes all jobs from a batch [JobQueue.jsx]
+export const removeBatch = async (batch_name, submit_container_name) => {
+  const token = localStorage.getItem("access_token")
+  if (!token) throw new Error("No authentication token found");
+
+  
+  const res = await fetch(`${BACKEND_URL}/queue/remove-batch`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ batch_name, submit_container_name }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  const data = await res.json();
+  alert(data.message);
+}
+

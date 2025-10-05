@@ -33,6 +33,12 @@ function Sidebar() {
           <NavLink to="/jobs/queue" className="nav-link"> Estado de Trabajos </NavLink>
           <NavLink to="/jobs/finished" className="nav-link"> Finalizados </NavLink>
         </div>
+        
+        <div className="section">
+          <div className="section-title">Registros</div>
+          <NavLink to="/registers/jobs" className="nav-link"> Trabajos Anteriores </NavLink>
+          <NavLink to="/registers/clusters" className="nav-link"> Clusters  </NavLink>
+        </div>
       </nav>
     </div>
   );

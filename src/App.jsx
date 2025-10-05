@@ -7,22 +7,33 @@ import FinishedJobs from "./pages/FinishedJobs";
 import { AppProvider } from "./context/AppContext";
 import NewJob from "./pages/NewJob";
 import JobQueue from "./pages/JobQueue";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import StoragedJobs from "./pages/StoragedJobs";
+import { ProtectedRoute } from "./services/ProtectedRoute"
 
 function App() {
-  // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 
   return (
     <div >
       <AppProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<div>Home</div>} />
-              <Route path="/resources" element={<Resources />} />
-              <Route path="/initialize-cluster" element={<InitializeCluster />} />
-              <Route path="/jobs/new" element={<NewJob />} />
-              <Route path="/jobs/queue" element={<JobQueue />} />
-              <Route path="/jobs/finished" element={<FinishedJobs />} />
+            {/** public routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+
+            {/** protected routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/" element={<Layout />}>
+                <Route index element={<div>Home</div>} />
+                <Route path="/resources" element={<Resources />} />
+                <Route path="/initialize-cluster" element={<InitializeCluster />} />
+                <Route path="/jobs/new" element={<NewJob />} />
+                <Route path="/jobs/queue" element={<JobQueue />} />
+                <Route path="/jobs/finished" element={<FinishedJobs />} />
+                <Route path="/registers/jobs" element={<StoragedJobs />} />
+              </Route>
             </Route>
           </Routes>
         </BrowserRouter>

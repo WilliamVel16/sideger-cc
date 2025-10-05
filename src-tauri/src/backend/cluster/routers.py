@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
-from cluster.models import NodeRole, ContainerConfig, ShutdownNodeResult, ClusterInitRequest, ClusterNodeResult
+from cluster.schemas import NodeRole, ContainerConfig, ShutdownNodeResult, ClusterInitRequest, ClusterNodeResult
 from cluster.deploy import initialize_cluster
 from cluster.shutdown import shutdown_cluster
 
