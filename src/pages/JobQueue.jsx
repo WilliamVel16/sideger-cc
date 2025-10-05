@@ -33,19 +33,24 @@ function JobQueue() {
         console.log("[RESPONSE data.jobs TRAB ENV SES]",data.jobs)
         setJobsData(data)
 
-        if (data.totals.total_jobs === 0) {
+        if (data.totals.total_jobs === 0 && interval) {
           clearInterval(interval);
           interval = null;
         }
       } catch (err) {
-        console.error(err);
+        console.error("[JobQueue] Error getting jobs:",err);
       }
     };
+
+    if (!submitContainerName) {
+      console.log("[JobQueue] No hay contenedor submit aún, acción: deplegar cluser");
+      return;
+    }
 
     fetchJobs();
     interval = setInterval(fetchJobs, 15000); // then try with webSockets
     return () => clearInterval(interval);
-  }, [clusterNodesConfig]); // REVIEW THIS ----------------------------------------------
+  }, [clusterNodesConfig, sessionJobsSubmitted]); // REVIEW THIS ----------------------------------------------
 
   // manage remove a specif job from a batch
   const handleDeleteJob = async () => {
@@ -297,11 +302,11 @@ function JobQueue() {
         <TextField
           label="Nombre del lote"
           size="small"
-          value={jobId}
+          value={batchName}
           onChange={(e) => setBatchName(e.target.value)}
           sx={{ mr: 4 }}
         />
-        <Button variant="outlined" color="error" onClick={handleDeleteBatch()}>
+        <Button variant="outlined" color="error" onClick={handleDeleteBatch}>
           Eliminar lote
         </Button>
       </Box>
