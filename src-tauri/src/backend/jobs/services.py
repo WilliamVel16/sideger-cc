@@ -197,7 +197,6 @@ async def remove_job_service(job_id: str, submit_container_name: str):
     Deletes a specific jof grom HTCondor queue since submit role container
     """
     command = f"docker exec {submit_container_name} condor_rm {job_id}"
-
     process = await asyncio.create_subprocess_shell(
         command,
         stdout=asyncio.subprocess.PIPE,
@@ -209,3 +208,21 @@ async def remove_job_service(job_id: str, submit_container_name: str):
         raise HTTPException(status_code=500, detail=f"Error al eliminar trabajo: {stderr.decode().strip()}")
 
     return {"message": f"Trabajo {job_id} eliminado correctamente", "stdout": stdout.decode().strip()}
+
+
+async def remove_batch_service(batch_name: str, submit_container_name: str):
+    """
+    deletes all the jobs from a batch (JobBatchName) in the HTCondor queue
+    """
+    command = f"docker exec {submit_container_name} condor_rm -constraint 'JobBatchName==\"{batch_name}\"'"
+    process = await asyncio.create_subprocess_shell(
+        command,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await process.communicate()
+
+    if process.returncode != 0:
+        raise HTTPException(status_code=500, detail=f"Error al eliminar lote: {stderr.decode().strip()}")
+
+    return {"message": f"Lote {batch_name} eliminado correctamente", "stdout": stdout.decode().strip()}

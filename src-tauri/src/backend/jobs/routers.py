@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
 from typing import List
 from .schemas import JobSubmitRequest, JobResultsRequest
-from .services import create_submit_file_service, submit_job_service, jobs_state_service, jobs_results_service, remove_job_service
+from .services import create_submit_file_service, submit_job_service, jobs_state_service, jobs_results_service, remove_job_service, remove_batch_service
 
 router = APIRouter()
 
@@ -42,5 +42,13 @@ async def get_jobs_results(jobs_submitted: List[JobResultsRequest], sub_containe
 async def delete_queue_job(job_id: str, submit_container_name: str):
     response = await remove_job_service(job_id, submit_container_name)
     print("[REMOVE A JOB]", response)
+    return response
+
+
+# remove a batch of jobs
+@router.post("/queue/remove-batch")
+async def delete_batch(batch_name: str, submit_container_name: str):
+    response = await remove_batch_service(batch_name, submit_container_name)
+    print("[REMOVE BATCH]", response)
     return response
     

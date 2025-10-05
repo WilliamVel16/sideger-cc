@@ -9,11 +9,12 @@ import {
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useAppContext } from "../context/AppContext";
-import { jobsQueue, getJobInformation, removeSpecificJob } from "../utils/tauriApi";
+import { jobsQueue, getJobInformation, removeSpecificJob, removeBatch } from "../utils/tauriApi";
 
 function JobQueue() {
   const { clusterNodesConfig, sessionJobsSubmitted, submitContainerName } = useAppContext();
   const [jobId, setJobId] = useState("");
+  const [batchName, setBatchName] = useState("");
   const [jobInfo, setJobInfo] = useState(null);
   const [jobsData, setJobsData] = useState({
     timerequest: null,
@@ -46,7 +47,6 @@ function JobQueue() {
     return () => clearInterval(interval);
   }, [clusterNodesConfig]); // REVIEW THIS ----------------------------------------------
 
-
   // manage remove a specif job from a batch
   const handleDeleteJob = async () => {
     if (!jobId.trim()) {
@@ -68,8 +68,8 @@ function JobQueue() {
     if (!window.confirm(`¿Seguro que desea eliminar el trabajo ${jobId}?`)) return;
 
     try {
-      const res = await removeSpecificJob(jobId.trim(), submitContainerName);
-      alert(res.message || `Trabajo ${jobId} eliminado correctamente.`);
+      const response = await removeSpecificJob(jobId.trim(), submitContainerName);
+      alert(response.message || `Trabajo ${jobId} eliminado correctamente.`);
       setJobId("");
       setJobInfo(null);
     } catch (err) {
@@ -79,8 +79,21 @@ function JobQueue() {
   };
 
   // remove all jobs from a batch
-  const handleCancelAll = () => {
-    console.log("Cancelar todos los trabajos");
+  const handleDeleteBatch = async () => {
+    if (!submitContainerName) {
+      alert("No se encontró el nodo submit.");
+      return;
+    }
+
+    if (!window.confirm(`¿Eliminar todos los trabajos del lote "${batchName}"?`)) return;
+
+    try {
+      const response = await removeBatch(batchName, submitContainerName)
+      alert(response.message || `Lote ${batchName} eliminado correctamente.`);
+      setBatchName("");
+    } catch (err) {
+      alert(`Error al eliminar el lote: ${err.message}`);
+    }
   };
 
   // manage show view more information about a specific job
@@ -276,10 +289,20 @@ function JobQueue() {
           Ver más información
         </Button>
         <Button variant="outlined" color="error" onClick={handleDeleteJob} sx={{ mr: 1 }}>
-          Eliminar Trabajo
+          Eliminar trabajo
         </Button>
-        <Button variant="outlined" color="error" onClick={handleCancelAll}>
-          Cancelar Todo
+      </Box>
+
+      <Box sx={{ mt: 4 }}>
+        <TextField
+          label="Nombre del lote"
+          size="small"
+          value={jobId}
+          onChange={(e) => setBatchName(e.target.value)}
+          sx={{ mr: 4 }}
+        />
+        <Button variant="outlined" color="error" onClick={handleDeleteBatch()}>
+          Eliminar lote
         </Button>
       </Box>
 
