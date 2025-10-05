@@ -23,7 +23,7 @@ class Job(Base):
     universe = Column(String, nullable=False)
     job_name = Column(String, nullable=False)
     execution_date = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
-    execution_total_time = Column(Integer, nullable=True)
+    execution_total_time = Column(String, nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"))
 
     user = relationship("User", back_populates="jobs")
@@ -35,7 +35,6 @@ class Result(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     result = Column(String, nullable=False)
-    execution_time = Column(Integer, nullable=True)
     job_id = Column(Integer, ForeignKey("jobs.id"))
 
     job = relationship("Job", back_populates="results")

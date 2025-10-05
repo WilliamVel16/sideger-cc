@@ -38,10 +38,9 @@ class LoginResponse(BaseModel):
 
 class ResultBase(BaseModel):
     result: str
-    execution_time: Optional[int] = None
 
 class ResultCreate(ResultBase):
-    pass
+    result: str
 
 class ResultResponse(ResultBase):
     id: int
@@ -53,10 +52,9 @@ class JobBase(BaseModel):
     universe: str
     job_name: str
     execution_date: Optional[datetime] = None
-    execution_total_time: Optional[int] = None
+    execution_total_time: Optional[str] = None
 
 class JobCreate(JobBase):
-    user_id: int
     results: List[ResultCreate] = []
 
 class JobResponse(JobBase):

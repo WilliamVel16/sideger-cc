@@ -40,7 +40,7 @@ def summarize_jobs(jobs):
 
         job_entry = {
             "batch_name": batch_name,
-            "submitted": datetime.fromtimestamp(submitted_timestamp).strftime("%m/%d %H:%M"),
+            "submitted": datetime.fromtimestamp(submitted_timestamp).strftime("%d %b %Y, %H:%M:%S"), # format changed
             "status": status_map.get(jobstatus_code, "Unknown"),
             "cluster_id": cluster_id,
             "proc_id": proc_id,

@@ -30,13 +30,11 @@ async def get_state_jobs(submit_container_name: str, request: Request):
 # results, jobs fnished
 @router.post("/results")
 async def get_jobs_results(jobs_submitted: List[JobResultsRequest], sub_container_name: str):
-    # primero implementar lógica para el tiempo de vida del lote
     jobs_results = []
     for batch in jobs_submitted:
         job_result = await jobs_results_service(batch.batch_name, batch.number_jobs, batch.output_type, sub_container_name)
         jobs_results.append(job_result)
     return {"results": jobs_results}
-
 
 
 # luego la lógica para guardar el trabajo

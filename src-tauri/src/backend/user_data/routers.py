@@ -39,13 +39,14 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)
 
 # saves into db a new job with their results
 @router.post("/save-job", response_model=schemas.JobResponse)
-def create_job(job: schemas.JobCreate, db: Session = Depends(database.get_db)):
+def create_job(job: schemas.JobCreate, db: Session = Depends(database.get_db),
+               current_user: models.User = Depends(security.get_current_user)):
     db_job = models.Job(
         universe=job.universe,
         job_name=job.job_name,
         execution_date=job.execution_date,
         execution_total_time=job.execution_total_time,
-        user_id=job.user_id
+        user_id=current_user.id
     )
     db.add(db_job)
     db.commit()

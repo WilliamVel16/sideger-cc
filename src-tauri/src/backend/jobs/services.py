@@ -189,5 +189,5 @@ async def jobs_results_service(job_name: str, number_jobs: int, output_type: str
     else:
         raise ValueError(f"[ERR] output_type desconocido: {output_type}")
 
-    return {"id": job_name, "batch_name": job_name, "number_jobs": number_jobs, "total_time": "N/A", "total_time": total_time, "executions": executions}
+    return {"id": job_name, "batch_name": job_name, "number_jobs": number_jobs, "total_time": total_time, "executions": executions}
 
