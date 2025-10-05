@@ -94,8 +94,7 @@ export const register = async (name, lastname, email, password) => {
  * Executes a callback function after cleanup (commonly for redirect).
  */
 export const logout = () => {
-  localStorage.removeItem('access_token');
-  localStorage.removeItem('user');
+  localStorage.clear();
 };
 
 /**

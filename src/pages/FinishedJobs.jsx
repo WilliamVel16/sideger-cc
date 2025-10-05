@@ -15,18 +15,11 @@ import { useState, useEffect } from "react";
 import { useAppContext } from "../context/AppContext";
 import { jobsResults, saveJob } from "../utils/tauriApi";
 
-// parser de tiempo de ejecución desde el string
-const parseExecutionTime = (resultText) => {
-  if (!resultText) return null;
-  const m = resultText.match(/execution time:\s*([\d.]+)/i);
-  return m ? parseFloat(m[1]) : null;
-};
-
 export default function ResultadosLotes() {
   const { sessionJobsSubmitted, token, submitContainerName } = useAppContext();
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [savingId, setSavingId] = useState(null);
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -50,17 +43,14 @@ export default function ResultadosLotes() {
       .flatMap((exec) =>
         (exec.results || []).map((r) => ({
           result: r.result,
-          execution_time: parseExecutionTime(r.result),
         }))
       );
 
-    const execTotal =
-      results.reduce((acc, r) => acc + (r.execution_time || 0), 0) || null;
-
     return {
-      universe: batch.id,
+      universe: batch.universe,
       job_name: batch.batch_name,
-      execution_total_time: execTotal,
+      execution_date: new Date(batch.submitted).toISOString(),
+      execution_total_time: batch.total_time,
       results,
     };
   };
@@ -71,16 +61,16 @@ export default function ResultadosLotes() {
     );
     if (!confirmSave) return;
 
-    setSaving(true);
+    setSavingId(batch.id);
     try {
       const payload = buildPayload(batch);
-      await saveJob(payload, localStorage.getItem("access_token"));
+      await saveJob(payload);
       alert("job saved");
     } catch (err) {
       console.error(err);
       alert("Error saving job");
     } finally {
-      setSaving(false);
+      setSavingId(null);
     }
   };
 
@@ -130,10 +120,6 @@ export default function ResultadosLotes() {
                           backgroundColor: "#f7cbcbff",
                         }}
                       >
-                        <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                          Tiempo de ejecución: {exec.time}
-                        </Typography>
-
                         <Box sx={{ mt: 1 }}>
                           {exec.results.map((res, i) => (
                             <Box
@@ -161,11 +147,11 @@ export default function ResultadosLotes() {
                       variant="contained"
                       color="error"
                       fullWidth
-                      disabled={saving}
+                      disabled={savingId === batch.id}
                       onClick={() => handleSaveJob(batch)}
                       sx={{ mt: 2 }}
                     >
-                      {saving ? "Guardando..." : "Guardar este trabajo"}
+                      {savingId ? "Guardando..." : "Guardar este trabajo"}
                     </Button>
                   </AccordionDetails>
                 </Accordion>

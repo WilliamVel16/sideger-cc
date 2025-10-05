@@ -212,7 +212,7 @@ function JobQueue() {
                 {batch.batch_name} - {batch.submitted} ({batch.initial_total} trabajos enviados)
               </Typography>
               <Typography variant="body2" marginBottom={1}>
-                IDs del lote: {range_ids} --- {/*Zona de prueba: {batch.job_ids}*/}
+                IDs del lote en cola: {range_ids} {/*Zona de prueba: {batch.job_ids}*/}
               </Typography>
               <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt:1 }}>
                 {[

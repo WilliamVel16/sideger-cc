@@ -202,12 +202,16 @@ export const jobsResults = async (sessionJobsSubmitted, submitContainerName) => 
 }
 
 // saves a submitted job in the app's database [FinishedJobs.jsx]
+// WAY TOKEN TEMP
 export const saveJob = async (payload) => {
+  const token = localStorage.getItem("access_token");
+  if (!token) throw new Error("No authentication token found");
+
   const res = await fetch(`${BACKEND_URL}/user/save-job`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+      Authorization: `Bearer ${token}`, 
     },
     body: JSON.stringify(payload),
   });
