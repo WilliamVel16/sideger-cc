@@ -6,7 +6,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import { useAppContext } from "../context/AppContext";
 import { shutdownCluster } from "../utils/tauriApi";
-import { appWindow } from "@tauri-apps/api/window";
+import { exit } from "@tauri-apps/plugin-process";
 import useAuth from "../hooks/useAuth";
 
 function Topbar() {
@@ -62,7 +62,7 @@ function Topbar() {
   // close app
   const handleAppExit = async () => {
     if (!checkClusterBeforeExit("exit")) return;
-    await appWindow.close()
+    await exit(0)
   };
 
   const handleShutdownCluster = async () => {

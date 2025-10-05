@@ -238,3 +238,36 @@ export const getUserJobs = async () => {
   }
   return response.json();
 };
+
+// gets the information of a job [JobQueue.jsx]
+export const getJobInformation = async (job_id) => {
+  // here the logic to do the api request
+}
+
+// deletes a specific job from a batch [JobQueue.jsx]
+export const removeSpecificJob = async (job_id, submit_container_name) => {
+  const token = localStorage.getItem("access_token")
+  if (!token) throw new Error("No authentication token found");
+
+  const res = await fetch(`${BACKEND_URL}/queue/remove-job`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ job_id, submit_container_name }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Error al eliminar trabajo: ${err}`);
+  }
+
+  return res.json();
+}
+
+// deletes all jobs from a batch [JobQueue.jsx]
+export const removeBatch = async (batch_id) => {
+  // here the logic to do the api request
+}
+

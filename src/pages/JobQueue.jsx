@@ -9,10 +9,10 @@ import {
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useAppContext } from "../context/AppContext";
-import { jobsQueue } from "../utils/tauriApi";
+import { jobsQueue, getJobInformation, removeSpecificJob } from "../utils/tauriApi";
 
 function JobQueue() {
-  const { clusterNodesConfig, sessionJobsSubmitted } = useAppContext();
+  const { clusterNodesConfig, sessionJobsSubmitted, submitContainerName } = useAppContext();
   const [jobId, setJobId] = useState("");
   const [jobInfo, setJobInfo] = useState(null);
   const [jobsData, setJobsData] = useState({
@@ -24,17 +24,12 @@ function JobQueue() {
   useEffect(() => {
     let interval;
     const fetchJobs = async () => {
-      //find the node with submit role
-      const submitContainer = clusterNodesConfig
-        .filter(node => node.container_name.startsWith("sub_"))
-        .map(node => node.container_name);
-      
-      console.log(sessionJobsSubmitted)
+      console.log("[TRABAJOS ENV DE LA SESIÓN]", sessionJobsSubmitted)
 
       try {
-        const data = await jobsQueue(submitContainer[0], sessionJobsSubmitted);
-        console.log(data)
-        console.log(data.jobs)
+        const data = await jobsQueue(submitContainerName, sessionJobsSubmitted);
+        console.log("[RESPONSE data TRAB ENV SES]",data)
+        console.log("[RESPONSE data.jobs TRAB ENV SES]",data.jobs)
         setJobsData(data)
 
         if (data.totals.total_jobs === 0) {
@@ -49,21 +44,46 @@ function JobQueue() {
     fetchJobs();
     interval = setInterval(fetchJobs, 15000); // then try with webSockets
     return () => clearInterval(interval);
-  }, [clusterNodesConfig]); // REVIEW THIS
+  }, [clusterNodesConfig]); // REVIEW THIS ----------------------------------------------
 
 
+  // manage remove a specif job from a batch
+  const handleDeleteJob = async () => {
+    if (!jobId.trim()) {
+      alert("Ingrese un ID de trabajo válido (ejemplo: 3.2)");
+      return;
+    }
+
+    const validFormat = /^\d+\.\d+$/.test(jobId.trim());
+    if (!validFormat) {
+      alert("El ID debe tener el formato lote.trabajo (ejemplo: 3.2)");
+      return;
+    }
+
+    if (!submitContainerName) {
+      alert("No se encontró el nodo submit para eliminar el trabajo.");
+      return;
+    }
+
+    if (!window.confirm(`¿Seguro que desea eliminar el trabajo ${jobId}?`)) return;
+
+    try {
+      const res = await removeSpecificJob(jobId.trim(), submitContainerName);
+      alert(res.message || `Trabajo ${jobId} eliminado correctamente.`);
+      setJobId("");
+      setJobInfo(null);
+    } catch (err) {
+      console.error(err);
+      alert(`Error al eliminar el trabajo: ${err.message}`);
+    }
+  };
+
+  // remove all jobs from a batch
   const handleCancelAll = () => {
     console.log("Cancelar todos los trabajos");
   };
 
-  const handleDeleteJob = () => {
-    console.log("Eliminar trabajo ID:", jobId);
-  };
-
-  const handleCheckNode = () => {
-    console.log("Consultar nodo de trabajo ID:", jobId);
-  };
-
+  // manage show view more information about a specific job
   const handleViewInfo = () => {
     // search job id for evey batch
     let found = null;
@@ -255,13 +275,10 @@ function JobQueue() {
         <Button variant="outlined" color="" onClick={handleViewInfo} sx={{ mr: 1 }}>
           Ver más información
         </Button>
-        <Button variant="outlined" color="" onClick={handleCheckNode} sx={{ mr: 1 }}>
-          Consultar Nodo
-        </Button>
-        <Button variant="outlined" color="error" onClick={handleDeleteJob} >
+        <Button variant="outlined" color="error" onClick={handleDeleteJob} sx={{ mr: 1 }}>
           Eliminar Trabajo
         </Button>
-        <Button variant="outlined" color="error" onClick={handleCancelAll} sx={{ mt: 1 }} >
+        <Button variant="outlined" color="error" onClick={handleCancelAll}>
           Cancelar Todo
         </Button>
       </Box>
