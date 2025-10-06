@@ -13,6 +13,7 @@ export const AppProvider = ({ children }) => {
 	const [overlayNetworkName, setOverlayNetworkName] = usePersistentState("overlayNetworkName", "sidegerOnet"); // temporals
   const [sessionJobsSubmitted, setSessionJobsSubmitted] = usePersistentState("sessionJobsSubmitted", [])
   const [submitContainerName, setSubmitContainerName] = usePersistentState("submitContainerName", "")
+  const [currentClusterId, setCurrentClusterId] = usePersistentState("currentClusterId", "")
 
 	return (
 		<AppContext.Provider
@@ -25,7 +26,8 @@ export const AppProvider = ({ children }) => {
         clusterNodesConfig, setClusterNodesConfig,
         overlayNetworkName, setOverlayNetworkName,
         sessionJobsSubmitted, setSessionJobsSubmitted,
-        submitContainerName, setSubmitContainerName
+        submitContainerName, setSubmitContainerName,
+        currentClusterId, setCurrentClusterId
         }}
       >
         { children }

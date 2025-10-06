@@ -12,7 +12,7 @@ import { showResourcesSpecs, initializeCluster, showMySpecs } from "../utils/tau
 import { useAppContext } from '../context/AppContext';
 
 function InitializeCluster() {
-  const { resourcesIPs, resourcesUser, setClusterState, LANname, setClusterNodesConfig, overlayNetworkName, setOverlayNetworkName, setSubmitContainerName } = useAppContext();
+  const { resourcesIPs, resourcesUser, setClusterState, LANname, setClusterNodesConfig, overlayNetworkName, setOverlayNetworkName, setSubmitContainerName, setCurrentClusterId } = useAppContext();
   const [checkedServers, setCheckedServers] = useState([]);
   const [servers, setServers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -57,6 +57,23 @@ function InitializeCluster() {
     setServers([...servers, server]);
   };
 
+  // save in the database the deployed cluster information
+  const handleSaveClusterData = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user")); // review 
+      const clusterPayload = {
+        name: overlayNetworkName,             
+        number_nodes: checkedServers.length,
+        user_id: user.id,               
+      };
+
+    await saveClusterInformation(clusterPayload);
+    console.log("Cluster registrado correctamente en la base de datos.");
+  } catch (err) {
+    console.error("Error guardando información del cluster:", err);
+  }
+  }
+
   // sends the request ([{ip:role},]) to asign roles to every selected resource
   // and start cluster
   const handleSendRequest = async () => {
@@ -67,6 +84,16 @@ function InitializeCluster() {
       console.log(response);
       console.log(response[0].config);
       setClusterNodesConfig(response.map(node => node.config));
+
+      try {
+        const response = await handleSaveClusterData();
+        console.log(response)
+        setCurrentClusterId(response.cluster_id) // REVIEW RETURN
+        enqueueSnackbar("Clúster registrado correctamente.", { variant: "success" }); //temp
+      } catch (err) {
+        //console.error("Error guardando información del cluster:", err);
+        enqueueSnackbar("Error al guardar el clúster.", { variant: "error" }); //temp
+      }
 
       const submitContainer = response
         .filter(node => node.config.container_name.startsWith("sub_"))

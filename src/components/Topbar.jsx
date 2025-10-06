@@ -11,7 +11,7 @@ import useAuth from "../hooks/useAuth";
 
 function Topbar() {
   const { logout } = useAuth();
-  const { clusterState, setClusterState, clusterNodesConfig } = useAppContext();
+  const { clusterState, setClusterState, clusterNodesConfig, currentClusterId } = useAppContext();
   const [anchorMenu, setAnchorMenu] = useState(null);
   const [anchorNotif, setAnchorNotif] = useState(null);
   const [lastNotification, setLastNotification] = useState("Notificación de prueba");
@@ -68,7 +68,7 @@ function Topbar() {
   const handleShutdownCluster = async () => {
     // sends as arguments: nodes, onetName, and user
     try {
-      const response = await shutdownCluster(clusterNodesConfig);
+      const response = await shutdownCluster(clusterNodesConfig, currentClusterId);
       console.log(response);
       setClusterState("inactive")
     } catch (err) {

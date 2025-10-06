@@ -124,16 +124,20 @@ export const initializeCluster = async (nodes, resourcesUser, onetName) => {
 };
 
 // to kill the cluster [Topbar.jsx]
-export const shutdownCluster = async (clusterNodesConfig) => {
-  console.log(clusterNodesConfig)
+export const shutdownCluster = async (clusterNodesConfig, clusterId) => {
+  const payload = {
+    cluster_id: clusterId,
+    cluster_config: clusterNodesConfig,
+  };
+
 	const response = await fetch(`${BACKEND_URL}/cluster/shutdown`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify(clusterNodesConfig)
+    body: JSON.stringify(payload)
   });
-  console.log(response)
+  
   if (!response.ok) {
     const err = await response.text();
     throw new Error(`Shutdown failed: ${err}`);
@@ -274,7 +278,6 @@ export const removeBatch = async (batch_name, submit_container_name) => {
   const token = localStorage.getItem("access_token")
   if (!token) throw new Error("No authentication token found");
 
-  
   const res = await fetch(`${BACKEND_URL}/queue/remove-batch`, {
     method: "POST",
     headers: {
@@ -288,3 +291,15 @@ export const removeBatch = async (batch_name, submit_container_name) => {
   alert(data.message);
 }
 
+
+// save cluster deploy in the database [InitializeCluster.jsx]
+export async function saveClusterInformation(clusterData) {
+  const response = await fetch(`${BACKEND_URL}/cluster/save-cluster-data`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(clusterData),
+    });
+  if (!response.ok) throw new Error("Error trying to save the cluster");
+  return await response.json();
+}
