@@ -2,7 +2,11 @@ from typing import List
 from cluster.schemas import ContainerConfig, ShutdownNodeResult
 from containers.nodes import stop_single_node
 from resources.onet import leave_swarm, remove_overlay_network
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
+from core import database
+from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
+from user_data.models import Cluster
 
 def shutdown_cluster(cluster_config: List[ContainerConfig]) -> List[ShutdownNodeResult]:
     """
@@ -61,3 +65,23 @@ def shutdown_cluster(cluster_config: List[ContainerConfig]) -> List[ShutdownNode
         raise HTTPException(status_code=400, detail=f"[ERR {cm_node.ip}] (in remove onet): {e}")
 
     return results
+
+
+def update_shutdown_field(cluster_id: int, db: Session = Depends(database.get_db)):
+    """
+    permits update the field of the current cluster of the session
+    Args:
+        cluster_id: current cluster to udate the field shutdown_at
+        db: to get the cluster from db
+
+    Returns:
+        httpexception: if there is an error upadating the field
+        message: success confirmation about the cluster field
+    """
+    cluster = db.query(Cluster).filter(Cluster.id == cluster_id).first()
+    if not cluster:
+        raise HTTPException(status_code=404, detail="Cluster no encontrado")
+
+    cluster.time_up = func.now()
+    db.commit()
+    return {"message": "shutdown_at field updated"}
