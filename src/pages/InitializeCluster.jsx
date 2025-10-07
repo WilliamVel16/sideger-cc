@@ -84,8 +84,13 @@ function InitializeCluster() {
       const initializeResponse = await initializeCluster(dataCheckedServers, resourcesUser, overlayNetworkName);
       setClusterState("active");
       console.log("RESPONSE INITIALIZE", initializeResponse);
-      console.log(initializeResponse[0].config);
       setClusterNodesConfig(initializeResponse.map(node => node.config));
+
+      const submitContainer = initializeResponse
+        .filter(node => node.config.container_name.startsWith("sub_"))
+        .map(node => node.config.container_name);
+
+      setSubmitContainerName(submitContainer[0])
 
       try {
         const saveResponse = await handleSaveClusterData();
@@ -97,12 +102,6 @@ function InitializeCluster() {
         enqueueSnackbar("Error al guardar el clúster.", { variant: "error" }); //temp
       }
 
-      const submitContainer = initializeResponse
-        .filter(node => node.config.container_name.startsWith("sub_"))
-        .map(node => node.container_name);
-
-      console.log("SUBMIT CONT", submitContainer[0])
-      setSubmitContainerName(submitContainer[0])
     } catch (err) {
       console.error("Error deploying:", err);
     }

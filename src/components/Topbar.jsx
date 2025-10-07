@@ -11,7 +11,7 @@ import useAuth from "../hooks/useAuth";
 
 function Topbar() {
   const { logout } = useAuth();
-  const { clusterState, setClusterState, clusterNodesConfig, currentClusterId } = useAppContext();
+  const { clusterState, setClusterState, setClusterNodesConfig, setSubmitContainerName, setOverlayNetworkName, setResourcesIPs, clusterNodesConfig, currentClusterId } = useAppContext();
   const [anchorMenu, setAnchorMenu] = useState(null);
   const [anchorNotif, setAnchorNotif] = useState(null);
   const [lastNotification, setLastNotification] = useState("Notificación de prueba");
@@ -68,10 +68,13 @@ function Topbar() {
   const handleShutdownCluster = async () => {
     // sends as arguments: nodes, onetName, and user
     try {
-      console.log("SHUTDOWN CLUSTER SENDS", clusterNodesConfig, currentClusterId);
       const response = await shutdownCluster(clusterNodesConfig, currentClusterId);
       console.log("RESPONSE SHUTDOWN", response)
       setClusterState("inactive")
+      setClusterNodesConfig(null)
+      setSubmitContainerName("")
+      setOverlayNetworkName("")
+      setResourcesIPs([])
     } catch (err) {
       console.log("Error to try kill the cluster:", err);
     }
