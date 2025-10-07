@@ -7,6 +7,8 @@ from core import database
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from user_data.models import Cluster
+from datetime import datetime
+import pytz
 
 def shutdown_cluster(cluster_config: List[ContainerConfig]) -> List[ShutdownNodeResult]:
     """
@@ -82,6 +84,7 @@ def update_shutdown_field(cluster_id: int, db: Session = Depends(database.get_db
     if not cluster:
         raise HTTPException(status_code=404, detail="Cluster no encontrado")
 
-    cluster.time_up = func.now()
+    cluster.shutdown_at = datetime.now(pytz.timezone('America/Bogota'))
     db.commit()
+    #db.refresh(cluster)
     return {"message": "shutdown_at field updated"}

@@ -127,7 +127,7 @@ export const initializeCluster = async (nodes, resourcesUser, onetName) => {
 export const shutdownCluster = async (clusterNodesConfig, clusterId) => {
   const payload = {
     cluster_id: clusterId,
-    cluster_config: clusterNodesConfig,
+    nodes: clusterNodesConfig,
   };
 
 	const response = await fetch(`${BACKEND_URL}/cluster/shutdown`, {
@@ -292,7 +292,7 @@ export const removeBatch = async (batch_name, submit_container_name) => {
 }
 
 
-// save cluster deploy in the database [InitializeCluster.jsx]
+// save cluster deploy information in the database [InitializeCluster.jsx]
 export async function saveClusterInformation(clusterData) {
   const response = await fetch(`${BACKEND_URL}/cluster/save-cluster-data`,
     {
@@ -302,4 +302,30 @@ export async function saveClusterInformation(clusterData) {
     });
   if (!response.ok) throw new Error("Error trying to save the cluster");
   return await response.json();
+}
+
+
+
+// get the clusters deployed by the user 
+export const getUserClusters = async() => {
+  const response = await fetch(`${BACKEND_URL}/cluster/view-deployed`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(clusterData),
+    });
+  if (!response.ok) throw new Error("Error trying to save the cluster");
+  return await response.json();
+}
+
+
+// get the jobs that were running by a specific cluster
+export const getClusterJobs = async () => {
+  return 0
+}
+
+
+// get the resulsts of a spefific job
+export const getJobResults = async () => {
+  return {"message": 0}
 }

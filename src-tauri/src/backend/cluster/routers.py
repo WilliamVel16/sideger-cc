@@ -7,6 +7,8 @@ from cluster.deploy import initialize_cluster
 from cluster.shutdown import shutdown_cluster, update_shutdown_field
 from user_data.models import Cluster
 from core import security, database
+from datetime import datetime
+import pytz
 
 router = APIRouter()
 
@@ -35,7 +37,8 @@ async def shutdown_cluster_endpoint(request: ShutdownRequest, db: Session = Depe
     try:
         result = shutdown_cluster(request.nodes)
         print(result)
-        update_shutdown_field(request.cluster_id, db)
+        save_result = update_shutdown_field(request.cluster_id, db)
+        print("SHUTDOWN AND SAVE RESULT",result, save_result)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -47,7 +50,7 @@ async def save_cluster_data(cluster_data: ClusterSaveData, db: Session = Depends
         new_cluster = Cluster(
             name=cluster_data.name,
             number_nodes=cluster_data.number_nodes,
-            created_at=func.now(),
+            created_at=datetime.now(pytz.timezone('America/Bogota')),
             shutdown_at=None,
             user_id=cluster_data.user_id,
         )

@@ -1,7 +1,11 @@
+from email.policy import default
+
 from sqlalchemy import Column, Integer, String, TIMESTAMP, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from core.database import Base
+from datetime import datetime
+import pytz
 
 class User(Base):
     __tablename__ = "users"
@@ -22,8 +26,8 @@ class Cluster(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     number_nodes = Column(Integer, nullable=True)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
-    shutdown_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    created_at = Column(TIMESTAMP, default=lambda: datetime.now(pytz.timezone('America/Bogota')), nullable=False)
+    shutdown_at = Column(TIMESTAMP, default=None, onupdate=lambda: datetime.now(pytz.timezone('America/Bogota')))
     user_id = Column(Integer, ForeignKey("users.id"))
 
     user = relationship("User", back_populates="clusters")
@@ -36,7 +40,7 @@ class Job(Base):
     id = Column(Integer, primary_key=True, index=True)
     universe = Column(String, nullable=False)
     job_name = Column(String, nullable=False)
-    execution_date = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
+    execution_date = Column(TIMESTAMP, nullable=False)
     execution_total_time = Column(String, nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     cluster_id = Column(Integer, ForeignKey("clusters.id"))

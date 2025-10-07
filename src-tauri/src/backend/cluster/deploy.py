@@ -82,6 +82,5 @@ def initialize_cluster(nodes: List[NodeRole], resources_user: str, onetwork_name
             message=f"Container {config.container_name} with role {config.role} deployed and condor_master started.",
             config=config
         ))
-        
 
     return results

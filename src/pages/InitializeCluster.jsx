@@ -8,7 +8,7 @@ import ComputerIcon from '@mui/icons-material/Computer';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { showResourcesSpecs, initializeCluster, showMySpecs } from "../utils/tauriApi";
+import { showResourcesSpecs, initializeCluster, showMySpecs, saveClusterInformation } from "../utils/tauriApi";
 import { useAppContext } from '../context/AppContext';
 
 function InitializeCluster() {
@@ -67,11 +67,13 @@ function InitializeCluster() {
         user_id: user.id,               
       };
 
-    await saveClusterInformation(clusterPayload);
-    console.log("Cluster registrado correctamente en la base de datos.");
-  } catch (err) {
-    console.error("Error guardando información del cluster:", err);
-  }
+      console.log("PAYLOAD TO SAVE CLUSTER INFORMATION", clusterPayload)
+      const response = await saveClusterInformation(clusterPayload);
+      console.log("Cluster registrado correctamente en la base de datos.", response);
+      return response
+    } catch (err) {
+      console.error("Error guardando información del cluster:", err);
+    }
   }
 
   // sends the request ([{ip:role},]) to asign roles to every selected resource
@@ -79,26 +81,27 @@ function InitializeCluster() {
   const handleSendRequest = async () => {
     const dataCheckedServers = checkedServers.map(s => ({ ip: s.ip, role: s.role, }));
     try {
-      const response = await initializeCluster(dataCheckedServers, resourcesUser, overlayNetworkName);
+      const initializeResponse = await initializeCluster(dataCheckedServers, resourcesUser, overlayNetworkName);
       setClusterState("active");
-      console.log(response);
-      console.log(response[0].config);
-      setClusterNodesConfig(response.map(node => node.config));
+      console.log("RESPONSE INITIALIZE", initializeResponse);
+      console.log(initializeResponse[0].config);
+      setClusterNodesConfig(initializeResponse.map(node => node.config));
 
       try {
-        const response = await handleSaveClusterData();
-        console.log(response)
-        setCurrentClusterId(response.cluster_id) // REVIEW RETURN
+        const saveResponse = await handleSaveClusterData();
+        console.log("RESPONSE SAVE", saveResponse, saveResponse.cluster_id)
+        setCurrentClusterId(saveResponse.cluster_id) // REVIEW RETURN
         enqueueSnackbar("Clúster registrado correctamente.", { variant: "success" }); //temp
       } catch (err) {
         //console.error("Error guardando información del cluster:", err);
         enqueueSnackbar("Error al guardar el clúster.", { variant: "error" }); //temp
       }
 
-      const submitContainer = response
+      const submitContainer = initializeResponse
         .filter(node => node.config.container_name.startsWith("sub_"))
         .map(node => node.container_name);
 
+      console.log("SUBMIT CONT", submitContainer[0])
       setSubmitContainerName(submitContainer[0])
     } catch (err) {
       console.error("Error deploying:", err);

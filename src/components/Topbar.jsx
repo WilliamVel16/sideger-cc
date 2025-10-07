@@ -68,8 +68,9 @@ function Topbar() {
   const handleShutdownCluster = async () => {
     // sends as arguments: nodes, onetName, and user
     try {
+      console.log("SHUTDOWN CLUSTER SENDS", clusterNodesConfig, currentClusterId);
       const response = await shutdownCluster(clusterNodesConfig, currentClusterId);
-      console.log(response);
+      console.log("RESPONSE SHUTDOWN", response)
       setClusterState("inactive")
     } catch (err) {
       console.log("Error to try kill the cluster:", err);
