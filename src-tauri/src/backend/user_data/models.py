@@ -40,7 +40,7 @@ class Job(Base):
     id = Column(Integer, primary_key=True, index=True)
     universe = Column(String, nullable=False)
     job_name = Column(String, nullable=False)
-    execution_date = Column(TIMESTAMP, nullable=False)
+    execution_date = Column(String, nullable=False)
     execution_total_time = Column(String, nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     cluster_id = Column(Integer, ForeignKey("clusters.id"))
