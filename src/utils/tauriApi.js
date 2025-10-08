@@ -170,7 +170,7 @@ export const submitJob = async (formData, nodeSubmitRole, outputType) => {
 
 // to retrieve the jobs data in execution (includes state) [JobQueue.jsx]
 export const jobsQueue = async (nodeSubmitRole, sessionJobsSubmitted) => {
-  console.log(JSON.stringify( { session_jobs: sessionJobsSubmitted}))
+  console.log("SESION JOBS ENBVIADOS AL BACK", JSON.stringify( { session_jobs: sessionJobsSubmitted}))
   const response = await fetch(
     `${BACKEND_URL}/jobs/data/queue?submit_container_name=${encodeURIComponent(nodeSubmitRole)}`,
     {
@@ -207,7 +207,8 @@ export const jobsResults = async (sessionJobsSubmitted, submitContainerName) => 
 
 // saves a submitted job in the app's database [FinishedJobs.jsx]
 // WAY TOKEN TEMP
-export const saveJob = async (payload) => {
+export const saveJob = async (jobDataToSave) => {
+  console.log("SABE JOBS SENDS", jobDataToSave)
   const token = localStorage.getItem("access_token")
   if (!token) throw new Error("No authentication token found");
 
@@ -217,7 +218,7 @@ export const saveJob = async (payload) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`, 
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(jobDataToSave),
   });
   if (!res.ok) {
     const txt = await res.text();

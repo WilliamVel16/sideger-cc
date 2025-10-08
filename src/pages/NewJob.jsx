@@ -69,7 +69,7 @@ function NewJob() {
       console.log(response);
       
       setSessionJobsSubmitted(prevJobs => {
-      const newJob = { batch_name: formData.batch_name, number_jobs: formData.queue, output_type: outputType };
+      const newJob = { batch_name: formData.batch_name, universe: formData.universe, number_jobs: formData.queue, output_type: outputType };
       const filtered = prevJobs.filter(job => job.batch_name !== newJob.batch_name);
       return [...filtered, newJob];
     });
