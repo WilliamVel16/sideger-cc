@@ -21,7 +21,6 @@ export const scanInterfaces = async () => {
 
 // to obtain the IPs of the resources (up) by scanning the LAN [Resources.jsx]
 export const scanLanResources = async (interfaceLanName, localPassword) => {
-  console.log("OBLIGAR A ELEGIR LAN", interfaceLanName)
   const url = `${BACKEND_URL}/lan-ssh/scan-resources?interface_lan_name=${interfaceLanName}&local_password=${localPassword}`;
   const response = await fetch(url);
 
@@ -254,10 +253,11 @@ export const getJobInformation = async (job_id) => {
 
 // deletes a specific job from a batch [JobQueue.jsx]
 export const removeSpecificJob = async (job_id, submit_container_name) => {
+  console.log(job_id, submit_container_name)
   const token = localStorage.getItem("access_token")
   if (!token) throw new Error("No authentication token found");
 
-  const res = await fetch(`${BACKEND_URL}/queue/remove-job`, {
+  const res = await fetch(`${BACKEND_URL}/jobs/queue/remove-job`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
