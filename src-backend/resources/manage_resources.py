@@ -13,8 +13,7 @@ def show_resources_specs(resources_ips: List[str], resources_user: str) -> Union
     Example:
         Show info as: OS, DISK, RAM, CPU, GPU, HOSTNAME
     """
-    script_path = Path("../scripts/utils/resources_info.sh")
-
+    script_path = Path("scripts/utils/resources_info.sh")
     if not script_path.exists():
         raise HTTPException(status_code=404, detail=f"Script not found at path: {script_path}")
 
@@ -57,7 +56,7 @@ def show_my_specs(interface_lan_name: str) -> Union[dict, str]:
     Example:
         Show info as: OS, DISK, RAM, CPU, GPU, HOSTNAME
     """
-    script_path = Path("../scripts/utils/my_info.sh")
+    script_path = Path("scripts/utils/my_info.sh")
 
     if not script_path.exists():
         raise HTTPException(status_code=404, detail=f"Script not found at path: {script_path}")
