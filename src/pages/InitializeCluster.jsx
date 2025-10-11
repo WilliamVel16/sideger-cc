@@ -354,8 +354,8 @@ function InitializeCluster() {
             El cluster {overlayNetworkName} ha sido desplegado satistactoriamente
           </Typography>
           <Typography variant="body2" sx={{ mt: 1 }}>
-            Puedes dirigirte a la sección "Nuevo Trabajo" para <br />
-            que envies tus trabajos al cluster.
+            Puedes dirigirte a la sección "Nuevo Trabajo" <br />
+            y enviar tus trabajos al clúster.
           </Typography>
         </Box>
       )}
@@ -364,7 +364,7 @@ function InitializeCluster() {
         <Box sx={{ textAlign: 'center', mt: 4 }}>
           <ErrorIcon color="warning" sx={{ fontSize: 60 }} />
           <Typography variant="h6" color="warning.main">
-            {errorScan}
+            {errorDeploy}
           </Typography>
           <Typography variant="body2" sx={{ mt: 1 }}>
             Si el mensaje indica error en el despliegue, inténtalo nuevamente. <br/><br/> 
@@ -373,7 +373,7 @@ function InitializeCluster() {
           </Typography>
         </Box>
       )}
-      <ToastContainer position="bottom-right" autoClose={4000} />
+      {/** <ToastContainer position="bottom-right" autoClose={4000} /> */}
     </Container> 
   );
 }

@@ -12,6 +12,7 @@ import Signup from "./pages/Signup";
 import StoragedJobs from "./pages/StoragedJobs";
 import UserClusters from "./pages/UserClusters"
 import { ProtectedRoute } from "./services/ProtectedRoute"
+import { ToastContainer } from 'react-toastify'
 
 function App() {
 
@@ -39,6 +40,19 @@ function App() {
             </Route>
           </Routes>
         </BrowserRouter>
+
+        <ToastContainer
+          position="bottom-right"
+          autoClose={4000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="colored"
+        />
+
       </AppProvider>
     </div>
   );

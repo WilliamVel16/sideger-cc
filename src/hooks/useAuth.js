@@ -67,7 +67,6 @@ const useAuth = () => {
   const logout = async () => {
     setIsLoading(true)
     try {
-      
       authService.logout();
       navigate("/login")
     } catch (err) {

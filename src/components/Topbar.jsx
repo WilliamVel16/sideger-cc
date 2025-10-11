@@ -8,17 +8,19 @@ import { useAppContext } from "../context/AppContext";
 import { shutdownCluster } from "../utils/tauriApi";
 import { exit } from "@tauri-apps/plugin-process";
 import useAuth from "../hooks/useAuth";
+import { toast } from 'react-toastify'
+import Swal from 'sweetalert2';
 
 function Topbar() {
   const { logout } = useAuth();
-  const { clusterState, setClusterState, setClusterNodesConfig, setSubmitContainerName, setOverlayNetworkName, setResourcesIPs, clusterNodesConfig, currentClusterId } = useAppContext();
+  const { clusterState, setClusterState, setClusterNodesConfig, setSubmitContainerName,
+    setOverlayNetworkName, setResourcesIPs, clusterNodesConfig, currentClusterId,
+    setSessionJobsSubmitted
+  } = useAppContext();
   const [anchorMenu, setAnchorMenu] = useState(null);
   const [anchorNotif, setAnchorNotif] = useState(null);
   const [lastNotification, setLastNotification] = useState("Notificación de prueba");
   const [showNotifText, setShowNotifText] = useState(true);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [showClusterWarning, setShowClusterWarning] = useState(false);
-
   const [notifications] = useState([
     "Cluster iniciado correctamente.",
     "Nuevo trabajo en cola",
@@ -37,46 +39,85 @@ function Topbar() {
   // user must be deactivate the cluster (shutdown)
   const checkClusterBeforeExit = (action) => {
     if (clusterState === "active") {
-    const msg =
-      action === "logout"
-        ? "No puedes cerrar sesión mientras el clúster está activo."
-        : "No puedes cerrar la aplicación mientras el clúster está activo.";
-
-    setSnackbarMessage(`${msg} Por favor, da de baja el clúster antes de continuar.`);
-    setShowClusterWarning(true);
-    return false;
-  }
-  return true; 
+      showClusterActiveWarning(action);
+      return false;
+    }
+    return true; 
   };
 
   // manage close session
   const handleSessionClose = async () => {
     if (!checkClusterBeforeExit("logout")) return;
-    try {
-      await logout();
-    } catch (_) {
-      //useAuth manages errors
+
+    const result = await Swal.fire({
+      title: "¿Cerrar sesión?",
+      text: "Perderás el acceso actual a la aplicación.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sí, cerrar sesión",
+      cancelButtonText: "Cancelar acción",
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await logout();
+        toast.success("Sesión cerrada correctamente");
+      } catch {
+        toast.error("Error al cerrar sesión");
+        // useAuth manages errors
+      }
     }
   }
 
   // close app
   const handleAppExit = async () => {
     if (!checkClusterBeforeExit("exit")) return;
-    await exit(0)
+
+    const result = await Swal.fire({
+      title: "¿Salir de la aplicación?",
+      text: "Se cerrará completamente la aplicación.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sí, salir",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+    });
+
+    if (result.isConfirmed) {
+      await exit(0);
+    }
   };
 
+  // sends as arguments: nodes, onetName, and user
   const handleShutdownCluster = async () => {
-    // sends as arguments: nodes, onetName, and user
+    const result = await Swal.fire({
+      title: "¿Dar de baja el clúster?",
+      text: "Se cerrarán todos los nodos y recursos asociados.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, dar de baja",
+      cancelButtonText: "Cancelar acción",
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+    });
+    if (!result.isConfirmed) return;
+
     try {
       const response = await shutdownCluster(clusterNodesConfig, currentClusterId);
       console.log("RESPONSE SHUTDOWN", response)
       setClusterState("inactive")
       setClusterNodesConfig(null)
-      setSubmitContainerName("")
-      setOverlayNetworkName("")
-      setResourcesIPs([])
+      setSubmitContainerName(null)
+      setOverlayNetworkName(null)
+      setSessionJobsSubmitted(null)
+      setResourcesIPs(null)
+      toast.success("Clúster dado de baja correctamente");
     } catch (err) {
       console.log("Error to try kill the cluster:", err);
+      toast.error(`Error al intentar dar de baja el clúster: "${err}"`);
     }
   }
 
@@ -105,6 +146,22 @@ function Topbar() {
         return "En construcción";
     }
   };
+
+  // Warning to show when user is trying shutdown the cluster or close session
+  const showClusterActiveWarning = (action) => {
+  const msg =
+    action === "logout"
+      ? "No puedes cerrar sesión mientras el clúster está activo."
+      : "No puedes cerrar la aplicación mientras el clúster está activo.";
+
+  Swal.fire({
+    icon: "warning",
+    title: "Acción no permitida",
+    text: `${msg} Por favor, da de baja el clúster antes de continuar.`,
+    confirmButtonText: "Entendido",
+    confirmButtonColor: "#3085d6",
+  });
+};
 
   return (
     <div className="topbar">
@@ -157,22 +214,6 @@ function Topbar() {
         <MenuItem onClick={handleShutdownCluster}>Dar de Baja</MenuItem>
         <MenuItem onClick={handleAppExit}>Salir</MenuItem>
       </Menu>
-
-      {/* Snackbar warning */}
-      <Snackbar
-        open={showClusterWarning}
-        autoHideDuration={5000}
-        onClose={() => setShowClusterWarning(false)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={() => setShowClusterWarning(false)}
-          severity="warning"
-          sx={{ width: "100%" }}
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
     </div>
   );
 }
