@@ -4,6 +4,8 @@ from typing import List
 from . import models, schemas
 from core import security, database
 from . import services
+from datetime import datetime
+import pytz
 
 router = APIRouter()
 
@@ -39,29 +41,44 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)
 
 # saves into db a new job with their results
 @router.post("/save-job", response_model=schemas.JobResponse)
-def create_job(job: schemas.JobCreate, db: Session = Depends(database.get_db),
+def save_job(job: schemas.JobCreateRegister, db: Session = Depends(database.get_db),
                current_user: models.User = Depends(security.get_current_user)):
-    db_job = models.Job(
-        universe=job.universe,
-        job_name=job.job_name,
-        execution_date=job.execution_date,
-        execution_total_time=job.execution_total_time,
-        user_id=current_user.id
-    )
-    db.add(db_job)
-    db.commit()
-    db.refresh(db_job)
+    print("🧾 JOB DATA RECEIVED TO SAVE JOB:", job.dict())
+    print(f"🧩 Saving job for user {current_user.id} in cluster {job.cluster_id}: {job.job_name}")
+    try:
+        db_job = models.Job(
+            universe=job.universe,
+            job_name=job.job_name,
+            execution_date=job.execution_date,
+            execution_total_time=job.execution_total_time,
+            user_id=current_user.id,
+            cluster_id=job.cluster_id
+        )
 
-    # add results
-    if job.results:
-        db_results = [
-            models.Result(result=res.result, job_id=db_job.id)
-            for res in job.results
-        ]
-        db.add_all(db_results)
+        db.add(db_job)
         db.commit()
         db.refresh(db_job)
-    return db_job
+
+        # adds results
+        if job.results:
+            db_results = [
+                models.Result(result=res.result, job_id=db_job.id)
+                for res in job.results
+            ]
+            db.add_all(db_results)
+            db.commit()
+            db.refresh(db_job)
+
+        cluster = db.query(models.Cluster).filter(models.Cluster.id == job.cluster_id).first()
+        cluster_name = cluster.name if cluster else "Cluster desconocido"
+
+        return {
+            "message": f"Trabajo '{db_job.job_name}' guardado correctamente en el cluster '{cluster_name}' para el usuario '{current_user.name} {current_user.lastname}'."
+        }
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error saving job: {str(e)}")
 
 
 @router.get("/view-jobs-stored", response_model=List[schemas.JobResponse])

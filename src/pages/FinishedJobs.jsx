@@ -16,7 +16,7 @@ import { useAppContext } from "../context/AppContext";
 import { jobsResults, saveJob } from "../utils/tauriApi";
 
 export default function ResultadosLotes() {
-  const { sessionJobsSubmitted, token, submitContainerName } = useAppContext();
+  const { sessionJobsSubmitted, token, submitContainerName, currentClusterId } = useAppContext();
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [savingId, setSavingId] = useState(null);
@@ -49,8 +49,9 @@ export default function ResultadosLotes() {
     return {
       universe: batch.universe,
       job_name: batch.batch_name,
-      execution_date: new Date(batch.submitted).toISOString(),
+      execution_date: batch.submitted,
       execution_total_time: batch.total_time,
+      cluster_id: currentClusterId,
       results,
     };
   };
@@ -62,15 +63,18 @@ export default function ResultadosLotes() {
     if (!confirmSave) return;
 
     setSavingId(batch.id);
+    setLoading(true)
     try {
+      console.log("BATCH",batch)
       const payload = buildPayload(batch);
-      await saveJob(payload);
-      alert("job saved");
+      const result = await saveJob(payload);
+      alert("job saved", result);
     } catch (err) {
       console.error(err);
       alert("Error saving job");
     } finally {
       setSavingId(null);
+      setLoading(false);
     }
   };
 

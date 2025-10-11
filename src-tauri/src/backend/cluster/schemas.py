@@ -15,6 +15,9 @@ class ContainerConfig(BaseModel):
     hostname: str
     user: str
 
+class ShutdownRequest(BaseModel):
+    cluster_id: int
+    nodes: List[ContainerConfig]
 
 class ClusterInitRequest(BaseModel):
     nodes: List[NodeRole]
@@ -30,3 +33,9 @@ class ClusterNodeResult(BaseModel):
 class ShutdownNodeResult(BaseModel):
     free: bool
     message: str
+
+
+class ClusterSaveData(BaseModel):
+    name: str
+    number_nodes: int
+    user_id: int

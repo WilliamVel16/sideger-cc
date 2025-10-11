@@ -51,10 +51,11 @@ class ResultResponse(ResultBase):
 class JobBase(BaseModel):
     universe: str
     job_name: str
-    execution_date: Optional[datetime] = None
+    execution_date: str = None
     execution_total_time: Optional[str] = None
 
-class JobCreate(JobBase):
+class JobCreateRegister(JobBase):
+    cluster_id: Optional[int] = None
     results: List[ResultCreate] = []
 
 class JobResponse(JobBase):

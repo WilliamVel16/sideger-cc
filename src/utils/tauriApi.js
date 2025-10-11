@@ -124,16 +124,20 @@ export const initializeCluster = async (nodes, resourcesUser, onetName) => {
 };
 
 // to kill the cluster [Topbar.jsx]
-export const shutdownCluster = async (clusterNodesConfig) => {
-  console.log(clusterNodesConfig)
+export const shutdownCluster = async (clusterNodesConfig, clusterId) => {
+  const payload = {
+    cluster_id: clusterId,
+    nodes: clusterNodesConfig,
+  };
+
 	const response = await fetch(`${BACKEND_URL}/cluster/shutdown`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify(clusterNodesConfig)
+    body: JSON.stringify(payload)
   });
-  console.log(response)
+  
   if (!response.ok) {
     const err = await response.text();
     throw new Error(`Shutdown failed: ${err}`);
@@ -166,7 +170,7 @@ export const submitJob = async (formData, nodeSubmitRole, outputType) => {
 
 // to retrieve the jobs data in execution (includes state) [JobQueue.jsx]
 export const jobsQueue = async (nodeSubmitRole, sessionJobsSubmitted) => {
-  console.log(JSON.stringify( { session_jobs: sessionJobsSubmitted}))
+  console.log("SESION JOBS ENBVIADOS AL BACK", JSON.stringify( { session_jobs: sessionJobsSubmitted}))
   const response = await fetch(
     `${BACKEND_URL}/jobs/data/queue?submit_container_name=${encodeURIComponent(nodeSubmitRole)}`,
     {
@@ -203,7 +207,8 @@ export const jobsResults = async (sessionJobsSubmitted, submitContainerName) => 
 
 // saves a submitted job in the app's database [FinishedJobs.jsx]
 // WAY TOKEN TEMP
-export const saveJob = async (payload) => {
+export const saveJob = async (jobDataToSave) => {
+  console.log("SABE JOBS SENDS", jobDataToSave)
   const token = localStorage.getItem("access_token")
   if (!token) throw new Error("No authentication token found");
 
@@ -213,7 +218,7 @@ export const saveJob = async (payload) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`, 
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(jobDataToSave),
   });
   if (!res.ok) {
     const txt = await res.text();
@@ -274,7 +279,6 @@ export const removeBatch = async (batch_name, submit_container_name) => {
   const token = localStorage.getItem("access_token")
   if (!token) throw new Error("No authentication token found");
 
-  
   const res = await fetch(`${BACKEND_URL}/queue/remove-batch`, {
     method: "POST",
     headers: {
@@ -288,3 +292,41 @@ export const removeBatch = async (batch_name, submit_container_name) => {
   alert(data.message);
 }
 
+
+// save cluster deploy information in the database [InitializeCluster.jsx]
+export async function saveClusterInformation(clusterData) {
+  const response = await fetch(`${BACKEND_URL}/cluster/save-cluster-data`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(clusterData),
+    });
+  if (!response.ok) throw new Error("Error trying to save the cluster");
+  return await response.json();
+}
+
+
+
+// get the clusters deployed by the user 
+export const getUserClusters = async() => {
+  const response = await fetch(`${BACKEND_URL}/cluster/view-deployed`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(clusterData),
+    });
+  if (!response.ok) throw new Error("Error trying to save the cluster");
+  return await response.json();
+}
+
+
+// get the jobs that were running by a specific cluster
+export const getClusterJobs = async () => {
+  return 0
+}
+
+
+// get the resulsts of a spefific job
+export const getJobResults = async () => {
+  return {"message": 0}
+}

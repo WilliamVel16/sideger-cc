@@ -159,7 +159,7 @@ async def get_batch_lifetime(batch_name: str, sub_container_name: str) -> str:
     return formatted
     
 
-async def jobs_results_service(job_name: str, number_jobs: int, output_type: str, sub_container_name: str):
+async def jobs_results_service(job_name: str, universe: str, submitted: str, number_jobs: int, output_type: str, sub_container_name: str):
     """
     this function orchestra the build of jobs results, iterates the sideger's
     working directory (sideger-jobs), and returns the results depending
@@ -189,7 +189,7 @@ async def jobs_results_service(job_name: str, number_jobs: int, output_type: str
     else:
         raise ValueError(f"[ERR] output_type desconocido: {output_type}")
 
-    return {"id": job_name, "batch_name": job_name, "number_jobs": number_jobs, "total_time": total_time, "executions": executions}
+    return {"batch_name": job_name, "universe": universe, "submitted": submitted, "number_jobs": number_jobs, "total_time": total_time, "executions": executions}
 
 
 async def remove_job_service(job_id: str, submit_container_name: str):
