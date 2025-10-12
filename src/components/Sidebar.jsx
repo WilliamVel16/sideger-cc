@@ -37,7 +37,6 @@ function Sidebar() {
         <div className="section">
           <div className="section-title">Registros</div>
           <NavLink to="/registers/jobs" className="nav-link"> Trabajos Anteriores </NavLink>
-          <NavLink to="/registers/clusters" className="nav-link"> Clusters  </NavLink>
         </div>
       </nav>
     </div>

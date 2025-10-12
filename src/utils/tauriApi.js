@@ -226,26 +226,6 @@ export const saveJob = async (jobDataToSave) => {
   return res.json();
 };
 
-// gets the storaged jobs in DB to authenticated user [StoragedJobs.jsx]
-export const getUserJobs = async () => {
-  const token = localStorage.getItem("access_token")
-  if (!token) throw new Error("No authentication token found");
-
-  const response = await fetch(`${BACKEND_URL}/jobs/db`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`get user jobs failed: ${err}`);
-  }
-  return response.json();
-};
-
 // gets the information of a job [JobQueue.jsx]
 export const getJobInformation = async (job_id) => {
   // here the logic to do the api request
@@ -306,27 +286,36 @@ export async function saveClusterInformation(clusterData) {
 }
 
 
-
-// get the clusters deployed by the user 
+// get the clusters deployed by the user [StoragedJobs.jsx]
 export const getUserClusters = async() => {
-  const response = await fetch(`${BACKEND_URL}/cluster/view-deployed`,
+  const token = localStorage.getItem("access_token")
+  if (!token) throw new Error("No authentication token found");
+  const response = await fetch(`${BACKEND_URL}/user/clusters/db`,
     {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(clusterData),
+      method: "GET",
+      headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     });
-  if (!response.ok) throw new Error("Error trying to save the cluster");
+  if (!response.ok) throw new Error("Error trying get the storaged cluster sessions");
   return await response.json();
 }
 
 
-// get the jobs that were running by a specific cluster
-export const getClusterJobs = async () => {
+// deletes a specific cluster from an user [StoragedJobs.jsx]
+export const deleteCluster = async (id) => {
   return 0
 }
 
 
-// get the resulsts of a spefific job
-export const getJobResults = async () => {
+// deletes a specific job from a cluster [StoragedJobs.jsx]
+export const deleteJob = async (id) => {
+  return 0
+}
+
+
+// deletes a specific result from a job [StoragedJobs.jsx]
+export const deleteResult = async (id) => {
   return {"message": 0}
 }

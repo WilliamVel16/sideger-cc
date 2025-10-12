@@ -10,7 +10,6 @@ import JobQueue from "./pages/JobQueue";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import StoragedJobs from "./pages/StoragedJobs";
-import UserClusters from "./pages/UserClusters"
 import { ProtectedRoute } from "./services/ProtectedRoute"
 import { ToastContainer } from 'react-toastify'
 
@@ -35,7 +34,6 @@ function App() {
                 <Route path="/jobs/queue" element={<JobQueue />} />
                 <Route path="/jobs/finished" element={<FinishedJobs />} />
                 <Route path="/registers/jobs" element={<StoragedJobs />} />
-                <Route path="/registers/clusters" element={<UserClusters />} />
               </Route>
             </Route>
           </Routes>
