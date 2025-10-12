@@ -39,9 +39,6 @@ class LoginResponse(BaseModel):
 class ResultBase(BaseModel):
     result: str
 
-class ResultCreate(ResultBase):
-    result: str
-
 class ResultResponse(ResultBase):
     id: int
     class Config:
@@ -56,10 +53,22 @@ class JobBase(BaseModel):
 
 class JobCreateRegister(JobBase):
     cluster_id: Optional[int] = None
-    results: List[ResultCreate] = []
+    results: List[ResultBase] = []
 
 class JobResponse(JobBase):
     id: int
     results: List[ResultResponse]
+    class Config:
+        orm_mode = True
+
+
+class ClusterResponse(BaseModel):
+    id: int
+    name: str
+    number_nodes: Optional[int]
+    created_at: datetime
+    shutdown_at: Optional[datetime]
+    jobs: List[JobResponse]
+
     class Config:
         orm_mode = True
