@@ -9,10 +9,10 @@ import {
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useAppContext } from "../context/AppContext";
-import { jobsQueue, getJobInformation, removeSpecificJob, removeBatch, setClusterActiveInfo } from "../utils/tauriApi";
+import { jobsQueue, getJobInformation, removeSpecificJob, removeBatch } from "../utils/tauriApi";
 
 function JobQueue() {
-  const { clusterNodesConfig, sessionJobsSubmitted, setSessionJobsSubmitted, submitContainerName } = useAppContext();
+  const { clusterNodesConfig, sessionJobsSubmitted, setSessionJobsSubmitted, submitContainerName, setClusterActiveInfo } = useAppContext();
   const [jobId, setJobId] = useState("");
   const [batchName, setBatchName] = useState("");
   const [jobInfo, setJobInfo] = useState(null);
