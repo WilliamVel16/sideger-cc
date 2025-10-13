@@ -13,6 +13,7 @@ import { ToastContainer, toast } from 'react-toastify'
 import { showResourcesSpecs, initializeCluster, showMySpecs, saveClusterInformation } from "../utils/tauriApi";
 import { useAppContext } from '../context/AppContext';
 import Swal from 'sweetalert2';
+import { useNavigate } from "react-router";
 
 
 function InitializeCluster() {
@@ -28,9 +29,27 @@ function InitializeCluster() {
   const [deployStatus, setDeployStatus] = useState(""); // "" | "idle" | "success" | "error"
   const [errorDeploy, setErrorDeploy] = useState("")
   const [clusterNameNotFilled, setClusterNameNotFilled] = useState(false);
+  let navigate = useNavigate();
 
   // requests to backend for view all available resources
   const fetchData = async () => {
+    if (resourcesIPs.length === 0){
+      const result = await Swal.fire({
+        title: 'Acción no permitida',
+        text: `Primero debes buscar los recursos de cómputo en la sección "Recursos"`,
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonColor: '#18b654ff',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ir a buscar',
+        cancelButtonText: 'Entendido',
+      });
+
+      if (result.isConfirmed) {
+        navigate("/resources")
+      } 
+    }
+
     setLoading(true);
     console.log(resourcesIPs)
     try {

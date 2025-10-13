@@ -25,6 +25,7 @@ import { useAppContext } from "../context/AppContext";
 import AboutDialog from "../components/ui/aboutDialog";
 import FeaturesDialog from "../components/ui/featuresDialog";
 import { getUserClusters } from "../utils/tauriApi";
+import { useNavigate } from "react-router";
 
 export default function HomePage() {
   const { clusterState, overlayNetworkName, clusterActiveInfo } = useAppContext()
@@ -32,6 +33,7 @@ export default function HomePage() {
   const [openFeatures, setOpenFeatures] = useState(false);
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState([]);
+  let navigate = useNavigate();
 
 
   useEffect(() => {
@@ -52,7 +54,7 @@ export default function HomePage() {
   };
 
   const handleGoToManagement = () => {
-    toast.success("yendo al panel...")
+    navigate("/resources")
   };
 
   return (
@@ -218,7 +220,7 @@ export default function HomePage() {
               variant="contained"
               size="small"
               color=""
-              onClick={() => toast.success("yendo a storaged jobs...")}
+              onClick={() => navigate("registers/jobs")}
             >
               Ver historial de clusters
             </Button>
@@ -252,7 +254,7 @@ export default function HomePage() {
                     <TableCell>{cluster.jobs.length}</TableCell>
                     <TableCell>
                       <Chip
-                        label={cluster.shutdown_at ? "Detenido" : "Activo"}
+                        label={cluster.shutdown_at ? "Dado de baja" : "Activo"}
                         color={cluster.shutdown_at ? "error" : "success"}
                         size="small"
                       />

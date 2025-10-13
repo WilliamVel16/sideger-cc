@@ -9,7 +9,7 @@ export default function AboutDialog({ open, onClose }) {
       maxWidth="sm"
       fullWidth
     >
-      <DialogTitle>Sobre Sideger</DialogTitle>
+      <DialogTitle>Sobre Sideger-CC</DialogTitle>
       <DialogContent dividers>
         <Typography variant="body1" paragraph>
           <strong>Sideger</strong> es una plataforma que permite desplegar y
