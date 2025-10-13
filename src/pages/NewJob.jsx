@@ -83,24 +83,37 @@ function NewJob() {
       return;
     }
 
-    try {
-      const response = await submitJob(formData, submitContainerName, outputType);
-      console.log(response);
+    const result = await Swal.fire({
+      title: '¿Llenaste los campos necesarios para el trabajo?',
+      text: `Se enviará el lote "${batchName}" con los datos ingresados.`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#18b654ff',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, quiero enviar',
+      cancelButtonText: 'Volver y verificar',
+    });
 
-      setSessionJobsSubmitted((prevJobs) => {
-        const newJob = {
-          batch_name: batchName,
-          universe: formData.universe,
-          number_jobs: formData.queue,
-          output_type: outputType,
-        };
-        return [...prevJobs, newJob];
-      });
+    if (result.isConfirmed) {
+      try {
+        const response = await submitJob(formData, submitContainerName, outputType);
+        console.log(response);
 
-      toast.success(`Lote "${batchName}" enviado exitosamente`);
-    } catch (err) {
-      console.error("Error trying to submit the new job:", err);
-      toast.error(`Ocurrió un error al enviar el lote: "${err}"`);
+        setSessionJobsSubmitted((prevJobs) => {
+          const newJob = {
+            batch_name: batchName,
+            universe: formData.universe,
+            number_jobs: formData.queue,
+            output_type: outputType,
+          };
+          return [...prevJobs, newJob];
+        });
+
+        toast.success(`Lote "${batchName}" enviado exitosamente`);
+      } catch (err) {
+        console.error("Error trying to submit the new job:", err);
+        toast.error(`Ocurrió un error al enviar el lote: "${err}"`);
+      }
     }
   };
 
@@ -229,7 +242,7 @@ function NewJob() {
               </FormControl>
 
               <TextField                                                                                 // BATCH_NAME
-                label="Nombre de la ejecución"
+                label="Nombre del trabajo"
                 fullWidth
                 size="small"
                 sx={{ mt: 2 }}
