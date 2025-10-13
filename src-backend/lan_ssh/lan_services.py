@@ -15,8 +15,7 @@ def script_permissions() -> str:
     Example:
         allows the app to run a script to scan the LAN
     """
-    scripts_dir = Path("../../../local-scripts")
-    print(scripts_dir, Path.cwd())
+    scripts_dir = Path("scripts/utils/")
     if not scripts_dir.exists():
         raise FileNotFoundError("The directory local-scripts doesn't exist")
 
@@ -42,7 +41,7 @@ def scan_lan_resources(interface_lan_name: str, local_password: str) -> ScanReso
     """
     this function allows scan the allowed resources in the network
     """
-    script_path = Path("../../../local-scripts/get_resources_up.sh")
+    script_path = Path("scripts/utils/get_resources_up.sh")
     if not script_path.exists():
         raise HTTPException(status_code=404, detail="Script doesn't exist")
 

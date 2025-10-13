@@ -13,11 +13,12 @@ class ContainerConfig(BaseModel):
     @classmethod
     def new(cls, ip: str, role: str, onetwork_name: str, hostname: str, user: str) -> 'ContainerConfig':
         """
-        Crea una configuración de contenedor con su respectiva imagen y nombre.
+        creates a container config with its respective image.
+        based in the role defined by the user.
         """
         role_to_image = {
             "cm": "wvel/sideger-cm:1.0.2",
-            "sub": "wvel/sideger-sub:1.0.2",
+            "sub": "wvel/sideger-sub:4.1.7",
             "exe": "wvel/sideger-exe:1.0.2"
         }
 

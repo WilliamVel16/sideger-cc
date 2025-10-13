@@ -17,9 +17,11 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import { useAppContext } from "../context/AppContext";
 import { submitJob } from "../utils/tauriApi";
+import Swal from "sweetalert2";
+import { toast } from "react-toastify";
 
 function NewJob() {
-  const { submitContainerName, setSessionJobsSubmitted } = useAppContext();
+  const { submitContainerName, sessionJobsSubmitted, setSessionJobsSubmitted } = useAppContext();
   const [inputFiles, setInputFiles] = useState([]);
   const [jobType, setJobType] = useState("executable");
   const [input, setInput] = useState("");
@@ -64,17 +66,41 @@ function NewJob() {
 
   const handleSubmitNewJob = async () => {
     console.log(formData);
+    const batchName = formData.batch_name?.trim();
+
+    if (!batchName) {
+      toast.warning("Debes ingresar un nombre para el lote");
+      return;
+    }
+
+    // verify duplicates
+    const isDuplicate = sessionJobsSubmitted.some(
+      (job) => job.batch_name.toLowerCase() === batchName.toLowerCase()
+    );
+    if (isDuplicate) {
+      toast.error("Nombre de lote repetido.");
+      toast.info("Tip: ingresa un número al final")
+      return;
+    }
+
     try {
       const response = await submitJob(formData, submitContainerName, outputType);
       console.log(response);
-      
-      setSessionJobsSubmitted(prevJobs => {
-      const newJob = { batch_name: formData.batch_name, universe: formData.universe, number_jobs: formData.queue, output_type: outputType };
-      const filtered = prevJobs.filter(job => job.batch_name !== newJob.batch_name);
-      return [...filtered, newJob];
-    });
+
+      setSessionJobsSubmitted((prevJobs) => {
+        const newJob = {
+          batch_name: batchName,
+          universe: formData.universe,
+          number_jobs: formData.queue,
+          output_type: outputType,
+        };
+        return [...prevJobs, newJob];
+      });
+
+      toast.success(`Lote "${batchName}" enviado exitosamente`);
     } catch (err) {
-      console.log("Error trying submit the new job:", err);
+      console.error("Error trying to submit the new job:", err);
+      toast.error(`Ocurrió un error al enviar el lote: "${err}"`);
     }
   };
 

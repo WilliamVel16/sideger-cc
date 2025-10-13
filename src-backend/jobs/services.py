@@ -194,7 +194,7 @@ async def jobs_results_service(job_name: str, universe: str, submitted: str, num
 
 async def remove_job_service(job_id: str, submit_container_name: str):
     """
-    Deletes a specific jof grom HTCondor queue since submit role container
+    Deletes a specific jof from HTCondor queue since submit role container
     """
     command = f"docker exec {submit_container_name} condor_rm {job_id}"
     process = await asyncio.create_subprocess_shell(
@@ -205,7 +205,7 @@ async def remove_job_service(job_id: str, submit_container_name: str):
     stdout, stderr = await process.communicate()
 
     if process.returncode != 0:
-        raise HTTPException(status_code=500, detail=f"Error al eliminar trabajo: {stderr.decode().strip()}")
+        raise HTTPException(status_code=500, detail=f"Error trying delete the job: {stderr.decode().strip()}")
 
     return {"message": f"Trabajo {job_id} eliminado correctamente", "stdout": stdout.decode().strip()}
 

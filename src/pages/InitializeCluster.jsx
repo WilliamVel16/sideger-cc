@@ -3,23 +3,31 @@ import {
   ListItemText, Select, MenuItem, FormControl, FormGroup, TextField,
   FormControlLabel, InputLabel, IconButton, Button, Switch, Tooltip, CircularProgress
 } from '@mui/material';
-import { useState } from 'react';
+import { use, useState } from 'react';
 import ComputerIcon from '@mui/icons-material/Computer';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import VerifiedIcon from '@mui/icons-material/Verified';
+import { ToastContainer, toast } from 'react-toastify'
 import { showResourcesSpecs, initializeCluster, showMySpecs, saveClusterInformation } from "../utils/tauriApi";
 import { useAppContext } from '../context/AppContext';
+import Swal from 'sweetalert2';
+
 
 function InitializeCluster() {
-  const { resourcesIPs, resourcesUser, setClusterState, LANname, setClusterNodesConfig, overlayNetworkName, setOverlayNetworkName, setSubmitContainerName, setCurrentClusterId } = useAppContext();
+  const { resourcesIPs, resourcesUser, setClusterState, LANname, setClusterNodesConfig, overlayNetworkName, setOverlayNetworkName, setSubmitContainerName, setCurrentClusterId, setClusterActiveInfo } = useAppContext();
   const [checkedServers, setCheckedServers] = useState([]);
   const [servers, setServers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [deployingCluster, setDeployingCluster] = useState(false)
   const [sysDefineAll, setSysDefineAll] = useState(false);
   const [numExecutionNodes, setNumExecutionNodes] = useState(1);
   const [sysDefineResources, setSysDefineResources] = useState(false);
   const [keepCluster, setKeepCluster] = useState(false);
+  const [deployStatus, setDeployStatus] = useState(""); // "" | "idle" | "success" | "error"
+  const [errorDeploy, setErrorDeploy] = useState("")
+  const [clusterNameNotFilled, setClusterNameNotFilled] = useState(false);
 
   // requests to backend for view all available resources
   const fetchData = async () => {
@@ -67,9 +75,14 @@ function InitializeCluster() {
         user_id: user.id,               
       };
 
-      console.log("PAYLOAD TO SAVE CLUSTER INFORMATION", clusterPayload)
       const response = await saveClusterInformation(clusterPayload);
-      console.log("Cluster registrado correctamente en la base de datos.", response);
+      
+      setClusterActiveInfo(prev => ({
+        ...prev,                     
+        numberNodes: checkedServers.length,
+        createdAt: new Date().toLocaleString(),
+      }));
+
       return response
     } catch (err) {
       console.error("Error guardando información del cluster:", err);
@@ -79,10 +92,12 @@ function InitializeCluster() {
   // sends the request ([{ip:role},]) to asign roles to every selected resource
   // and start cluster
   const handleSendRequest = async () => {
+    setDeployingCluster(true);
+    setErrorDeploy("");
     const dataCheckedServers = checkedServers.map(s => ({ ip: s.ip, role: s.role, }));
     try {
       const initializeResponse = await initializeCluster(dataCheckedServers, resourcesUser, overlayNetworkName);
-      setClusterState("active");
+      
       console.log("RESPONSE INITIALIZE", initializeResponse);
       setClusterNodesConfig(initializeResponse.map(node => node.config));
 
@@ -91,21 +106,55 @@ function InitializeCluster() {
         .map(node => node.config.container_name);
 
       setSubmitContainerName(submitContainer[0])
-
+      setClusterState("active");
+      setDeployStatus("success")
+      toast.success(`Cluster desplegado y listo para usar`);
       try {
         const saveResponse = await handleSaveClusterData();
         console.log("RESPONSE SAVE", saveResponse, saveResponse.cluster_id)
-        setCurrentClusterId(saveResponse.cluster_id) // REVIEW RETURN
-        enqueueSnackbar("Clúster registrado correctamente.", { variant: "success" }); //temp
+        setCurrentClusterId(saveResponse.cluster_id)
+        toast.success(`Información del cluster guardada`)
       } catch (err) {
         //console.error("Error guardando información del cluster:", err);
-        enqueueSnackbar("Error al guardar el clúster.", { variant: "error" }); //temp
+        setErrorDeploy(err.message || "Error no resuelto al guardar información del clúster");
+        toast.error(err.message || "Error no resuelto al guardar información del clúster");
       }
 
     } catch (err) {
       console.error("Error deploying:", err);
+      setErrorDeploy(err.message || "Error no resulto al desplegar el clúster");
+      toast.error(err.message || "Error no resulto al desplegar el clúster");
+    } finally {
+      setDeployingCluster(false);
     }
   };
+
+  const confirmClusterDeployment = async () => {
+    if (!overlayNetworkName.trim()) {
+      setClusterNameNotFilled(true);
+      toast.error("Debes ingresar un nombre para el clúster");
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: '¿Desplegar clúster?',
+      text: `Se desplegará el clúster "${overlayNetworkName}" con la configuración actual.`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#18b654ff',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Quiero desplegar',
+      cancelButtonText: 'Volver y editar',
+    });
+
+    if (result.isConfirmed) {
+      handleSendRequest();
+      toast.info("Despliegue lanzado por el usuario")
+    } else {
+      toast.info("Despliegue cancelado por el usuario");
+    }
+  };
+
 
   return (
     <Container maxWidth="xl" sx={{ mt: 2, mx: "auto" }} >
@@ -121,7 +170,7 @@ function InitializeCluster() {
           {/*<Typography variant="body1" sx={{ mb: 2 }}>
             Para ver los recursos disponibles actualmente da click en el siguiente botón.
           </Typography>*/}
-          <Button variant='outlined' color='' disabled={loading} onClick={fetchData} sx={{ minWidth: 150 }}>
+          <Button variant='contained' color='' disabled={loading} onClick={fetchData} sx={{ minWidth: 150 }}>
             {loading ? <CircularProgress size={24} color="inherit" /> : 'Ver Recursos'}
           </Button>
         </Grid>
@@ -202,12 +251,17 @@ function InitializeCluster() {
               </FormGroup>
               <FormGroup sx={{ mb: 2 }}>
                 <TextField
+                  required
+                  error={Boolean(clusterNameNotFilled)}
                   label="Nombre del Clúster"
                   variant="outlined"
                   size="small"
                   fullWidth
                   value={overlayNetworkName}
-                  onChange={(e) => setOverlayNetworkName(e.target.value)}
+                  onChange={(e) => {
+                    setOverlayNetworkName(e.target.value);
+                    if (e.target.value.trim()) setClusterNameNotFilled(false);
+                  }}
                 />
               </FormGroup>
             </Grid>
@@ -290,15 +344,43 @@ function InitializeCluster() {
             <Button
               variant="contained"
               color="black"
-              onClick={handleSendRequest}
-              disabled={checkedServers.length < 3 || checkedServers.some(s => !s.role)}
+              onClick={confirmClusterDeployment}
+              disabled={checkedServers.length < 3 || checkedServers.some(s => !s.role) || deployingCluster}
+              sx={{ minWidth: 160 }}
             >
-              Inicializar Clúster
+              {deployingCluster ? <CircularProgress size={24} color='inherit' /> : 'Inicializar Clúster'}
             </Button>
           </Box>
         </Grid>
       </Grid>
+
+      {deployStatus === "success" && (
+        <Box sx={{ textAlign: 'center', mt: 4 }}>
+          <VerifiedIcon color="success" sx={{ fontSize: 60 }} />
+          <Typography variant="h6" color="success.main">
+            El cluster {overlayNetworkName} ha sido desplegado satistactoriamente
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            Puedes dirigirte a la sección "Nuevo Trabajo" <br />
+            y enviar tus trabajos al clúster.
+          </Typography>
+        </Box>
+      )}
       
+      {deployStatus === "error" && (
+        <Box sx={{ textAlign: 'center', mt: 4 }}>
+          <ErrorIcon color="warning" sx={{ fontSize: 60 }} />
+          <Typography variant="h6" color="warning.main">
+            {errorDeploy}
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            Si el mensaje indica error en el despliegue, inténtalo nuevamente. <br/><br/> 
+            Si el error esta relacionado con guardar la información del <br />
+            clúster, puedes ejecutar trabajos sin tener la opción de guardarlos.
+          </Typography>
+        </Box>
+      )}
+      {/** <ToastContainer position="bottom-right" autoClose={4000} /> */}
     </Container> 
   );
 }

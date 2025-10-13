@@ -14,6 +14,14 @@ export const AppProvider = ({ children }) => {
   const [sessionJobsSubmitted, setSessionJobsSubmitted] = usePersistentState("sessionJobsSubmitted", [])
   const [submitContainerName, setSubmitContainerName] = usePersistentState("submitContainerName", "")
   const [currentClusterId, setCurrentClusterId] = usePersistentState("currentClusterId", "")
+  const [clusterActiveInfo, setClusterActiveInfo] = usePersistentState("clusterActiveInfo", {
+    numberNodes: 0,
+    createdAt: null,
+    jobsTotal: 0,
+    jobsRunning: 0,
+    jobsHeld: 0,
+    jobsWaiting: 0,
+  })
 
 	return (
 		<AppContext.Provider
@@ -27,7 +35,8 @@ export const AppProvider = ({ children }) => {
         overlayNetworkName, setOverlayNetworkName,
         sessionJobsSubmitted, setSessionJobsSubmitted,
         submitContainerName, setSubmitContainerName,
-        currentClusterId, setCurrentClusterId
+        currentClusterId, setCurrentClusterId,
+        clusterActiveInfo, setClusterActiveInfo
         }}
       >
         { children }

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from . import models, schemas
 from core import security, database
-from . import services
+from .services import get_clusters_by_user_id
 from datetime import datetime
 import pytz
 
@@ -81,14 +81,15 @@ def save_job(job: schemas.JobCreateRegister, db: Session = Depends(database.get_
         raise HTTPException(status_code=500, detail=f"Error saving job: {str(e)}")
 
 
-@router.get("/view-jobs-stored", response_model=List[schemas.JobResponse])
-def get_all_jobs(db: Session = Depends(database.get_db)):
-    return db.query(models.Job).all()
-
-
-@router.get("/jobs/db", response_model=list[schemas.JobResponse])
-async def get_user_jobs(db: Session = Depends(database.get_db), current_user: models.User = Depends(security.get_current_user)):
+@router.get("/clusters/db", response_model=List[schemas.ClusterResponse])
+async def get_user_clusters(db: Session = Depends(database.get_db),
+                            current_user: models.User = Depends(security.get_current_user)):
     """
-    Devuelve los trabajos guardados en la BD del usuario autenticado.
+    returns the clusters storaged in the DB of the authenticated user.
+    builds all the data storaged for the specific cluster, including results.
     """
-    return services.get_jobs_by_user_id(db, current_user.id)
+    clusters = get_clusters_by_user_id(db, current_user.id)
+    if not clusters:
+        return [] #if user doesn't have clusters
+    return clusters
+

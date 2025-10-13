@@ -134,14 +134,14 @@ def leave_swarm(node_config: ContainerConfig) -> str:
     Makes a node leave the Docker Swarm cluster.
     
     If the node is the swarm manager 'cm', it forces the leave operation.
-    This helps to clean up swarm state on each cluster node.
+    This helps to clean up swarm state on each cluster's node.
     """
     ssh_auth = f"{node_config.user}@{node_config.ip}"
     command = "docker swarm leave --force" if node_config.role == "cm" else "docker swarm leave"
 
     try:
         if node_config.role == "sub":
-            # 'sub' role assumed to be local
+            # 'sub' role is local
             output = subprocess.run(
                 ["sh", "-c", command],
                 capture_output=True,

@@ -6,6 +6,7 @@ import { FiUser, FiMail, FiLock } from "react-icons/fi";
 import useAuth from "../hooks/useAuth";
 import Logo from "../assets/logo-secondary.png";
 import { emailPattern, passwordRules, confirmPasswordRules } from "../utils";
+import { toast } from 'react-toastify'
 
 /**
  * This signup component renders a user registration form allowing new users to create an account.
@@ -36,9 +37,10 @@ export default function Signup() {
   const onSubmit = async (data) => {
     const { passwordConfirmation, ...requestData } = data;
     try {
-      console.log(requestData)
       await signUp(requestData);
+      toast.success("Usuario registrado correctamente");
     } catch (_) {
+      toast.error("Error al registrar usuario");
       // useAuth hook maneja errores
     }
   };

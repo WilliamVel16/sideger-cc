@@ -3,12 +3,15 @@ import {
   FormGroup, TextField, Button, Snackbar, Alert, Select,
   FormControl,
   InputLabel,
-  MenuItem
+  MenuItem,
+  CircularProgress
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { scriptPermissions, scanInterfaces, scanLanResources, startSshConnection, getMyIp } from "../utils/tauriApi";
 import { useAppContext } from '../context/AppContext';
+import { ToastContainer, toast } from 'react-toastify'
 import VerifiedIcon from '@mui/icons-material/Verified';
+import ErrorIcon from '@mui/icons-material/Error';
 
 function Permissions() {
   const { resourcesIPs, setResourcesIPs, resourcesUser, setResourcesUser, LANname, setLANname } = useAppContext();
@@ -16,11 +19,14 @@ function Permissions() {
   const [successPermissions, setSuccessPermissions] = useState(false);
   const [errorPermissions, setErrorPermissions] = useState("");
   const [successScan, setSuccessScan] = useState(false);
-  const [errorScan, setErrorScan] = useState("");
   const [numberResources, setNumberResources] = useState(0);
   const [localPass, setLocalPass] = useState("");
   const [interfaces, setInterfaces] = useState([]);
   const [resourcesPass, setResourcesPass] = useState();
+  const [scanStatus, setScanStatus] = useState("idle"); // "idle" | "success" | "error"
+  const [errorScan, setErrorScan] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
   // scans the network interfaces
   useEffect(() => {
@@ -34,15 +40,28 @@ function Permissions() {
     })();
   }, []);
 
+  // validate inputs
+  const validate = () => {
+    const newErrors = {};
+    if (!LANname) newErrors.LANname = "Selecciona una interfaz LAN";
+    if (!localPass) newErrors.localPass = "La contraseña es obligatoria";
+    if (!resourcesUser) newErrors.resourcesUser = "El usuario es obligatorio";
+    if (!resourcesPass) newErrors.resourcesPass = "La contraseña del recurso es obligatoria";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   // get the permissions to execute scripts to deploy the cluster
   const handleAccept = async () => {
     try {
       const result = await scriptPermissions();
-      console.log("GOOD", result);
+      console.log(result);
       setSuccessPermissions(true);
+      toast.success("Permisos concedidos correctamente");
     } catch (err) {
-      console.error("BAD", err);
-      setErrorPermissions(err.message || "Unresolved error");
+      console.error(err);
+      toast.error(err.message || "Error al otorgar permisos");
     } finally {
       setAccepted(true);
     }
@@ -50,25 +69,35 @@ function Permissions() {
 
   // executes the resources scanning in the LAN
   const handleScanResources = async () => {
+    if (!validate()) {
+      toast.error("Por favor completa los campos requeridos");
+      return;
+    }
+
+    setLoading(true)
+    setScanStatus("idle");
+    setErrorScan("");
     try {
       const allDevicesFound = await scanLanResources(LANname, localPass);
       const thisResourceIp = await getMyIp(LANname);
       const finalResources = allDevicesFound.ips.filter(ip => ip !== thisResourceIp && !ip.endsWith(".1"));
+      
+      if (finalResources.length === 0) {
+        setErrorScan("No se encontraron recursos disponibles en la red.");
+        toast.error("No se encontraron recursos disponibles en la red.");
+        return;
+      }
+
       setResourcesIPs(finalResources);
       setNumberResources(finalResources.length)
-      setSuccessScan(true);
+      setScanStatus("success");
+      toast.success(`Se encontraron ${finalResources.length} recursos`);
     } catch (err) {
-      if (typeof err === "string") {
-        console.error("no ok 1", err);
-        setErrorScan(err);
-      } else if (err && err.message) {
-        //console.log("Error 2 during ssh connection:", JSON.stringify(err, null, 2));
-        console.error("no ok 2", err.message);
-        setErrorScan(err.message);
-      } else {
-        console.error("no ok 3", "Unresolved error");
-        setErrorScan("Unresolved error");
-      }
+      setErrorScan(err.message || "Error no resuelto al escanear la red");
+      toast.error(err.message || "Error no resuelto al escanear la red");
+      setScanStatus("error")
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -137,14 +166,14 @@ function Permissions() {
           usuario del recurso que estás usando.
         </Typography>
         
-        <Grid container direction="column" spacing={2} marginTop={3} alignItems={"center"}>
+        <Grid container direction="column" spacing={2} marginTop={3} alignItems={"center"} >
            <Grid item xs={12} md={6} sx={{ width: '30%' }}>
-            <FormControl fullWidth size="small">
+            <FormControl required error={Boolean(errors.LANname)} fullWidth size="small">
               <InputLabel> Interfaz LAN </InputLabel>
               <Select
-                value={LANname}
+                value={LANname || ""}
                 label="Interfaz LAN"
-                onChange={(e) => setLANname(e.target.value)}
+                onChange={(e) => { setLANname(e.target.value); setErrors(prev => ({ ...prev, LANname: "" })); }}
                 >
                   {interfaces.map((iface) => (
                     <MenuItem key={iface} value={iface}>
@@ -156,65 +185,84 @@ function Permissions() {
           </Grid>
           <Grid item xs={12} md={6} sx={{ width: '30%' }}>
             <TextField
+              required
+              error={Boolean(errors.localPass)}
               label="Contraseña de usuario"
               variant="outlined"
               type="password"
               fullWidth
               size="small"
               value={localPass}
-              onChange={(e) => setLocalPass(e.target.value)}
+              onChange={(e) => {
+                setLocalPass(e.target.value);
+                setErrors(prev => ({ ...prev, localPass: "" }));
+              }}
             />
           </Grid>
           <Grid item xs={12} md={6} sx={{ width: '30%' }}>
             <TextField
+              required
+              error={Boolean(errors.resourcesUser)}
               label="Usuario de los recursos"
               variant="outlined"
               fullWidth
               size="small"
               value={resourcesUser}
-              onChange={(e) => setResourcesUser(e.target.value)}
+              onChange={(e) => {
+                setResourcesUser(e.target.value);
+                setErrors(prev => ({ ...prev, resourcesUser: "" }));
+              }}
             />
           </Grid>
           <Grid item xs={12} md={6} sx={{ width: '30%' }}>
             <TextField
+              required
+              error={Boolean(errors.resourcesPass)}
               label="Contraseña de los recursos"
               variant="outlined"
               type="password"
               fullWidth
               size="small"
               value={resourcesPass}
-              onChange={(e) => setResourcesPass(e.target.value)}
+              onChange={(e) => {
+                setResourcesPass(e.target.value);
+                setErrors(prev => ({ ...prev, resourcesPass: "" }));
+              }}
             />
           </Grid>
         </Grid>
-        <Box sx={{ textAlign: 'center', mt: 5 }}>
-          <Button variant="contained" color="black" onClick={() => handleScanResources()}>
-            Buscar Recursos
+        <Box sx={{ textAlign: 'center', mt: 5 }}> 
+          <Button variant="contained" color="" disabled={loading} onClick={() => handleScanResources()} sx={{ minWidth: 150 }}>
+            {loading ? <CircularProgress size={24} color='inherit' /> : 'Buscar Recursos'}
           </Button>
         </Box>
 
-        {successScan && (
+        {scanStatus === "success" && (
           <Box sx={{ textAlign: 'center', mt: 4 }}>
             <VerifiedIcon color="success" sx={{ fontSize: 60 }} />
             <Typography variant="h6" color="success.main">
               El sistema ha encontrado {numberResources} recursos disponibles en la red
             </Typography>
             <Typography variant="body2" sx={{ mt: 1 }}>
-              Ya puedes dirigirte a la sección "Desplegar"
+              Puedes dirigirte a la sección "Desplegar"
+            </Typography>
+          </Box>
+        )}
+        
+        {scanStatus === "error" && (
+          <Box sx={{ textAlign: 'center', mt: 4 }}>
+            <ErrorIcon color="warning" sx={{ fontSize: 60 }} />
+            <Typography variant="h6" color="warning.main">
+              {errorScan}
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              Asegúrate de elegir una interfaz válida e <br/> ingresar las credenciales correctas
             </Typography>
           </Box>
         )}
 
-        <Snackbar
-          open={Boolean(errorScan)}
-          autoHideDuration={6000}
-          onClose={() => setErrorScan("")}
-        >
-          <Alert onClose={() => setErrorScan("")} severity="error" sx={{ width: '100%' }}>
-            {errorScan}
-          </Alert>
-        </Snackbar>
       {/*</Paper>*/}
+      <ToastContainer position="bottom-right" autoClose={4000} />
     </Container>
   );
 }

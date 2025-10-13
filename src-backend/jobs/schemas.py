@@ -36,3 +36,8 @@ class JobResultsRequest(BaseModel):
     number_jobs: int
     output_type: str
     submitted: str
+
+
+class RemoveJobRequest(BaseModel):
+    job_id: str
+    submit_container_name: str
