@@ -16,7 +16,7 @@ import Swal from 'sweetalert2';
 
 
 function InitializeCluster() {
-  const { resourcesIPs, resourcesUser, setClusterState, LANname, setClusterNodesConfig, overlayNetworkName, setOverlayNetworkName, setSubmitContainerName, setCurrentClusterId } = useAppContext();
+  const { resourcesIPs, resourcesUser, setClusterState, LANname, setClusterNodesConfig, overlayNetworkName, setOverlayNetworkName, setSubmitContainerName, setCurrentClusterId, setClusterActiveInfo } = useAppContext();
   const [checkedServers, setCheckedServers] = useState([]);
   const [servers, setServers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -76,6 +76,13 @@ function InitializeCluster() {
       };
 
       const response = await saveClusterInformation(clusterPayload);
+      
+      setClusterActiveInfo(prev => ({
+        ...prev,                     
+        numberNodes: checkedServers.length,
+        createdAt: new Date().toLocaleString(),
+      }));
+
       return response
     } catch (err) {
       console.error("Error guardando información del cluster:", err);
@@ -105,12 +112,12 @@ function InitializeCluster() {
       try {
         const saveResponse = await handleSaveClusterData();
         console.log("RESPONSE SAVE", saveResponse, saveResponse.cluster_id)
-        setCurrentClusterId(saveResponse.cluster_id) // REVIEW RETURN
+        setCurrentClusterId(saveResponse.cluster_id)
         toast.success(`Información del cluster guardada`)
       } catch (err) {
         //console.error("Error guardando información del cluster:", err);
-        setErrorDeploy(err.message || "Error no resulto al guardar información del clúster");
-        toast.error(err.message || "Error no resulto al guardar información del clúster");
+        setErrorDeploy(err.message || "Error no resuelto al guardar información del clúster");
+        toast.error(err.message || "Error no resuelto al guardar información del clúster");
       }
 
     } catch (err) {

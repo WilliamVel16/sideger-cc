@@ -137,11 +137,11 @@ function Topbar() {
   const getClusterStateText = () => {
     switch(clusterState) {
       case "active":
-        return "Cluster activo";
+        return "Clúster activo";
       case "inactive":
-        return "Cluster inactivo";
+        return "Clúster inactivo";
       case "warning":
-        return "Cluster en alerta";
+        return "Clúster en alerta";
       default:
         return "En construcción";
     }

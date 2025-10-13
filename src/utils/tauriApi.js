@@ -273,6 +273,8 @@ export const removeBatch = async (batch_name, submit_container_name) => {
 }
 
 
+// ----------------------------- database ---------------------------------- //
+
 // save cluster deploy information in the database [InitializeCluster.jsx]
 export async function saveClusterInformation(clusterData) {
   const response = await fetch(`${BACKEND_URL}/cluster/save-cluster-data`,

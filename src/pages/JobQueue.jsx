@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useAppContext } from "../context/AppContext";
-import { jobsQueue, getJobInformation, removeSpecificJob, removeBatch } from "../utils/tauriApi";
+import { jobsQueue, getJobInformation, removeSpecificJob, removeBatch, setClusterActiveInfo } from "../utils/tauriApi";
 
 function JobQueue() {
   const { clusterNodesConfig, sessionJobsSubmitted, setSessionJobsSubmitted, submitContainerName } = useAppContext();
@@ -25,12 +25,19 @@ function JobQueue() {
   useEffect(() => {
     let interval;
     const fetchJobs = async () => {
-      console.log("[TRABAJOS ENV DE LA SESIÓN]", sessionJobsSubmitted)
-
       try {
         const data = await jobsQueue(submitContainerName, sessionJobsSubmitted);
         console.log("[RESPONSE data TRAB ENV SES]",data)
         setJobsData(data)
+        
+        const totals = data.jobs.totals;
+        setClusterActiveInfo(prev => ({
+          ...prev,
+          jobsTotal: totals.total_jobs,
+          jobsRunning: totals.run,
+          jobsHeld: totals.held,
+          jobsWaiting: totals.idle
+        }));
 
         // update jobs of the session submitted to storage date-hour that job was sent
         if (data.batches?.length > 0) {
