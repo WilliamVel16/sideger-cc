@@ -90,6 +90,6 @@ async def get_user_clusters(db: Session = Depends(database.get_db),
     """
     clusters = get_clusters_by_user_id(db, current_user.id)
     if not clusters:
-        return [] #if user doesn't have jobs
+        return [] #if user doesn't have clusters
     return clusters
 
