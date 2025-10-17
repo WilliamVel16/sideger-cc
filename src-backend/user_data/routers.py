@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from . import models, schemas
 from core import security, database
+from .models import Cluster, Job, Result
 from .services import get_clusters_by_user_id
 from datetime import datetime
 import pytz
@@ -40,7 +41,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)
 
 
 # saves into db a new job with their results
-@router.post("/save-job", response_model=schemas.JobResponse)
+@router.post("/save-job")
 def save_job(job: schemas.JobCreateRegister, db: Session = Depends(database.get_db),
                current_user: models.User = Depends(security.get_current_user)):
     print("🧾 JOB DATA RECEIVED TO SAVE JOB:", job.dict())
@@ -93,3 +94,53 @@ async def get_user_clusters(db: Session = Depends(database.get_db),
         return [] #if user doesn't have clusters
     return clusters
 
+
+@router.delete("/cls/db/remove/{cluster_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user_cluster(cluster_id: int, db: Session = Depends(database.get_db),
+                              current_user: models.User = Depends(security.get_current_user)):
+    """
+    deletes a cluster storage in the DB from an user having as parameter the id of the
+    cluster to remove.
+    returns 204 no content (small message to confirm cluster deleted successfully) or
+    404 NOT FOUND if the cluster doesn't exist
+    """
+    cluster_to_delete = db.query(Cluster).get(cluster_id)
+    if not cluster_to_delete:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cluster not found")
+
+    db.delete(cluster_to_delete)
+    db.commit()
+
+
+@router.delete("/jbs/db/remove/{job_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_cluster_job(job_id: int, db: Session = Depends(database.get_db),
+                              current_user: models.User = Depends(security.get_current_user)):
+    """
+    deletes a job storage in the DB from a cluster having as parameter the id of the
+    job to remove.
+    returns 204 no content (small message to confirm job deleted successfully) or
+    404 NOT FOUND if the job doesn't exist
+    """
+    job_to_delete = db.query(Job).get(job_id)
+    if not job_to_delete:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
+
+    db.delete(job_to_delete)
+    db.commit()
+
+
+@router.delete("/res/db/remove/{result_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_job_result(result_id: int, db: Session = Depends(database.get_db),
+                              current_user: models.User = Depends(security.get_current_user)):
+    """
+    deletes a result storage in the DB from a job having as parameter the id of the
+    result to remove.
+    returns 204 no content (small message to confirm result deleted successfully) or
+    404 NOT FOUND if the result doesn't exist
+    """
+    result_to_delete = db.query(Result).get(result_id)
+    if not result_to_delete:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Result not found")
+
+    db.delete(result_to_delete)
+    db.commit()
