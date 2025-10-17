@@ -305,19 +305,64 @@ export const getUserClusters = async() => {
 }
 
 
-// deletes a specific cluster from an user [StoragedJobs.jsx]
+// deletes a specific cluster from a user [StoragedJobs.jsx]
 export const deleteCluster = async (id) => {
-  return 0
-}
+  const token = localStorage.getItem("access_token");
+  if (!token) throw new Error("No authentication token found");
+
+  const response = await fetch(`${BACKEND_URL}/user/cls/db/remove/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorMsg = response.status === 404 ? "Cluster no encontrado" : "Error eliminando cluster";
+    throw new Error(errorMsg);
+  }
+  return { message: "Cluster eliminado correctamente" };
+};
 
 
 // deletes a specific job from a cluster [StoragedJobs.jsx]
 export const deleteJob = async (id) => {
-  return 0
-}
+  const token = localStorage.getItem("access_token");
+  if (!token) throw new Error("No authentication token found");
+
+  const response = await fetch(`${BACKEND_URL}/user/jbs/db/remove/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorMsg = response.status === 404 ? "Trabajo no encontrado" : "Error eliminando trabajo";
+    throw new Error(errorMsg);
+  }
+  return { message: "Trabajo eliminado correctamente" };
+};
 
 
 // deletes a specific result from a job [StoragedJobs.jsx]
 export const deleteResult = async (id) => {
-  return {"message": 0}
-}
+  const token = localStorage.getItem("access_token");
+  if (!token) throw new Error("No authentication token found");
+
+  const response = await fetch(`${BACKEND_URL}/user/res/db/remove/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorMsg = response.status === 404 ? "Resultado no encontrado" : "Error eliminando resultado";
+    throw new Error(errorMsg);
+  }
+  return { message: "Resultado eliminado correctamente" };
+};

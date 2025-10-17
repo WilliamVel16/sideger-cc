@@ -77,6 +77,7 @@ export default function StoragedJobs() {
     }
   };
 
+  // handle to delete a job from a cluster
   const handleJobDelete = async (clusterId, jobId) => {
     const result = await Swal.fire({
       title: "¿Eliminar este trabajo?",
@@ -104,6 +105,7 @@ export default function StoragedJobs() {
     }
   };
 
+  // handle to remove a result from a job
   const handleResultDelete = async (clusterId, jobId, resultId) => {
     const result = await Swal.fire({
       title: "¿Eliminar este resultado?",
