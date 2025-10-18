@@ -3,7 +3,7 @@ import {
   ListItemText, Select, MenuItem, FormControl, FormGroup, TextField,
   FormControlLabel, InputLabel, IconButton, Button, Switch, Tooltip, CircularProgress
 } from '@mui/material';
-import { use, useState } from 'react';
+import { useState } from 'react';
 import ComputerIcon from '@mui/icons-material/Computer';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -399,7 +399,7 @@ function InitializeCluster() {
           </Typography>
         </Box>
       )}
-      {/** <ToastContainer position="bottom-right" autoClose={4000} /> */}
+      <ToastContainer position="bottom-right" autoClose={4000} />
     </Container> 
   );
 }

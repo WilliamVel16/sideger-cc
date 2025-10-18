@@ -26,11 +26,11 @@ function JobQueue() {
     let interval;
     const fetchJobs = async () => {
       try {
-        const data = await jobsQueue(submitContainerName, sessionJobsSubmitted);
-        console.log("[RESPONSE data TRAB ENV SES]",data)
-        setJobsData(data)
+        const jobs = await jobsQueue(submitContainerName, sessionJobsSubmitted);
+        console.log("[RESPONSE jobs TRAB ENV SES]", jobs)
+        setJobsData(jobs)
         
-        const totals = data.jobs.totals;
+        const totals = jobs.totals;
         setClusterActiveInfo(prev => ({
           ...prev,
           jobsTotal: totals.total_jobs,
@@ -40,9 +40,9 @@ function JobQueue() {
         }));
 
         // update jobs of the session submitted to storage date-hour that job was sent
-        if (data.batches?.length > 0) {
+        if (jobs.batches?.length > 0) {
           const submittedMap = Object.fromEntries(
-            data.batches.map((b) => [b.batch_name, b.submitted])
+            jobs.batches.map((b) => [b.batch_name, b.submitted])
           );
 
           setSessionJobsSubmitted((prev) =>
@@ -52,9 +52,11 @@ function JobQueue() {
                 : job
             )
           );
+        } else {
+          console.log("YUCA")
         }
 
-        if (data.totals.total_jobs === 0 && interval) {
+        if (jobs.totals.total_jobs === 0 && interval) {
           clearInterval(interval);
           interval = null;
         }

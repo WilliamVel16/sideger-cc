@@ -57,10 +57,12 @@ export default function StoragedJobs() {
   const handleClusterDelete = async (clusterId) => {
     const result = await Swal.fire({
       title: "¿Eliminar este cluster?",
-      text: "Esto eliminará todos los trabajos y resultados asociados.",
+      text: "Se eliminarán todos los trabajos y resultados asociados.",
       icon: "warning",
+      confirmButtonColor: '#18b654ff',
+      cancelButtonColor: '#d33',
       showCancelButton: true,
-      confirmButtonText: "Sí, eliminar",
+      confirmButtonText: "Eliminar",
       cancelButtonText: "Cancelar",
     });
 
@@ -77,13 +79,17 @@ export default function StoragedJobs() {
     }
   };
 
+  // handle to delete a job from a cluster
   const handleJobDelete = async (clusterId, jobId) => {
     const result = await Swal.fire({
       title: "¿Eliminar este trabajo?",
       text: "Los resultados también serán eliminados.",
       icon: "warning",
+      confirmButtonColor: '#18b654ff',
+      cancelButtonColor: '#d33',
       showCancelButton: true,
       confirmButtonText: "Eliminar",
+      cancelButtonText: "Cancelar",
     });
 
     if (result.isConfirmed) {
@@ -104,12 +110,16 @@ export default function StoragedJobs() {
     }
   };
 
+  // handle to remove a result from a job
   const handleResultDelete = async (clusterId, jobId, resultId) => {
     const result = await Swal.fire({
       title: "¿Eliminar este resultado?",
       icon: "warning",
+      confirmButtonColor: '#18b654ff',
+      cancelButtonColor: '#d33',
       showCancelButton: true,
       confirmButtonText: "Eliminar",
+      cancelButtonText: "Cancelar",
     });
 
     if (result.isConfirmed) {
@@ -201,8 +211,6 @@ export default function StoragedJobs() {
             </Button>
           </Box>
         )}
-
-        
       </Stack>
 
       {loading ? (

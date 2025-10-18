@@ -198,6 +198,7 @@ export default function HomePage() {
               <Grid item>
                 <Button
                   variant="contained"
+                  size="small"
                   color=""
                   onClick={() => (toast.success("yendo a new job..."))}
                 >
@@ -206,7 +207,8 @@ export default function HomePage() {
               </Grid>
               <Grid item>
                 <Button
-                  variant="outlined"
+                  variant="contained"
+                  size="small"
                   color=""
                   onClick={() => (toast.success("yendo a jobs en cola..."))}
                 >

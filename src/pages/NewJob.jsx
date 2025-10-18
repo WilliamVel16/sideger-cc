@@ -104,7 +104,7 @@ function NewJob() {
             batch_name: batchName,
             universe: formData.universe,
             number_jobs: formData.queue,
-            output_type: outputType,
+            output_type: outputType, 
           };
           return [...prevJobs, newJob];
         });
