@@ -44,8 +44,6 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)
 @router.post("/save-job")
 def save_job(job: schemas.JobCreateRegister, db: Session = Depends(database.get_db),
                current_user: models.User = Depends(security.get_current_user)):
-    print("🧾 JOB DATA RECEIVED TO SAVE JOB:", job.dict())
-    print(f"🧩 Saving job for user {current_user.id} in cluster {job.cluster_id}: {job.job_name}")
     try:
         db_job = models.Job(
             universe=job.universe,

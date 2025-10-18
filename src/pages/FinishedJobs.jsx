@@ -4,9 +4,6 @@ import {
   Typography,
   Container,
   Paper,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   CircularProgress,
   Button,
   List,
@@ -19,23 +16,24 @@ import { useState, useEffect } from "react";
 import { useAppContext } from "../context/AppContext";
 import { jobsResults, saveJob } from "../utils/tauriApi";
 import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 
 export default function FinishedJobs() {
   const { sessionJobsSubmitted, token, submitContainerName, currentClusterId } = useAppContext();
   const [batches, setBatches] = useState([]);
-  const [selectedBatchId, setSelectedBatchId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [savingId, setSavingId] = useState(null);
-
-  const selectedBatch = batches.find((b) => b.id === selectedBatchId) ?? null;
+  const [selectedBatchName, setSelectedBatchName] = useState(null);
+  
+  const selectedBatch = batches.find((b) => b.batch_name === selectedBatchName) ?? null;
 
   useEffect(() => {
     const fetchResults = async () => {
       setLoading(true);
       try {
-        const data = await jobsResults(sessionJobsSubmitted, submitContainerName);
-        console.log(data.results)
-        setBatches(data.results);
+        const results = await jobsResults(sessionJobsSubmitted, submitContainerName);
+        console.log(results)
+        setBatches(results);
       } catch (err) {
         console.error(err);
         toast.error("Error al cargar los resultados")
@@ -66,7 +64,7 @@ export default function FinishedJobs() {
   };
 
   const handleSaveJob = async (batch) => {
-    setSavingId(batch.id);
+    //setSavingId(batch.batch_name);
     setLoading(true)
     try {
       console.log("BATCH",batch)
@@ -110,7 +108,7 @@ export default function FinishedJobs() {
       ) : (
         <Grid container spacing={3}>
           {/* left panel: list of batches */}
-          <Grid item xs={12} md={4}>
+          <Grid item size={3.5} md={4}>
             <Paper sx={{ p: 2, height: "70vh", overflowY: "auto" }} elevation={3}>
               <Typography variant="h6" sx={{ mb: 1 }}>
                 Trabajos ({batches.length})
@@ -120,9 +118,9 @@ export default function FinishedJobs() {
               <List disablePadding>
                 {batches.map((batch) => (
                   <ListItemButton
-                    key={batch.id}
-                    onClick={() => setSelectedBatchId(batch.id)}
-                    selected={selectedBatchId === batch.id}
+                    key={batch.batch_name}
+                    onClick={() => setSelectedBatchName(batch.batch_name)}
+                    selected={selectedBatchName === batch.batch_name}
                     sx={{
                       mb: 1,
                       flexDirection: "column",
@@ -142,7 +140,7 @@ export default function FinishedJobs() {
                         }
                         secondary={
                           <Typography variant="body2" color="text.secondary">
-                            {batch.number_jobs} jobs - {batch.total_time}
+                            {batch.submitted}
                           </Typography>
                         }
                       />
@@ -155,7 +153,7 @@ export default function FinishedJobs() {
           </Grid>
 
           {/* right panel: selected batch details */}
-          <Grid item xs={12} md={8}>
+          <Grid item size="grow" md={8}>
             <Paper sx={{ p: 2, height: "70vh", display: "flex", flexDirection: "column" }} elevation={3}>
               {!selectedBatch ? (
                 <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -167,9 +165,9 @@ export default function FinishedJobs() {
                 <>
                   <Box sx={{ mb: 1, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <Box>
-                      <Typography variant="h6">{selectedBatch.batch_name}</Typography>
+                      <Typography variant="h6">{selectedBatch.batch_name} </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        <strong>Ejecuciones:</strong> {selectedBatch.number_jobs} - <strong>Tiempo:</strong> {selectedBatch.total_time}
+                        <strong>Ejecuciones:</strong> {selectedBatch.number_jobs} - <strong>Tiempo:</strong> {selectedBatch.total_time} 
                       </Typography>
                     </Box>
                   </Box>
@@ -216,11 +214,11 @@ export default function FinishedJobs() {
                     variant="contained"
                     color="error"
                     fullWidth
-                    disabled={savingId === selectedBatch.id}
+                    disabled={savingId === selectedBatch.batch_name}
                     onClick={() => handleSaveJob(selectedBatch)}
-                    sx={{ mt: 2 }}
+                    sx={{ mt: 2, alignSelf: "center", width: "40%"}}
                   >
-                    {savingId === selectedBatch.id ? "Guardando..." : "Guardar este trabajo"}
+                    {savingId === selectedBatch.batch_name ? "Guardando..." : "Guardar este trabajo"}
                   </Button>
                 </>
               )}

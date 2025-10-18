@@ -201,7 +201,8 @@ export const jobsResults = async (sessionJobsSubmitted, submitContainerName) => 
     const err = await response.text();
     throw new Error(`get jobs results failed: ${err}`);
   }
-  return response.json();
+  const data = await response.json();
+  return data.results;
 }
 
 // saves a submitted job in the app's database [FinishedJobs.jsx]
