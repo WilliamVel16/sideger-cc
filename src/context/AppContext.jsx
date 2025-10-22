@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import { usePersistentState } from "../hooks/usePersistentSate";
+import { usePersistentState } from "../hooks/usePersistentState";
 
 const AppContext = createContext();
 
@@ -10,7 +10,7 @@ export const AppProvider = ({ children }) => {
 	const [clusterState, setClusterState] = usePersistentState("clusterState", "inactive");
 	const [LANname, setLANname] = usePersistentState("LANname", "");
 	const [clusterNodesConfig, setClusterNodesConfig] =  usePersistentState("clusterNodesConfig", null);
-	const [overlayNetworkName, setOverlayNetworkName] = usePersistentState("overlayNetworkName", "sidegerOnet"); // temporals
+	const [overlayNetworkName, setOverlayNetworkName] = usePersistentState("overlayNetworkName", ""); // temporals
   const [sessionJobsSubmitted, setSessionJobsSubmitted] = usePersistentState("sessionJobsSubmitted", [])
   const [submitContainerName, setSubmitContainerName] = usePersistentState("submitContainerName", "")
   const [currentClusterId, setCurrentClusterId] = usePersistentState("currentClusterId", "")

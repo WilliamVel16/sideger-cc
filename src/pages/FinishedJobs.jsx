@@ -31,8 +31,9 @@ export default function FinishedJobs() {
     const fetchResults = async () => {
       setLoading(true);
       try {
+        console.log("data enviada", sessionJobsSubmitted, submitContainerName)
         const results = await jobsResults(sessionJobsSubmitted, submitContainerName);
-        console.log(results)
+        
         setBatches(results);
       } catch (err) {
         console.error(err);

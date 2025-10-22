@@ -110,10 +110,10 @@ function Topbar() {
       console.log("RESPONSE SHUTDOWN", response)
       setClusterState("inactive")
       setClusterNodesConfig(null)
-      setSubmitContainerName(null)
-      setOverlayNetworkName(null)
-      setSessionJobsSubmitted(null)
-      setResourcesIPs(null)
+      setSubmitContainerName("")
+      setOverlayNetworkName("")
+      setSessionJobsSubmitted([])
+      setResourcesIPs([])
       toast.success("Clúster dado de baja correctamente");
     } catch (err) {
       console.log("Error to try kill the cluster:", err);

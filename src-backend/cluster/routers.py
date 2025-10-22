@@ -36,7 +36,6 @@ async def shutdown_cluster_endpoint(request: ShutdownRequest, db: Session = Depe
     '''
     try:
         result = shutdown_cluster(request.nodes)
-        print(result)
         save_result = update_shutdown_field(request.cluster_id, db)
         print("SHUTDOWN AND SAVE RESULT",result, save_result)
         return result
