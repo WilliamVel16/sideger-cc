@@ -1,20 +1,45 @@
-from fastapi import APIRouter, Request
+import shutil
+from fastapi import APIRouter, Request, File, Form, UploadFile
 from typing import List
-from .schemas import JobSubmitRequest, JobResultsRequest, RemoveJobRequest
+from .schemas import JobSubmitRequest, JobResultsRequest, RemoveJobRequest, JobData
 from .services import create_submit_file_service, submit_job_service, jobs_state_service, jobs_results_service, remove_job_service, remove_batch_service
+import json, shutil, os
 
 router = APIRouter()
 
 # submit a job to the cluster
 @router.post("/submit")
-async def submit_job(request: JobSubmitRequest):
-    job = request.job_data
-    submit_container_name = request.submit_role_container_name
-    output_type = request.output_type
-    
+async def submit_job(
+    job_data: str = Form(...),
+    submit_role_container_name: str = Form(...),
+    output_type: str = Form(...),
+    files: list[UploadFile] = File(None)):
+
+    job_dict = json.loads(job_data)
+    job_name = job_dict.get("batch_name")
+
+    working_directory = os.path.expanduser("~/sideger-jobs")
+    os.makedirs(working_directory, exist_ok=True)
+
+    # save job files
+    if files:
+        for file in files:
+            dest_path = os.path.join(working_directory, f"{job_name}_{file.filename}")
+            with open(dest_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+
+    # update files list to transfer
+    if files:
+        job_dict["transfer_input_files"] = ",".join(
+            [f"{job_name}_{file.filename}" for file in files]
+        )
+
+    # generates classAd (.sub)
+    job = JobData(**job_dict)
     filename_classad = create_submit_file_service(job, output_type)
 
-    output = submit_job_service(filename_classad, submit_container_name)
+    # executes condor_submit into the submit node (container)
+    output = submit_job_service(filename_classad, submit_role_container_name)
     return {"message": "job received", "output": output}
 
 

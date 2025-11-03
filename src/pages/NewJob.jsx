@@ -96,7 +96,8 @@ function NewJob() {
 
     if (result.isConfirmed) {
       try {
-        const response = await submitJob(formData, submitContainerName, outputType);
+
+        const response = await submitJob(formData, submitContainerName, outputType, inputFiles);
         console.log(response);
 
         setSessionJobsSubmitted((prevJobs) => {

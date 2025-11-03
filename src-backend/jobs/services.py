@@ -46,15 +46,15 @@ def create_submit_file_service(job: JobData, output_type: str):
     return filename
 
 
-def submit_job_service(filename_sub_classad: str, sub_container_name: str):
+def submit_job_service(filename_sub_classad: str, sub_role_container_name: str):
     '''
     permits send a job to HTCondor after that classAd file is build
     params:
     - filename_sub_classad, the name of the submit file (classAd) created
     - sub_container_name, the name of the container with role 'sub'
     '''
-    command = f"docker exec -w /sideger-jobs {sub_container_name} sh -c 'condor_submit {filename_sub_classad}'"
-    try: 
+    command = f"docker exec -w /sideger-jobs {sub_role_container_name} sh -c 'condor_submit {filename_sub_classad}'"
+    try:
         output = subprocess.run(
             ["bash", "-c", command],
             capture_output=True,
