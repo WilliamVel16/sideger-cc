@@ -370,3 +370,25 @@ export const deleteResult = async (id) => {
   }
   return { message: "Resultado eliminado correctamente" };
 };
+
+
+// download results (.zip)
+export const downloadResults = async (batch_name, output_type) => {
+  const token = localStorage.getItem("access_token");
+  if (!token) throw new Error("No authentication token found");
+
+  const res = await fetch(`${BACKEND_URL}/jobs/download-results/${batch_name}?output_type=${output_type}`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(`Error: ${await res.text()}`);
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${batchName}_resultados.zip`;
+  a.click();
+  window.URL.revokeObjectURL(url);
+};
