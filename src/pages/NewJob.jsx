@@ -165,14 +165,14 @@ function NewJob() {
                   <MenuItem value="executable">1. Ejecutable</MenuItem>
                   <MenuItem value="executable-args">2. Con argumentos</MenuItem>
                   <MenuItem value="executable-files">3. Con archivos de entrada</MenuItem>
-                  <MenuItem value="executable-args-files">4. Incluye  "2" y "3"</MenuItem>
+                  <MenuItem value="python">4. Python"</MenuItem>
                   <MenuItem value="shell">5. Shell</MenuItem>
                   <MenuItem value="advanced">6. Avanzado</MenuItem>
                 </Select>
               </FormControl>
 
               {(jobType === "executable-args" || jobType === "executable-files" || 
-              jobType === "advanced" || jobType === "shell" || jobType === "executable-args-files") && (
+              jobType === "executable" || jobType === "advanced" || jobType === "shell") && (
                 <>
                   <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
                     <Button
@@ -272,7 +272,7 @@ function NewJob() {
                 />
               )}
               
-              {(jobType === "advanced" || jobType === "executable-files" || jobType === "executable-args-files") && (         // INPUT
+              {(jobType === "advanced" || jobType === "executable-files" ) && (         // INPUT
                 <TextField
                   label="Archivo de entrada"
                   fullWidth
@@ -283,7 +283,7 @@ function NewJob() {
                 />
               )}
 
-              {(jobType === "advanced" || jobType === "executable-args" || jobType === "executable-args-files") && (                                 // ARGUMENTS
+              {(jobType === "advanced" || jobType === "executable-args") && (                                 // ARGUMENTS
                 <TextField
                   label="Argumentos"
                   fullWidth
