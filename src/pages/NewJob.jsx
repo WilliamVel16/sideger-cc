@@ -166,13 +166,13 @@ function NewJob() {
                   <MenuItem value="executable">1. Ejecutable</MenuItem>
                   <MenuItem value="executable-args">2. Con argumentos</MenuItem>
                   <MenuItem value="executable-files">3. Con archivos de entrada</MenuItem>
-                  <MenuItem value="python">4. Python"</MenuItem>
+                  <MenuItem value="python">4. Python</MenuItem>
                   <MenuItem value="shell">5. Shell</MenuItem>
                   <MenuItem value="advanced">6. Avanzado</MenuItem>
                 </Select>
               </FormControl>
 
-              {(jobType === "executable-args" || jobType === "executable-files" || 
+              {(jobType === "executable-args" || jobType === "executable-files" || jobType === "python" || 
               jobType === "executable" || jobType === "advanced" || jobType === "shell") && (
                 <>
                   <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
@@ -183,7 +183,7 @@ function NewJob() {
                       sx={{ mt: 3 }}
                       color="black"
                     >
-                      Subir Archivo
+                      Subir Archivos
                       <input
                         hidden
                         multiple
@@ -228,8 +228,18 @@ function NewJob() {
 
             {/** data about the job*/}
             <Grid item size={{ xs: 12, md: 4 }}>
-              <Typography variant="h6"> Trabajo </Typography>
-              <FormControl fullWidth size="small" sx={{ mt: 2 }}>                                         {/** UNIVERSE */}
+              <Typography variant="h6" > Trabajo </Typography>
+              {(jobType === "python") && (
+                <>
+                  <Typography sx={{ mt: 1 }}>
+                    Incluye esta línea al inicio de tu script Python:
+                  </Typography>
+                  <Box component="code" sx={{ display: "block", mb: 2, color: "green", fontWeight: 600 }}>
+                    #!/usr/bin/env python3
+                  </Box>
+                </>
+              )}
+              <FormControl fullWidth size="small">                                         {/** UNIVERSE */}
                 <InputLabel>Universo</InputLabel>
                 <Select
                   value={formData.universe || ""}
@@ -251,8 +261,8 @@ function NewJob() {
                 onChange={(e) => handleFormChange("batch_name", e.target.value)}
               />
               
-              {(jobType !== "shell") && (
-                <TextField                                                                                 // EXECUTABLE
+              {(jobType !== "shell" || jobType === "python") && (
+                <TextField                                                                                    // EXECUTABLE
                   label="Ejecutable"
                   fullWidth
                   size="small"
@@ -263,7 +273,7 @@ function NewJob() {
               )}            
 
               {(jobType === "advanced" || jobType === "shell") && (
-                <TextField                                                                                 // SHELL
+                <TextField                                                                                   // SHELL
                   label="Instrucción a ejecutar (shell)"
                   fullWidth
                   size="small"
@@ -273,7 +283,7 @@ function NewJob() {
                 />
               )}
               
-              {(jobType === "advanced" || jobType === "executable-files" ) && (         // INPUT
+              {(jobType === "advanced" || jobType === "executable-files" ) && (                               // INPUT
                 <TextField
                   label="Archivo de entrada"
                   fullWidth
@@ -295,7 +305,7 @@ function NewJob() {
                 />
               )}
 
-              {(jobType === "executable-args" || "shell") && (
+              {(jobType === "python" || jobType === "executable-args" || jobType === "shell") && (
                 <TextField                                                                                 // TRANSFER_INPUT_FILES
                   label="Archivos a transfeir"
                   fullWidth
@@ -307,14 +317,18 @@ function NewJob() {
               )}
 
               {(jobType === "advanced") && (                                                               // SHOULD_TRANSFER_FILES (advanced)         
-                <TextField                                                                                 
-                  label="¿Se deben transferir archivos?" 
-                  fullWidth
-                  size="small"
-                  sx={{ mt: 2 }}
-                  value={formData.should_transfer_files || ""}
-                  onChange={(e) => handleFormChange("should_transfer_files", e.target.value)}
-                />
+                <FormControl fullWidth size="small" sx={{ mt: 2 }}>
+                  <InputLabel>¿Se deben transferir archivos?</InputLabel>
+                  <Select
+                    value={formData.should_transfer_files || ""}
+                    label="¿Se deben transferir archivos?"
+                    onChange={(e) => handleFormChange("should_transfer_files", e.target.value)}
+                  >
+                    <MenuItem value="YES">Sí</MenuItem>
+                    <MenuItem value="NO">No</MenuItem>
+                    <MenuItem value="IF_NEEDED">Sólo si es necesario</MenuItem>
+                  </Select>
+                </FormControl>
               )}
 
               {(jobType === "advanced") && (                                                                // TRANSFER_OUTPUT_FILES (advanced)         
@@ -329,14 +343,17 @@ function NewJob() {
               )}
 
               {(jobType === "advanced") && (                                                                // WHEN_TO_TRANSFER_FILES (advanced)         
-                <TextField                                                                                 
-                  label="Cuando transferir los archivos" 
-                  fullWidth
-                  size="small"
-                  sx={{ mt: 2 }}
-                  value={formData.when_to_transfer_files || ""}
-                  onChange={(e) => handleFormChange("when_to_transfer_files", e.target.value)}
-                />
+                <FormControl fullWidth size="small" sx={{ mt: 2 }}>
+                  <InputLabel>¿Cuándo transferir los archivos?</InputLabel>
+                  <Select
+                    value={formData.when_to_transfer_files || ""}
+                    label="¿Cuándo transferir los archivos?"
+                    onChange={(e) => handleFormChange("when_to_transfer_files", e.target.value)}
+                  >
+                    <MenuItem value="ON_EXIT">Al finalizar la ejecución</MenuItem>
+                    <MenuItem value="ON_EXIT_OR_EVICT">Al finalizar o al ser expulsado</MenuItem>
+                  </Select>
+                </FormControl>
               )}
 
               <TextField                                                                                   // QUEUE
@@ -389,43 +406,10 @@ function NewJob() {
                 value={formData.request_gpus || ""}
                 onChange={(e) => handleFormChange("request_gpus", e.target.value)}
               />
-
-              {(jobType === "advanced") && (
-                <TextField                                                                                 // OUTPUT (advanced)
-                  label="Directorio para la salida"
-                  size="small"
-                  fullWidth
-                  sx={{ mt: 2 }}
-                  value={formData.output || ""}
-                  onChange={(e) => handleFormChange("output", e.target.value)}
-                />
-              )}
-
-              {(jobType === "advanced") && (
-                <TextField                                                                                 // ERROR (advanced)
-                  label="Directorio para el error"
-                  size="small"
-                  fullWidth
-                  sx={{ mt: 2 }}
-                  value={formData.error || ""}
-                  onChange={(e) => handleFormChange("error", e.target.value)}
-                />
-              )}
-
-              {(jobType === "advanced") && (
-                <TextField                                                                                 // LOG (advanced)
-                  label="Directorio para los logs"
-                  size="small"
-                  fullWidth
-                  sx={{ mt: 2 }}
-                  value={formData.log || ""}
-                  onChange={(e) => handleFormChange("log", e.target.value)}
-                />
-              )}
-
+              
               {(jobType === "advanced") && (
                 <TextField                                                                                 // MAX_RETRIES (advanced) no implemented
-                  label="Cuantas veces reintentar trabajo"
+                  label="¿Cuántas veces reintentar trabajo?"
                   size="small"
                   fullWidth
                   sx={{ mt: 2 }}

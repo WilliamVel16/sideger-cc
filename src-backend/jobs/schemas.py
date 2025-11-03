@@ -8,10 +8,10 @@ class JobData(BaseModel):
     shell: Optional[str] = None
     input: Optional[str] = None
     arguments: Optional[str] = None
-    transfer_input_files: Optional[str] = None
+    transfer_input_files: Optional[str] = "YES"
     should_transfer_files: Optional[str] = None
     transfer_output_files: Optional[List[str]] = None
-    when_to_transfer_output: Optional[str] = None
+    when_to_transfer_output: Optional[str] = "ON_EXIT"
     request_cpus: Optional[str] = None
     request_memory: Optional[str] = None
     request_disk: Optional[str] = None
