@@ -114,7 +114,7 @@ async def download_results(batch_name: str, output_type: str):
             ]
             to_compress.extend(subdirs)
         else:
-            raise HTTPException(status_code=400, detail=f"Tipo de salida no reconocido: {output_type}")
+            raise HTTPException(status_code=400, detail=f"Unrecognized output type: {output_type}")
 
     if not to_compress:
         raise HTTPException(status_code=404, detail="No archives found to zip")
