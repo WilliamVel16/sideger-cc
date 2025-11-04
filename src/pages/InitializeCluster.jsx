@@ -17,7 +17,12 @@ import { useNavigate } from "react-router";
 
 
 function InitializeCluster() {
-  const { resourcesIPs, resourcesUser, setClusterState, LANname, setClusterNodesConfig, overlayNetworkName, setOverlayNetworkName, setSubmitContainerName, setCurrentClusterId, setClusterActiveInfo } = useAppContext();
+  const {
+    resourcesIPs, resourcesUser, setClusterState,
+    LANname, setClusterNodesConfig, overlayNetworkName,
+    setOverlayNetworkName, setSubmitContainerName, 
+    setCurrentClusterId, setClusterActiveInfo 
+  } = useAppContext();
   const [checkedServers, setCheckedServers] = useState([]);
   const [servers, setServers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -152,6 +157,7 @@ function InitializeCluster() {
     if (!overlayNetworkName.trim()) {
       setClusterNameNotFilled(true);
       toast.error("Debes ingresar un nombre para el clúster");
+      console.log("1")
       return;
     }
 

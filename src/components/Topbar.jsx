@@ -15,7 +15,7 @@ function Topbar() {
   const { logout } = useAuth();
   const { clusterState, setClusterState, setClusterNodesConfig, setSubmitContainerName,
     setOverlayNetworkName, setResourcesIPs, clusterNodesConfig, currentClusterId,
-    setSessionJobsSubmitted
+    setSessionJobsSubmitted, setCurrentClusterId, setClusterActiveInfo
   } = useAppContext();
   const [anchorMenu, setAnchorMenu] = useState(null);
   const [anchorNotif, setAnchorNotif] = useState(null);
@@ -109,11 +109,20 @@ function Topbar() {
       const response = await shutdownCluster(clusterNodesConfig, currentClusterId);
       console.log("RESPONSE SHUTDOWN", response)
       setClusterState("inactive")
+      setCurrentClusterId("")
       setClusterNodesConfig(null)
-      setSubmitContainerName(null)
-      setOverlayNetworkName(null)
-      setSessionJobsSubmitted(null)
-      setResourcesIPs(null)
+      setSubmitContainerName("")
+      setOverlayNetworkName("")
+      setSessionJobsSubmitted([])
+      setResourcesIPs([])
+      setClusterActiveInfo({
+        numberNodes: 0,
+        createdAt: null,
+        jobsTotal: 0,
+        jobsRunning: 0,
+        jobsHeld: 0,
+        jobsWaiting: 0,
+      })
       toast.success("Clúster dado de baja correctamente");
     } catch (err) {
       console.log("Error to try kill the cluster:", err);

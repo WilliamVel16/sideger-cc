@@ -53,7 +53,7 @@ function JobQueue() {
             )
           );
         } else {
-          console.log("YUCA")
+          console.log("without sessionJobsSubmitted (empty)")
         }
 
         if (jobs.totals.total_jobs === 0 && interval) {

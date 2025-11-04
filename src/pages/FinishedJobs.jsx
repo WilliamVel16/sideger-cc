@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useAppContext } from "../context/AppContext";
-import { jobsResults, saveJob } from "../utils/tauriApi";
+import { jobsResults, saveJob, downloadResults } from "../utils/tauriApi";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 
@@ -31,8 +31,9 @@ export default function FinishedJobs() {
     const fetchResults = async () => {
       setLoading(true);
       try {
+        console.log("data enviada", sessionJobsSubmitted, submitContainerName)
         const results = await jobsResults(sessionJobsSubmitted, submitContainerName);
-        console.log(results)
+        
         setBatches(results);
       } catch (err) {
         console.error(err);
@@ -90,6 +91,31 @@ export default function FinishedJobs() {
       setLoading(false);
     }
   };
+
+  // output type for download a selected job
+  const handleDownloadResults = async (batchName) => {
+    const jobInfo = sessionJobsSubmitted.find(
+      (job) => job.batch_name === batchName
+    );
+
+    const outputType = jobInfo?.output_type
+
+    if (!outputType) {
+      toast.error("No se pudo determinar el tipo de salida del trabajo");
+      console.warn("Job encontrado:", jobInfo);
+      return;
+    }
+
+    try {
+      toast.info("Preparando resultados...");
+      await downloadResults(batchName, outputType);
+      toast.success("Descarga iniciada");
+    } catch (err) {
+      console.error(err);
+      toast.error("Error al descargar los resultados");
+    }
+  };
+
 
   return (
     <Container maxWidth="lg" sx={{ mt: 2 }}>
@@ -209,7 +235,7 @@ export default function FinishedJobs() {
                     ))}
                   </Box>
 
-                  {/* save job */}
+                  {/* save job - download job */}
                   <Button
                     variant="contained"
                     color="error"
@@ -220,6 +246,16 @@ export default function FinishedJobs() {
                   >
                     {savingId === selectedBatch.batch_name ? "Guardando..." : "Guardar este trabajo"}
                   </Button>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    fullWidth
+                    sx={{ mt: 1, alignSelf: "center", width: "40%" }}
+                    onClick={() => handleDownloadResults(selectedBatch.batch_name)}
+                  >
+                    Descargar resultados
+                  </Button>
+
                 </>
               )}
             </Paper>

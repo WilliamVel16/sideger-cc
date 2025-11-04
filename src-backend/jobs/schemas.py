@@ -4,13 +4,13 @@ from pydantic import BaseModel
 class JobData(BaseModel):
     universe: Optional[str] = None
     batch_name: Optional[str] = None
-    executable: str
+    executable: str = None
     shell: Optional[str] = None
     input: Optional[str] = None
     arguments: Optional[str] = None
     transfer_input_files: Optional[str] = None
-    should_transfer_files: Optional[str] = None
-    transfer_output_files: Optional[List[str]] = None
+    should_transfer_files: Optional[str] = "YES"
+    transfer_output_files: Optional[List[str]] = "ON_EXIT"
     when_to_transfer_output: Optional[str] = None
     request_cpus: Optional[str] = None
     request_memory: Optional[str] = None
@@ -21,7 +21,7 @@ class JobData(BaseModel):
     error: Optional[str] = None
     max_retries: Optional[int] = None
     periodic_remove: Optional[str] = None
-    queue: Optional[int] 
+    queue: Optional[int] = 1
 
 
 class JobSubmitRequest(BaseModel):

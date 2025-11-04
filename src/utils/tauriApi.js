@@ -147,17 +147,20 @@ export const shutdownCluster = async (clusterNodesConfig, clusterId) => {
 // -------------------------- jobs -----------------------------
 
 // to submit a new job to the cluster [NewJob.jsx]
-export const submitJob = async (formData, nodeSubmitRole, outputType) => {
+export const submitJob = async (formData, nodeSubmitRole, outputType, inputFiles) => {
+  const data = new FormData();
+  data.append("job_data", JSON.stringify(formData));
+  data.append("submit_role_container_name", nodeSubmitRole);
+  data.append("output_type", outputType);
+  
+  // selected files
+  inputFiles.forEach(file => {
+    data.append("files", file); 
+  });
+
   const response = await fetch(`${BACKEND_URL}/jobs/submit`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      job_data: formData,
-      submit_role_container_name: nodeSubmitRole,
-      output_type: outputType
-    })
+    body: data,
   });
   console.log(response)
   if (!response.ok) {
@@ -366,4 +369,26 @@ export const deleteResult = async (id) => {
     throw new Error(errorMsg);
   }
   return { message: "Resultado eliminado correctamente" };
+};
+
+
+// download results (.zip)
+export const downloadResults = async (batch_name, output_type) => {
+  const token = localStorage.getItem("access_token");
+  if (!token) throw new Error("No authentication token found");
+
+  const res = await fetch(`${BACKEND_URL}/jobs/download-results/${batch_name}?output_type=${output_type}`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(`Error: ${await res.text()}`);
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${batchName}_resultados.zip`;
+  a.click();
+  window.URL.revokeObjectURL(url);
 };
