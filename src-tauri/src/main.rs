@@ -2,6 +2,7 @@ use std::process::Command;
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
         .setup(|_app| {
             Command::new("bash")
                 .arg("start.sh")
