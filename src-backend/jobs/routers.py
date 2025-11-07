@@ -26,14 +26,14 @@ async def submit_job(
     # save job files
     if files:
         for file in files:
-            dest_path = os.path.join(working_directory, f"{job_name}_{file.filename}")
+            dest_path = os.path.join(working_directory, f"{file.filename}")
             with open(dest_path, "wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
 
     # update files list to transfer
     if files:
         job_dict["transfer_input_files"] = ",".join(
-            [f"{job_name}_{file.filename}" for file in files]
+            [f"{file.filename}" for file in files]
         )
 
     # generates classAd (.sub)
