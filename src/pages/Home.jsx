@@ -73,7 +73,7 @@ export default function HomePage() {
           </Typography>
           <Box mt={2}>
             <Chip
-              label={clusterState === "active" ? "Clúster Activo" : "Clúster Inactivo"}
+              label={clusterState === "active" ? "Clúster activo" : "Clúster inactivo"}
               color={clusterState === "active" ? "success" : "default"}
               sx={{ fontWeight: "bold", mr: 2 }}
             />
@@ -86,7 +86,7 @@ export default function HomePage() {
                 Ir a desplegar mi clúster
               </Button>
             ) : (
-              <Typography> El clúster {overlayNetworkName} actualmente está listo para recibir trabajos </Typography>
+              <Typography marginTop={1}> El clúster {overlayNetworkName} actualmente está listo para recibir trabajos </Typography>
             )}
           </Box>
         </Box>
@@ -126,36 +126,36 @@ export default function HomePage() {
 
       {/** general state panel */}
       {clusterState === "active" && (
-        <Grid container spacing={2} mb={4}>
+        <Grid container spacing={2} mb={3} alignItems="stretch">
           <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
+            <Card sx={{ height: "90%"}}>
+              <CardContent sx={{ textAlign: "center" }}>
                 <Tooltip title="Número total de nodos activos en este clúster">
                   <Typography variant="h6">Nodos activos</Typography>
                 </Tooltip>
                 <Typography variant="h4" fontWeight="bold">
-                  {clusterActiveInfo.nodes}
+                  {clusterActiveInfo.numberNodes}
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
+            <Card sx={{ height: "90%"}}>
+              <CardContent sx={{ textAlign: "center" }}>
                 <Tooltip title="Fecha de despliegue del clúster">
                   <Typography variant="h6">Fecha de despliegue</Typography>
                 </Tooltip>
                 <Typography variant="body1">
-                  {clusterActiveInfo.date ? clusterActiveInfo.date : "—"}
+                  {clusterActiveInfo.createdAt ? clusterActiveInfo.createdAt : "—"}
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
+            <Card sx={{ height: "90%"}}>
+              <CardContent sx={{ textAlign: "center" }}>
                 <Tooltip title="Trabajos totales enviados a este clúster">
                   <Typography variant="h6">Trabajos totales en cola</Typography>
                 </Tooltip>
@@ -167,19 +167,16 @@ export default function HomePage() {
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
+            <Card sx={{ height: "90%"}}>
+              <CardContent sx={{ textAlign: "center" }}>
                 <Tooltip title="Jobs en ejecución / completados / fallidos">
-                  <Typography variant="h6">Estado Jobs</Typography>
+                  <Typography variant="h6">Estado de trabajos</Typography>
                 </Tooltip>
                 <Typography variant="body1">
-                  icon {clusterActiveInfo.jobsRunning} en ejecución
+                  {clusterActiveInfo.jobsRunning} en ejecución
                 </Typography>
                 <Typography variant="body1">
-                  icon {clusterActiveInfo.jobsHeld} retenidos
-                </Typography>
-                <Typography variant="body1">
-                  icon {clusterActiveInfo.jobsWaiting} en espera
+                  {clusterActiveInfo.jobsWaiting} en espera
                 </Typography>
               </CardContent>
             </Card>

@@ -24,6 +24,9 @@ export default function FinishedJobs() {
   const [loading, setLoading] = useState(false);
   const [savingId, setSavingId] = useState(null);
   const [selectedBatchName, setSelectedBatchName] = useState(null);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadingBatch, setDownloadingBatch] = useState(null);
+
   
   const selectedBatch = batches.find((b) => b.batch_name === selectedBatchName) ?? null;
 
@@ -65,7 +68,6 @@ export default function FinishedJobs() {
   };
 
   const handleSaveJob = async (batch) => {
-    //setSavingId(batch.batch_name);
     setLoading(true)
     try {
       console.log("BATCH",batch)
@@ -92,7 +94,9 @@ export default function FinishedJobs() {
     }
   };
 
-  // output type for download a selected job
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  // handle job downloads considering output type for download a selected job
   const handleDownloadResults = async (batchName) => {
     const jobInfo = sessionJobsSubmitted.find(
       (job) => job.batch_name === batchName
@@ -101,21 +105,52 @@ export default function FinishedJobs() {
     const outputType = jobInfo?.output_type
 
     if (!outputType) {
-      toast.error("No se pudo determinar el tipo de salida del trabajo");
+      await Swal.fire({
+        title: "Error",
+        text: "No se pudo determinar el tipo de salida del trabajo.",
+        icon: "error",
+        confirmButtonColor: "#e53935",
+        confirmButtonText: "Entendido",
+      });
       console.warn("Job encontrado:", jobInfo);
       return;
     }
 
     try {
-      toast.info("Preparando resultados...");
+      setDownloading(true);
+      setDownloadingBatch(batchName);
+
+      // loading download swal
+      Swal.fire({
+        title: "Preparando resultados...",
+        text: "Por favor espera mientras se genera el archivo ZIP.",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+      await sleep(3000);
+
       await downloadResults(batchName, outputType);
-      toast.success("Descarga iniciada");
+
+      //Swal.close();
+      setDownloading(false);
+
+      await Swal.fire({
+        title: "Descarga finalizada",
+        text: `El archivo con los resultados de "${batchName}" ha sido guardado en el directorio de Descargas.`,
+        icon: "success",
+        confirmButtonColor: "#18b654ff",
+        confirmButtonText: "Entendido",
+      });
     } catch (err) {
       console.error(err);
       toast.error("Error al descargar los resultados");
+    } finally {
+      setDownloadingBatch(null);
     }
   };
-
 
   return (
     <Container maxWidth="lg" sx={{ mt: 2 }}>
@@ -248,12 +283,20 @@ export default function FinishedJobs() {
                   </Button>
                   <Button
                     variant="outlined"
-                    color="primary"
+                    color=""
                     fullWidth
                     sx={{ mt: 1, alignSelf: "center", width: "40%" }}
                     onClick={() => handleDownloadResults(selectedBatch.batch_name)}
+                    disabled={downloading && downloadingBatch === selectedBatch.batch_name}
                   >
-                    Descargar resultados
+                    {downloading && downloadingBatch === selectedBatch.batch_name ? (
+                      <>
+                        <CircularProgress size={20} sx={{ mr: 1 }} color="primary" />
+                        Preparando zip...
+                      </>
+                    ) : (
+                      "Descargar resultados"
+                    )}
                   </Button>
 
                 </>
