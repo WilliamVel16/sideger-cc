@@ -19,11 +19,13 @@ import {
 } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
 import TipsAndUpdatesIcon from "@mui/icons-material/TipsAndUpdates";
+import BrightnessHighIcon from '@mui/icons-material/BrightnessHigh';
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { useAppContext } from "../context/AppContext";
 import AboutDialog from "../components/ui/aboutDialog";
 import FeaturesDialog from "../components/ui/featuresDialog";
+import HowToUseDialog from "../components/ui/howToUseDialog";
 import { getUserClusters } from "../utils/tauriApi";
 import { useNavigate } from "react-router";
 
@@ -31,6 +33,7 @@ export default function HomePage() {
   const { clusterState, overlayNetworkName, clusterActiveInfo } = useAppContext()
   const [openAbout, setOpenAbout] = useState(false);
   const [openFeatures, setOpenFeatures] = useState(false);
+  const [openHotToUse, setOpenHowToUse] = useState(false);
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState([]);
   let navigate = useNavigate();
@@ -110,8 +113,19 @@ export default function HomePage() {
               color="info"
               startIcon={<TipsAndUpdatesIcon />}
               onClick={() => setOpenFeatures(true)}
+              sx={{ marginRight: 2}}
             >
               Lo que puedes hacer
+            </Button>
+          </Tooltip>
+          <Tooltip title="Pasos para el uso de la herramienta">
+            <Button
+              variant="text"
+              color="info"
+              startIcon={<BrightnessHighIcon />}
+              onClick={() => setOpenHowToUse(true)}
+            >
+              ¿Cómo hacerlo?
             </Button>
           </Tooltip>
         </Box>
@@ -122,8 +136,10 @@ export default function HomePage() {
 
       {/* dialog: what you can with sideger */}
       <FeaturesDialog open={openFeatures} onClose={() => setOpenFeatures(false)} />
-    
 
+      {/* dialog: hot to use it? */}
+      <HowToUseDialog open={openHotToUse} onClose={() => setOpenHowToUse(false)} />
+    
       {/** general state panel */}
       {clusterState === "active" && (
         <Grid container spacing={2} mb={3} alignItems="stretch">
@@ -239,13 +255,13 @@ export default function HomePage() {
                 <TableCell>Nombre</TableCell>
                 <TableCell>Fecha</TableCell>
                 <TableCell>Nodos</TableCell>
-                <TableCell>Jobs ejecutados</TableCell>
+                <TableCell>Trabajos ejecutados</TableCell>
                 <TableCell>Estado</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {history.length > 0 ? (
-                history.slice(0, 3).map((cluster, idx) => (
+                history.slice(0, 5).map((cluster, idx) => (
                   <TableRow key={idx}>
                     <TableCell>{cluster.name}</TableCell>
                     <TableCell>{new Date(cluster.created_at).toLocaleString()}</TableCell>
