@@ -45,7 +45,6 @@ export const getMyIp = async (interfaceLanName) => {
 
 // to set the ssh connection in the resources of LAN [Resources.jsx]
 export const startSshConnection = async (resourcesUser, resourcesPass, resourcesIps) => {
-  console.log(resourcesIps, resourcesUser, resourcesPass)
 	const response = await fetch(`${BACKEND_URL}/lan-ssh/connect`, {
 		method: "POST",
 		headers: {

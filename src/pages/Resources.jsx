@@ -67,6 +67,10 @@ function Permissions() {
     }
   };
 
+  const handleTest = async () => {
+    console.log(successScan, resourcesIPs.length)
+  }
+
   // executes the resources scanning in the LAN
   const handleScanResources = async () => {
     if (!validate()) {
@@ -91,6 +95,7 @@ function Permissions() {
       setResourcesIPs(finalResources);
       setNumberResources(finalResources.length)
       setScanStatus("success");
+      setSuccessScan(true);
       toast.success(`Se encontraron ${finalResources.length} recursos`);
     } catch (err) {
       setErrorScan(err.message || "Error no resuelto al escanear la red");

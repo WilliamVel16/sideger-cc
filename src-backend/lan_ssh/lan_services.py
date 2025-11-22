@@ -90,7 +90,7 @@ def start_ssh_connection(resources_ips: List[str], resources_user: str, resource
         copy the public keys from the server where sideger is being use inside
         of the other available servers of the network
     """
-    script_path = Path("../scripts/utils/ssh_connection.sh") 
+    script_path = Path("scripts/utils/ssh_connection.sh")
     if not script_path.exists():
         raise HTTPException(status_code=404, detail=f"Script not found in path: {script_path}")
 
