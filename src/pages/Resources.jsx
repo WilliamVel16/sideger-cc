@@ -67,10 +67,6 @@ function Permissions() {
     }
   };
 
-  const handleTest = async () => {
-    console.log(successScan, resourcesIPs.length)
-  }
-
   // executes the resources scanning in the LAN
   const handleScanResources = async () => {
     if (!validate()) {

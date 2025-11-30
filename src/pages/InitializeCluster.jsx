@@ -44,8 +44,8 @@ function InitializeCluster() {
         text: `Primero debes buscar los recursos de cómputo en la sección "Recursos"`,
         icon: 'info',
         showCancelButton: true,
-        confirmButtonColor: '#18b654ff',
-        cancelButtonColor: '#d33',
+        confirmButtonColor: '#0a913dff',
+        cancelButtonColor: '#b61010ff',
         confirmButtonText: 'Ir a buscar',
         cancelButtonText: 'Entendido',
       });
@@ -122,7 +122,6 @@ function InitializeCluster() {
     try {
       const initializeResponse = await initializeCluster(dataCheckedServers, resourcesUser, overlayNetworkName);
       
-      console.log("RESPONSE INITIALIZE", initializeResponse);
       setClusterNodesConfig(initializeResponse.map(node => node.config));
 
       const submitContainer = initializeResponse
@@ -132,19 +131,29 @@ function InitializeCluster() {
       setSubmitContainerName(submitContainer[0])
       setClusterState("active");
       setDeployStatus("success")
-      toast.success(`Cluster desplegado y listo para usar`);
+
       try {
         const saveResponse = await handleSaveClusterData();
-        console.log("RESPONSE SAVE", saveResponse, saveResponse.cluster_id)
         setCurrentClusterId(saveResponse.cluster_id)
-        toast.success(`Información del cluster guardada`)
       } catch (err) {
         //console.error("Error guardando información del cluster:", err);
+        Swal.close();
         setErrorDeploy(err.message || "Error no resuelto al guardar información del clúster");
         toast.error(err.message || "Error no resuelto al guardar información del clúster");
       }
 
+      Swal.close(); // Cerrar el LOADING
+
+      await Swal.fire({
+        title: "Clúster desplegado",
+        text: `El clúster "${overlayNetworkName}" está listo para usar.`,
+        icon: "success",
+        confirmButtonColor: "#0a913dff",
+        confirmButtonText: "Entendido",
+      });
+
     } catch (err) {
+      Swal.close();
       console.error("Error deploying:", err);
       setErrorDeploy(err.message || "Error no resulto al desplegar el clúster");
       toast.error(err.message || "Error no resulto al desplegar el clúster");
@@ -166,15 +175,24 @@ function InitializeCluster() {
       text: `Se desplegará el clúster "${overlayNetworkName}" con la configuración actual.`,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#18b654ff',
-      cancelButtonColor: '#d33',
+      confirmButtonColor: '#0a913dff',
+      cancelButtonColor: '#b61010ff',
       confirmButtonText: 'Quiero desplegar',
       cancelButtonText: 'Volver y editar',
     });
 
     if (result.isConfirmed) {
-      handleSendRequest();
-      toast.info("Despliegue lanzado por el usuario")
+      Swal.fire({
+      title: "Desplegando clúster...",
+      text: "Por favor espera unos minutos mientras Sideger despliega tu clúster",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    handleSendRequest();
     } else {
       toast.info("Despliegue cancelado por el usuario");
     }
@@ -373,7 +391,7 @@ function InitializeCluster() {
               disabled={checkedServers.length < 3 || checkedServers.some(s => !s.role) || deployingCluster}
               sx={{ minWidth: 160 }}
             >
-              {deployingCluster ? <CircularProgress size={24} color='inherit' /> : 'Inicializar Clúster'}
+              Inicializar Clúster
             </Button>
           </Box>
         </Grid>

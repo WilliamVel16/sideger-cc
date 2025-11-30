@@ -28,11 +28,21 @@ def script_permissions() -> str:
 
 def scan_interfaces() -> List[str]:
     """
-    this function allows scan the network interfaces
+    Scan network interfaces and keep only real/physical ones.
     """
     try:
         interfaces = netifaces.interfaces()
-        return list(set(interfaces))
+
+        VIRTUAL_PREFIXES = ["docker", "br", "veth", "virbr", "vlan"]
+        EXCLUDE_EXACT = ["lo"]
+
+        real_interfaces = [
+            iface for iface in interfaces
+            if iface not in EXCLUDE_EXACT
+               and not any(iface.startswith(prefix) for prefix in VIRTUAL_PREFIXES)
+        ]
+        return real_interfaces
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error to obtain interfaces: {e}")
 
