@@ -5,12 +5,12 @@ const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
 	const [resourcesIPs, setResourcesIPs] = usePersistentState("resourcesIPs", []);
-	const [resourcesUser, setResourcesUser] = usePersistentState("resourcesUser", "usuario"); // temporals
+	const [resourcesUser, setResourcesUser] = usePersistentState("resourcesUser", "");
 	const [containersPass, setContainersPass] = usePersistentState("containersPass", "pass123"); // temporals
 	const [clusterState, setClusterState] = usePersistentState("clusterState", "inactive");
 	const [LANname, setLANname] = usePersistentState("LANname", "");
 	const [clusterNodesConfig, setClusterNodesConfig] =  usePersistentState("clusterNodesConfig", null);
-	const [overlayNetworkName, setOverlayNetworkName] = usePersistentState("overlayNetworkName", ""); // temporals
+	const [overlayNetworkName, setOverlayNetworkName] = usePersistentState("overlayNetworkName", "");
   const [sessionJobsSubmitted, setSessionJobsSubmitted] = usePersistentState("sessionJobsSubmitted", [])
   const [submitContainerName, setSubmitContainerName] = usePersistentState("submitContainerName", "")
   const [currentClusterId, setCurrentClusterId] = usePersistentState("currentClusterId", "")

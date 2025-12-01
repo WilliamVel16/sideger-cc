@@ -224,16 +224,14 @@ function InitializeCluster() {
           <Grid container spacing={2}>
             <Grid item size={{ xs:6, md:6.5}}>
               <Typography variant="body1" sx={{ mb: 2 }}>
-                Automática: Sideger elige recursos y sus roles, solamente debes ingresar el número de recursos a utilizar. <br/>
-                Manual: Tú eliges los recursos que quieras usar, así como sus roles, hazlo desde las cuadrillas inferiores. <br/>
-                Mantener Cluster: pendiente.  <br/>
-                Nombre: Ingresa un nombre para identificar tu cluster
+                <strong>Automática:</strong> Sideger elige recursos y sus roles, solamente debes ingresar el número de recursos a utilizar. <br/>
+                <strong>Manual:</strong> Tú eliges los recursos que quieras usar, así como sus roles, hazlo desde las cuadrillas inferiores. <br/>
+                <strong>Nombre:</strong> Ingresa un nombre para identificar tu cluster
               </Typography>
             </Grid>
 
             {/* controls */}
             <Grid item size={{ xs:6, md:4}}>
-              <Typography variant="h6" mb={1}> Gestiónar Cluster </Typography>
               <FormGroup sx={{ ml: 1, mb: 1 }}>
                 <Grid container alignItems="stretch" justifyContent="flex-start" spacing={2} sx={{ mb: 1}}>
                   <Grid item xs={7}>
@@ -278,18 +276,6 @@ function InitializeCluster() {
                     />
                   }
                   label="Manual"
-                />
-              </FormGroup>
-              <FormGroup sx={{ ml: 1, mb: 2 }}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={keepCluster}
-                      onChange={(e) => setKeepCluster(e.target.checked)}
-                      size="small"
-                    />
-                  }
-                  label="Mantener cluster"
                 />
               </FormGroup>
               <FormGroup sx={{ mb: 2 }}>

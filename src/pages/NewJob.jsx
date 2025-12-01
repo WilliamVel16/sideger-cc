@@ -245,8 +245,6 @@ function NewJob() {
                     onChange={(e) => handleFormChange("universe", e.target.value)}
                   >
                     <MenuItem value={"vanilla"}>Vanilla</MenuItem>
-                    <MenuItem value={"java"}>Java</MenuItem>
-                    <MenuItem value={"parallel"}>Parallel</MenuItem>
                   </Select>
                 </FormControl>
                 <TooltipInformation
