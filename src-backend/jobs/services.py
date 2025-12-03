@@ -7,7 +7,7 @@ from pathlib import Path
 from .submit_builder import HTCondorSubmit
 from .schemas import JobData
 import asyncio, json
-from datetime import timedelta
+from datetime import timedelta, datetime
 from .utils import summarize_jobs, build_results_a_directory, build_results_n_directories
 
 def create_submit_file_service(job: JobData, output_type: str):
@@ -89,6 +89,23 @@ async def jobs_state_service(sub_container_name: str, session_jobs: list):
 
         if process.returncode != 0:
             raise HTTPException(status_code=400, detail=stderr.decode())
+
+        stdout_str = stdout.decode().strip()
+
+        if stdout_str == "" or stdout_str == "[]":
+            empty = {
+                "timerequest": datetime.now().isoformat(),
+                "batches": [],
+                "totals": {
+                    "total_jobs": 0,
+                    "done": 0,
+                    "run": 0,
+                    "idle": 0,
+                    "held": 0,
+                    "suspended": 0
+                }
+            }
+            return empty
         
         try:
             jobs_json = json.loads(stdout)

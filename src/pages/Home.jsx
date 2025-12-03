@@ -255,7 +255,7 @@ export default function HomePage() {
                 <TableCell>Nombre</TableCell>
                 <TableCell>Fecha</TableCell>
                 <TableCell>Nodos</TableCell>
-                <TableCell>Trabajos ejecutados</TableCell>
+                <TableCell>Trabajos guardados</TableCell>
                 <TableCell>Estado</TableCell>
               </TableRow>
             </TableHead>

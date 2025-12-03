@@ -14,6 +14,7 @@ import {
 import { useState } from "react";
 import UploadIcon from "@mui/icons-material/Upload";
 import DeleteIcon from "@mui/icons-material/Delete";
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import { useAppContext } from "../context/AppContext";
 import { submitJob } from "../utils/tauriApi";
@@ -51,6 +52,14 @@ function NewJob() {
       transfer_input_files: fileNames,
     }));
   };
+
+  const handleSetExecutable = (fileName) => {
+    setFormData((prev) => ({
+      ...prev,
+      executable: fileName,
+    }));
+  };
+
 
   const handleRemoveFile = (fileNameToRemove) => {
     const updatedFiles = inputFiles.filter((file) => file.name !== fileNameToRemove);
@@ -131,6 +140,9 @@ function NewJob() {
             En esta sección tienes la opción de subir archivos y encontrarás una
             plantilla en donde debes establecer los requerimientos para le
             ejecución de tu trabajo.
+            <br></br>
+            Cuando subas archivos, debes indicar el archivo principal, es la forma
+            de indicarle al sistema que es el ejecutable del trabajo que vas a enviar
           </Typography>
         </Grid>
 
@@ -194,34 +206,63 @@ function NewJob() {
                     </Button>
                   </Box>
                   <Box sx={{ mt: 2 }}>
-                    {inputFiles.length > 0 &&
-                      inputFiles.map((file, i) => (
+                  {inputFiles.length > 0 &&
+                    inputFiles.map((file, i) => {
+                      const isExecutable = formData.executable === file.name;
+
+                      return (
                         <Box
                           key={i}
                           sx={{
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "space-between",
-                            border: "1px solid #ccc",
+                            border: "1px solid",
+                            borderColor: isExecutable ? "primary.main" : "#ccc",
+                            backgroundColor: isExecutable ? "rgba(25, 118, 210, 0.1)" : "transparent",
                             borderRadius: 1,
                             padding: "4px 8px",
                             mb: 1,
                           }}
                         >
                           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                            <InsertDriveFileIcon fontSize="small" />
-                            <Typography variant="body2">{file.name}</Typography>
+                            <InsertDriveFileIcon
+                              fontSize="small"
+                              color={isExecutable ? "primary" : "inherit"}
+                            />
+                            <Typography
+                              variant="body2"
+                              sx={{ color: isExecutable ? "primary.main" : "inherit" }}
+                            >
+                              {file.name}
+                            </Typography>
                           </Box>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleRemoveFile(file.name)}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
+
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleSetExecutable(file.name)}
+                            >
+                              <CheckBoxIcon
+                                fontSize="small"
+                                color={isExecutable ? "primary" : "inherit"}
+                              />
+                            </IconButton>
+
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => handleRemoveFile(file.name)}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Box>
                         </Box>
-                      ))}
-                  </Box>
+                      );
+                    })
+                  }
+                </Box>
+
                 </>
               )}
             </Grid>

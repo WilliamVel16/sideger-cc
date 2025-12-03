@@ -7,7 +7,7 @@ import {
   TextField,
   Paper,
 } from "@mui/material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAppContext } from "../context/AppContext";
 import { jobsQueue, getJobInformation, removeSpecificJob, removeBatch } from "../utils/tauriApi";
 
@@ -16,6 +16,7 @@ function JobQueue() {
   const [jobId, setJobId] = useState("");
   const [batchName, setBatchName] = useState("");
   const [jobInfo, setJobInfo] = useState(null);
+  const intervalRef = useRef(null)
   const [jobsData, setJobsData] = useState({
     timerequest: null,
     batches: [],
@@ -23,7 +24,7 @@ function JobQueue() {
   });
   
   useEffect(() => {
-    let interval;
+    //let interval;
     const fetchJobs = async () => {
       try {
         const jobs = await jobsQueue(submitContainerName, sessionJobsSubmitted);
@@ -52,14 +53,14 @@ function JobQueue() {
                 : job
             )
           );
-        } else {
-          console.log("without sessionJobsSubmitted (empty)")
-        }
+        } // else {
+        //   console.log("without sessionJobsSubmitted (empty)")
+        // }
 
-        if (jobs.totals.total_jobs === 0 && interval) {
-          clearInterval(interval);
-          interval = null;
-        }
+        // if (jobs.totals.total_jobs === 0 && interval) {
+        //   clearInterval(interval);
+        //   interval = null;
+        // }
       } catch (err) {
         console.error("[JobQueue] Error getting jobs:",err);
       }
@@ -71,8 +72,9 @@ function JobQueue() {
     }
 
     fetchJobs();
-    interval = setInterval(fetchJobs, 15000); // then try with webSockets
-    return () => clearInterval(interval);
+    intervalRef.current = setInterval(fetchJobs, 15000);
+    //interval = setInterval(fetchJobs, 15000); // then try with webSockets
+    return () => clearInterval(intervalRef.current);
   }, [clusterNodesConfig]); // REVIEW THIS ----------------------------------------------
 
   // manage remove a specif job from a batch
@@ -239,24 +241,24 @@ function JobQueue() {
             </Grid>
           ))}
           <Box
-                sx={{
-                  backgroundColor: "#fa5c5cff",
-                  color: "white",
-                  borderRadius: 1,
-                  p: 2,
-                  minHeight: 40,
-                  maxHeight: 50,
-                  textAlign: "center",
-                  mb: 1,
-                }}
-              >
-                <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                  Total trabajos
-                </Typography>
-                <Typography variant="inherit" sx={{  }}>
-                  {jobsData.totals.total_jobs || 0}
-                </Typography>
-              </Box>
+            sx={{
+              backgroundColor: "#fa5c5cff",
+              color: "white",
+              borderRadius: 1,
+              p: 2,
+              minHeight: 40,
+              maxHeight: 50,
+              textAlign: "center",
+              mb: 1,
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+              Total trabajos
+            </Typography>
+            <Typography variant="inherit" sx={{  }}>
+              {jobsData.totals.total_jobs || 0}
+            </Typography>
+          </Box>
         </Grid>
       </Paper>
 
