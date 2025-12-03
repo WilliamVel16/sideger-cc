@@ -19,11 +19,13 @@ import {
 } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
 import TipsAndUpdatesIcon from "@mui/icons-material/TipsAndUpdates";
+import BrightnessHighIcon from '@mui/icons-material/BrightnessHigh';
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { useAppContext } from "../context/AppContext";
 import AboutDialog from "../components/ui/aboutDialog";
 import FeaturesDialog from "../components/ui/featuresDialog";
+import HowToUseDialog from "../components/ui/howToUseDialog";
 import { getUserClusters } from "../utils/tauriApi";
 import { useNavigate } from "react-router";
 
@@ -31,6 +33,7 @@ export default function HomePage() {
   const { clusterState, overlayNetworkName, clusterActiveInfo } = useAppContext()
   const [openAbout, setOpenAbout] = useState(false);
   const [openFeatures, setOpenFeatures] = useState(false);
+  const [openHotToUse, setOpenHowToUse] = useState(false);
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState([]);
   let navigate = useNavigate();
@@ -73,7 +76,7 @@ export default function HomePage() {
           </Typography>
           <Box mt={2}>
             <Chip
-              label={clusterState === "active" ? "Clúster Activo" : "Clúster Inactivo"}
+              label={clusterState === "active" ? "Clúster activo" : "Clúster inactivo"}
               color={clusterState === "active" ? "success" : "default"}
               sx={{ fontWeight: "bold", mr: 2 }}
             />
@@ -86,7 +89,7 @@ export default function HomePage() {
                 Ir a desplegar mi clúster
               </Button>
             ) : (
-              <Typography> El clúster {overlayNetworkName} actualmente está listo para recibir trabajos </Typography>
+              <Typography marginTop={1}> El clúster {overlayNetworkName} actualmente está listo para recibir trabajos </Typography>
             )}
           </Box>
         </Box>
@@ -110,8 +113,19 @@ export default function HomePage() {
               color="info"
               startIcon={<TipsAndUpdatesIcon />}
               onClick={() => setOpenFeatures(true)}
+              sx={{ marginRight: 2}}
             >
               Lo que puedes hacer
+            </Button>
+          </Tooltip>
+          <Tooltip title="Pasos para el uso de la herramienta">
+            <Button
+              variant="text"
+              color="info"
+              startIcon={<BrightnessHighIcon />}
+              onClick={() => setOpenHowToUse(true)}
+            >
+              ¿Cómo hacerlo?
             </Button>
           </Tooltip>
         </Box>
@@ -122,40 +136,42 @@ export default function HomePage() {
 
       {/* dialog: what you can with sideger */}
       <FeaturesDialog open={openFeatures} onClose={() => setOpenFeatures(false)} />
-    
 
+      {/* dialog: hot to use it? */}
+      <HowToUseDialog open={openHotToUse} onClose={() => setOpenHowToUse(false)} />
+    
       {/** general state panel */}
       {clusterState === "active" && (
-        <Grid container spacing={2} mb={4}>
+        <Grid container spacing={2} mb={3} alignItems="stretch">
           <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
+            <Card sx={{ height: "90%"}}>
+              <CardContent sx={{ textAlign: "center" }}>
                 <Tooltip title="Número total de nodos activos en este clúster">
                   <Typography variant="h6">Nodos activos</Typography>
                 </Tooltip>
                 <Typography variant="h4" fontWeight="bold">
-                  {clusterActiveInfo.nodes}
+                  {clusterActiveInfo.numberNodes}
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
+            <Card sx={{ height: "90%"}}>
+              <CardContent sx={{ textAlign: "center" }}>
                 <Tooltip title="Fecha de despliegue del clúster">
                   <Typography variant="h6">Fecha de despliegue</Typography>
                 </Tooltip>
                 <Typography variant="body1">
-                  {clusterActiveInfo.date ? clusterActiveInfo.date : "—"}
+                  {clusterActiveInfo.createdAt ? clusterActiveInfo.createdAt : "—"}
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
+            <Card sx={{ height: "90%"}}>
+              <CardContent sx={{ textAlign: "center" }}>
                 <Tooltip title="Trabajos totales enviados a este clúster">
                   <Typography variant="h6">Trabajos totales en cola</Typography>
                 </Tooltip>
@@ -167,19 +183,16 @@ export default function HomePage() {
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
+            <Card sx={{ height: "90%"}}>
+              <CardContent sx={{ textAlign: "center" }}>
                 <Tooltip title="Jobs en ejecución / completados / fallidos">
-                  <Typography variant="h6">Estado Jobs</Typography>
+                  <Typography variant="h6">Estado de trabajos</Typography>
                 </Tooltip>
                 <Typography variant="body1">
-                  icon {clusterActiveInfo.jobsRunning} en ejecución
+                  {clusterActiveInfo.jobsRunning} en ejecución
                 </Typography>
                 <Typography variant="body1">
-                  icon {clusterActiveInfo.jobsHeld} retenidos
-                </Typography>
-                <Typography variant="body1">
-                  icon {clusterActiveInfo.jobsWaiting} en espera
+                  {clusterActiveInfo.jobsWaiting} en espera
                 </Typography>
               </CardContent>
             </Card>
@@ -242,13 +255,13 @@ export default function HomePage() {
                 <TableCell>Nombre</TableCell>
                 <TableCell>Fecha</TableCell>
                 <TableCell>Nodos</TableCell>
-                <TableCell>Jobs ejecutados</TableCell>
+                <TableCell>Trabajos ejecutados</TableCell>
                 <TableCell>Estado</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {history.length > 0 ? (
-                history.slice(0, 3).map((cluster, idx) => (
+                history.slice(0, 5).map((cluster, idx) => (
                   <TableRow key={idx}>
                     <TableCell>{cluster.name}</TableCell>
                     <TableCell>{new Date(cluster.created_at).toLocaleString()}</TableCell>

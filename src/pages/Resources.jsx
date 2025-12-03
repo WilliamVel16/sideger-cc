@@ -91,6 +91,7 @@ function Permissions() {
       setResourcesIPs(finalResources);
       setNumberResources(finalResources.length)
       setScanStatus("success");
+      setSuccessScan(true);
       toast.success(`Se encontraron ${finalResources.length} recursos`);
     } catch (err) {
       setErrorScan(err.message || "Error no resuelto al escanear la red");
@@ -162,8 +163,9 @@ function Permissions() {
         </Typography>
         <Typography variant="body1" sx={{ mb: 2 }}>
           Para continuar con el procedimiento se requiere el nombre de la interfaz de la red local de la
-          sala de cómputo e información sobre la infraestructura física, por favor ingresa el nombre de la interfaz de la red LAN y la contraseña del
-          usuario del recurso que estás usando.
+          sala de cómputo e información sobre la infraestructura física, por favor ingresa el nombre de la
+          interfaz de la red LAN y la contraseña del usuario del recurso que estás usando, asimismo debes
+          ingresar el usuario y contraseña de los recursos de la red LAN seleccionada.
         </Typography>
         
         <Grid container direction="column" spacing={2} marginTop={3} alignItems={"center"} >

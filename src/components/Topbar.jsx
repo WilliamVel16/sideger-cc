@@ -82,8 +82,8 @@ function Topbar() {
       showCancelButton: true,
       confirmButtonText: "Sí, salir",
       cancelButtonText: "Cancelar",
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
+      confirmButtonColor: "#0a913dff",
+      cancelButtonColor: "#b61010ff",
     });
 
     if (result.isConfirmed) {
@@ -100,14 +100,25 @@ function Topbar() {
       showCancelButton: true,
       confirmButtonText: "Sí, dar de baja",
       cancelButtonText: "Cancelar acción",
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
+      confirmButtonColor: "#0a913dff",
+      cancelButtonColor: "#b61010ff",
     });
     if (!result.isConfirmed) return;
+
+    Swal.fire({
+      title: "Dando de baja...",
+      text: "Por favor espera mientras se liberan los recursos usados en el clúster",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
 
     try {
       const response = await shutdownCluster(clusterNodesConfig, currentClusterId);
       console.log("RESPONSE SHUTDOWN", response)
+      // update status
       setClusterState("inactive")
       setCurrentClusterId("")
       setClusterNodesConfig(null)
@@ -123,9 +134,12 @@ function Topbar() {
         jobsHeld: 0,
         jobsWaiting: 0,
       })
+
+      Swal.close();
+
       toast.success("Clúster dado de baja correctamente");
     } catch (err) {
-      console.log("Error to try kill the cluster:", err);
+      Swal.close();
       toast.error(`Error al intentar dar de baja el clúster: "${err}"`);
     }
   }

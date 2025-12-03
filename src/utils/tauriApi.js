@@ -45,7 +45,6 @@ export const getMyIp = async (interfaceLanName) => {
 
 // to set the ssh connection in the resources of LAN [Resources.jsx]
 export const startSshConnection = async (resourcesUser, resourcesPass, resourcesIps) => {
-  console.log(resourcesIps, resourcesUser, resourcesPass)
 	const response = await fetch(`${BACKEND_URL}/lan-ssh/connect`, {
 		method: "POST",
 		headers: {
@@ -141,7 +140,7 @@ export const shutdownCluster = async (clusterNodesConfig, clusterId) => {
     const err = await response.text();
     throw new Error(`Shutdown failed: ${err}`);
   }
-  return response.json();
+  return response.json();submitJob
 };
 
 // -------------------------- jobs -----------------------------
@@ -388,7 +387,7 @@ export const downloadResults = async (batch_name, output_type) => {
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${batchName}_resultados.zip`;
+  a.download = `${batch_name}_resultados.zip`;
   a.click();
   window.URL.revokeObjectURL(url);
 };

@@ -24,7 +24,7 @@ export default function AboutDialog({ open, onClose }) {
           alta capacidad de procesamiento (HTC).
         </Typography>
         <Typography variant="body1">
-          Su objetivo es facilitar a estudiantes, docentes e investigadores el
+          Su objetivo es facilitar el
           acceso a potencia de cómputo distribuida sin necesidad de
           configuraciones complejas.
         </Typography>

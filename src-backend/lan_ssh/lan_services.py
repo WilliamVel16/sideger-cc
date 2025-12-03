@@ -28,11 +28,21 @@ def script_permissions() -> str:
 
 def scan_interfaces() -> List[str]:
     """
-    this function allows scan the network interfaces
+    Scan network interfaces and keep only real/physical ones.
     """
     try:
         interfaces = netifaces.interfaces()
-        return list(set(interfaces))
+
+        VIRTUAL_PREFIXES = ["docker", "br", "veth", "virbr", "vlan"]
+        EXCLUDE_EXACT = ["lo"]
+
+        real_interfaces = [
+            iface for iface in interfaces
+            if iface not in EXCLUDE_EXACT
+               and not any(iface.startswith(prefix) for prefix in VIRTUAL_PREFIXES)
+        ]
+        return real_interfaces
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error to obtain interfaces: {e}")
 
@@ -90,7 +100,7 @@ def start_ssh_connection(resources_ips: List[str], resources_user: str, resource
         copy the public keys from the server where sideger is being use inside
         of the other available servers of the network
     """
-    script_path = Path("../scripts/utils/ssh_connection.sh") 
+    script_path = Path("scripts/utils/ssh_connection.sh")
     if not script_path.exists():
         raise HTTPException(status_code=404, detail=f"Script not found in path: {script_path}")
 
