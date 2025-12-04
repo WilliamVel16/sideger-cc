@@ -13,12 +13,13 @@ app = FastAPI()
 
 origins = [
     "http://localhost:1420",  # front
-    # --then vpn--
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    #allow_origins=origins,
+    allow_origins=["*"],
+    #allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -32,4 +33,4 @@ app.include_router(containers_router, prefix="/containers", tags=["CONTAINERS"])
 app.include_router(cluster_router, prefix="/cluster", tags=["CLUSTER"])
 app.include_router(htcondor_router, prefix="/htc", tags=["HTCONDOR"])
 app.include_router(jobs_router, prefix="/jobs", tags=["JOBS"])
-app.include_router(user_auth_router, prefix="/user", tags="USER SESSION")
+app.include_router(user_auth_router, prefix="/user", tags=["USER SESSION"])
