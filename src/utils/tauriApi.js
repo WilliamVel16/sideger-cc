@@ -1,4 +1,4 @@
-const BACKEND_URL = "http://localhost:8000";
+const BACKEND_URL =  import.meta.env.VITE_API_URL;
 
 // to execute scripts with user permission [Resources.jsx]
 export const scriptPermissions = async () => {

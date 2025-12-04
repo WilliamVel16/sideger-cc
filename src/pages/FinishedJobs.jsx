@@ -263,7 +263,7 @@ export default function FinishedJobs() {
                               boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
                             }}
                           >
-                            {res.job}: {res.result}
+                            {res.job}: {res.result} 
                           </Box>
                         ))}
                       </Paper>
