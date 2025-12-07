@@ -121,6 +121,30 @@ export const initializeCluster = async (nodes, resourcesUser, onetName) => {
   return await res.json();
 };
 
+
+// to add new node(s) to the cluster [initializeCluster.jsx]
+export const addNewNodes = async(nodes, resourcesUser, onetName, token, numberExecuteNodesUp) => {
+  const res = await fetch(`${BACKEND_URL}/cluster/add-nodes`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      nodes: nodes,
+      resources_user: resourcesUser,
+      onetwork_name: onetName,  
+      token: token,
+      n_execute_nodes: numberExecuteNodesUp
+    })
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error);
+  }
+  return await res.json();
+}
+
 // to kill the cluster [Topbar.jsx]
 export const shutdownCluster = async (clusterNodesConfig, clusterId) => {
   const payload = {

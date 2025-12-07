@@ -10,7 +10,7 @@ import AddIcon from '@mui/icons-material/Add';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import { ToastContainer, toast } from 'react-toastify'
-import { showResourcesSpecs, initializeCluster, showMySpecs, saveClusterInformation } from "../utils/tauriApi";
+import { showResourcesSpecs, initializeCluster, showMySpecs, saveClusterInformation, addNewNodes } from "../utils/tauriApi";
 import { useAppContext } from '../context/AppContext';
 import Swal from 'sweetalert2';
 import { useNavigate } from "react-router";
@@ -18,13 +18,10 @@ import { useNavigate } from "react-router";
 
 function InitializeCluster() {
   const {
-    resourcesIPs, resourcesUser, setClusterState,
-    LANname, setClusterNodesConfig, overlayNetworkName,
-    setOverlayNetworkName, setSubmitContainerName, 
-    setCurrentClusterId, setClusterActiveInfo 
+    resourcesIPs, resourcesUser, clusterState, setClusterState, LANname, setClusterNodesConfig,
+    overlayNetworkName, setOverlayNetworkName, setSubmitContainerName, setCurrentClusterId,
+    setClusterActiveInfo, checkedServers, setCheckedServers, servers, setServers, swarmToken, setSwarmToken
   } = useAppContext();
-  const [checkedServers, setCheckedServers] = useState([]);
-  const [servers, setServers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [deployingCluster, setDeployingCluster] = useState(false)
   const [sysDefineAll, setSysDefineAll] = useState(false);
@@ -70,8 +67,7 @@ function InitializeCluster() {
 
   // permits to identify which resources has been selected using its ip
   const handleAdd = (server) => {
-    console.log(server);
-    setCheckedServers([...checkedServers, { ...server, role: "" }]);
+    setCheckedServers([...checkedServers, { ...server, role: "", isNew: true  }]);
     setServers(servers.filter(s => s.ip !== server.ip));
   };
 
@@ -113,7 +109,7 @@ function InitializeCluster() {
     }
   }
 
-  // sends the request ([{ip:role},]) to asign roles to every selected resource
+  // sends the request ([{ip, role},]) to asign roles to every selected resource
   // and start cluster
   const handleSendRequest = async () => {
     setDeployingCluster(true);
@@ -122,7 +118,8 @@ function InitializeCluster() {
     try {
       const initializeResponse = await initializeCluster(dataCheckedServers, resourcesUser, overlayNetworkName);
       
-      setClusterNodesConfig(initializeResponse.map(node => node.config));
+      setClusterNodesConfig(initializeResponse.nodes.map(node => node.config));
+      setSwarmToken(initializeResponse.token);
 
       const submitContainer = initializeResponse
         .filter(node => node.config.container_name.startsWith("sub_"))
@@ -131,6 +128,11 @@ function InitializeCluster() {
       setSubmitContainerName(submitContainer[0])
       setClusterState("active");
       setDeployStatus("success")
+      setCheckedServers(prev =>
+        prev.map(n =>
+          n.isNew ? { ...n, isNew: false } : n
+        )
+      );
 
       try {
         const saveResponse = await handleSaveClusterData();
@@ -142,7 +144,7 @@ function InitializeCluster() {
         toast.error(err.message || "Error no resuelto al guardar información del clúster");
       }
 
-      Swal.close(); // Cerrar el LOADING
+      Swal.close();
 
       await Swal.fire({
         title: "Clúster desplegado",
@@ -187,9 +189,7 @@ function InitializeCluster() {
       text: "Por favor espera unos minutos mientras Sideger despliega tu clúster",
       allowOutsideClick: false,
       allowEscapeKey: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
+      didOpen: () => { Swal.showLoading(); },
     });
 
     handleSendRequest();
@@ -198,6 +198,56 @@ function InitializeCluster() {
     }
   };
 
+  const handleAddNodes = async () => {
+    try {
+      const newNodes = checkedServers.filter(n => n.isNew && n.role && n.role.trim() !== "");
+      if (newNodes.length === 0) {
+        toast.info("No hay nodos nuevos para agregar.");
+        return;
+      }
+
+      const titleSwal = newNodes.length === 1  ? "Agregando nodo..." : "Agregando nodos...";
+      const titleSwal2 = newNodes.length === 1 ? "Nodo agregado" : "Nodos agregados"
+      const numberExecuteNodesUp = checkedServers.filter(
+        n => !n.isNew && n.role === "exe"
+      ).length;
+
+      Swal.fire({
+        title: titleSwal,
+        text: "Por favor espera mientras Sideger escala tu clúster",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
+      const addNodesResponse = await addNewNodes(newNodes, resourcesUser, overlayNetworkName, swarmToken, numberExecuteNodesUp);
+      console.log(addNodesResponse)
+      setClusterNodesConfig(prev => [
+        ...prev,
+        ...addNodesResponse.map(n => n.config)
+      ]);
+
+
+      Swal.close();
+
+      await Swal.fire({
+        title: titleSwal2,
+        text: "Número de nodos del clúster actualizado",
+        icon: "success",
+        confirmButtonColor: "#0a913dff",
+      });
+
+      setCheckedServers(prev =>
+        prev.map(n =>
+          n.isNew ? { ...n, isNew: false } : n
+        )
+      );
+
+    } catch (err) {
+      Swal.close();
+      toast.error(err.message || "Error inesperado al agregar nodos");
+    }
+  };
 
   return (
     <Container maxWidth="xl" sx={{ mt: 2, mx: "auto" }} >
@@ -214,7 +264,13 @@ function InitializeCluster() {
             Para ver los recursos disponibles actualmente da click en el siguiente botón.
           </Typography>*/}
           <Button variant='contained' color='' disabled={loading} onClick={fetchData} sx={{ minWidth: 150 }}>
-            {loading ? <CircularProgress size={24} color="inherit" /> : 'Ver Recursos'}
+            {loading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : clusterState === "active" ? (
+              "Actualizar recursos"
+            ) : (
+              "Ver Recursos"
+            )}
           </Button>
         </Grid>
         
@@ -224,9 +280,9 @@ function InitializeCluster() {
           <Grid container spacing={2}>
             <Grid item size={{ xs:6, md:6.5}}>
               <Typography variant="body1" sx={{ mb: 2 }}>
-                <strong>Automática:</strong> Sideger elige recursos y sus roles, solamente debes ingresar el número de recursos a utilizar. <br/>
-                <strong>Manual:</strong> Tú eliges los recursos que quieras usar, así como sus roles, hazlo desde las cuadrillas inferiores. <br/>
-                <strong>Nombre:</strong> Ingresa un nombre para identificar tu cluster
+                <Typography component="span" fontWeight={550}>Automática:</Typography> Sideger elige recursos y sus roles, solamente debes ingresar el número de recursos a utilizar. <br/>
+                <Typography component="span" fontWeight={550}>Manual:</Typography> Tú eliges los recursos que quieras usar, así como sus roles, hazlo desde las cuadrillas inferiores. <br/>
+                <Typography component="span" fontWeight={550}>Nombre:</Typography> Ingresa un nombre para identificar tu cluster
               </Typography>
             </Grid>
 
@@ -282,7 +338,7 @@ function InitializeCluster() {
                 <TextField
                   required
                   error={Boolean(clusterNameNotFilled)}
-                  label="Nombre del Clúster"
+                  label="Nombre del clúster"
                   variant="outlined"
                   size="small"
                   fullWidth
@@ -370,15 +426,27 @@ function InitializeCluster() {
       <Grid container spacing={2} sx={{ mb: 2}}>
         <Grid item size={12} >
           <Box sx={{ mt: 3, textAlign: 'center' }}>
-            <Button
-              variant="contained"
-              color="black"
-              onClick={confirmClusterDeployment}
-              disabled={checkedServers.length < 3 || checkedServers.some(s => !s.role) || deployingCluster}
-              sx={{ minWidth: 160 }}
-            >
-              Inicializar Clúster
-            </Button>
+            {clusterState !== "active" ? (
+              <Button
+                variant="contained"
+                color="black"
+                onClick={confirmClusterDeployment}
+                disabled={checkedServers.length < 3 || checkedServers.some(s => !s.role) || deployingCluster}
+                sx={{ minWidth: 160 }}
+              >
+                Inicializar Clúster
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                color="black"
+                onClick={handleAddNodes}   // <-- Nuevo handler
+                disabled={checkedServers.some(s => !s.role)}  
+                sx={{ minWidth: 160 }}
+              >
+                Agregar nodo(s)
+              </Button>
+            )}
           </Box>
         </Grid>
       </Grid>

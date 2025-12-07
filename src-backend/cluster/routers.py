@@ -2,8 +2,9 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
-from cluster.schemas import NodeRole, ShutdownRequest, ShutdownNodeResult, ClusterInitRequest, ClusterSaveData
-from cluster.deploy import initialize_cluster
+from cluster.schemas import NodeRole, ShutdownRequest, ShutdownNodeResult, ClusterInitRequest, ClusterSaveData, \
+    ClusterAddNodes, InitializeClusterResponse, ClusterNodeResult
+from cluster.deploy import initialize_cluster, add_new_nodes
 from cluster.shutdown import shutdown_cluster, update_shutdown_field
 from user_data.models import Cluster
 from core import security, database
@@ -12,10 +13,20 @@ import pytz
 
 router = APIRouter()
 
-@router.post("/initialize")
+@router.post("/initialize", response_model=InitializeClusterResponse)
 async def initialize_cluster_endpoint(req: ClusterInitRequest):
     try:
         result = initialize_cluster(req.nodes, req.resources_user, req.onetwork_name)
+        print(result)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error initializing cluster{str(e)}")
+
+
+@router.post("/add-nodes", response_model=List[ClusterNodeResult])
+async def add_new_nodes_endpoint(req: ClusterAddNodes):
+    try:
+        result = add_new_nodes(req.nodes, req.resources_user, req.onetwork_name, req.token, req.n_execute_nodes)
         print(result)
         return result
     except Exception as e:

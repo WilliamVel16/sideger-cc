@@ -23,11 +23,19 @@ class ClusterInitRequest(BaseModel):
     nodes: List[NodeRole]
     resources_user: str
     onetwork_name: str
+
+class ClusterAddNodes(ClusterInitRequest):
+    token: str
+    n_execute_nodes: int
     
 
 class ClusterNodeResult(BaseModel):
-    message : str 
+    message : str
     config: ContainerConfig
+
+class InitializeClusterResponse(BaseModel):
+    nodes: List[ClusterNodeResult]
+    token: str
 
 
 class ShutdownNodeResult(BaseModel):
