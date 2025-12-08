@@ -19,7 +19,7 @@ import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 
 export default function FinishedJobs() {
-  const { sessionJobsSubmitted, token, submitContainerName, currentClusterId } = useAppContext();
+  const { sessionJobsSubmitted, token, submitContainerName, currentClusterId, savedJobs, setSavedJobs } = useAppContext();
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [savingId, setSavingId] = useState(null);
@@ -70,9 +70,9 @@ export default function FinishedJobs() {
   const handleSaveJob = async (batch) => {
     setLoading(true)
     try {
-      console.log("BATCH",batch)
       const payload = buildPayload(batch);
       await saveJob(payload);
+      setSavedJobs(prev => [...prev, batch.batch_name]);
       
       const result = await Swal.fire({
       title: 'Trabajo Guardado',
@@ -87,7 +87,7 @@ export default function FinishedJobs() {
     } 
     } catch (err) {
       console.error(err);
-      alert("Error saving job");
+      toast.error(`Error guardando el trabajo: ${err}`);
     } finally {
       setSavingId(null);
       setLoading(false);
@@ -273,13 +273,18 @@ export default function FinishedJobs() {
                   {/* save job - download job */}
                   <Button
                     variant="contained"
-                    color="error"
+                    color=""
                     fullWidth
-                    disabled={savingId === selectedBatch.batch_name}
+                    disabled={
+                      savingId === selectedBatch.batch_name ||
+                      savedJobs.includes(selectedBatch.batch_name)
+                    }
                     onClick={() => handleSaveJob(selectedBatch)}
-                    sx={{ mt: 2, alignSelf: "center", width: "40%"}}
+                    sx={{ mt: 2, alignSelf: "center", width: "40%" }}
                   >
-                    {savingId === selectedBatch.batch_name ? "Guardando..." : "Guardar este trabajo"}
+                    {savedJobs.includes(selectedBatch.batch_name) ? "Guardado"
+                      : savingId === selectedBatch.batch_name ? "Guardando..." : "Guardar este trabajo"
+                    }
                   </Button>
                   <Button
                     variant="outlined"

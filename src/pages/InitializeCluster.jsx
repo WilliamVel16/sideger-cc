@@ -10,11 +10,11 @@ import AddIcon from '@mui/icons-material/Add';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import { ToastContainer, toast } from 'react-toastify'
-import { showResourcesSpecs, initializeCluster, showMySpecs, saveClusterInformation, addNewNodes } from "../utils/tauriApi";
+import { scanLanResources, showResourcesSpecs, initializeCluster, showMySpecs, saveClusterInformation, addNewNodes } from "../utils/tauriApi";
 import { useAppContext } from '../context/AppContext';
 import Swal from 'sweetalert2';
 import { useNavigate } from "react-router";
-
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
 function InitializeCluster() {
   const {
@@ -27,7 +27,6 @@ function InitializeCluster() {
   const [sysDefineAll, setSysDefineAll] = useState(false);
   const [numExecutionNodes, setNumExecutionNodes] = useState(1);
   const [sysDefineResources, setSysDefineResources] = useState(false);
-  const [keepCluster, setKeepCluster] = useState(false);
   const [deployStatus, setDeployStatus] = useState(""); // "" | "idle" | "success" | "error"
   const [errorDeploy, setErrorDeploy] = useState("")
   const [clusterNameNotFilled, setClusterNameNotFilled] = useState(false);
@@ -143,7 +142,6 @@ function InitializeCluster() {
         setErrorDeploy(err.message || "Error no resuelto al guardar información del clúster");
         toast.error(err.message || "Error no resuelto al guardar información del clúster");
       }
-
       Swal.close();
 
       await Swal.fire({
@@ -165,10 +163,18 @@ function InitializeCluster() {
   };
 
   const confirmClusterDeployment = async () => {
+    const nameRegex = /^[A-Za-z0-9_-]+$/;
+
     if (!overlayNetworkName.trim()) {
       setClusterNameNotFilled(true);
       toast.error("Debes ingresar un nombre para el clúster");
       console.log("1")
+      return;
+    }
+
+    if (!nameRegex.test(overlayNetworkName)) {
+      setClusterNameNotFilled(true);
+      toast.error("Nombre inválido: usa solo letras, números, guion (-) y guion bajo (_).");
       return;
     }
 
@@ -226,8 +232,6 @@ function InitializeCluster() {
         ...prev,
         ...addNodesResponse.map(n => n.config)
       ]);
-
-
       Swal.close();
 
       await Swal.fire({
@@ -251,7 +255,7 @@ function InitializeCluster() {
 
   return (
     <Container maxWidth="xl" sx={{ mt: 2, mx: "auto" }} >
-      <Grid container spacing={4} sx={{ mb: 4 }}>
+      <Grid container spacing={4} sx={{ mb: 1 }}>
         {/* information + instructions */}
         <Grid item size={{ xs: 6, md: 4}}>
           <Typography variant="h6" mb={1}> Información </Typography>
@@ -260,18 +264,6 @@ function InitializeCluster() {
             los recursos y sus roles por tí, sin embargo, tienes la oportunidad de elegirlos tú mismo. Ten presente las
             opciones y gestiona el cluster según tus necesidades.<br/>
           </Typography>
-          {/*<Typography variant="body1" sx={{ mb: 2 }}>
-            Para ver los recursos disponibles actualmente da click en el siguiente botón.
-          </Typography>*/}
-          <Button variant='contained' color='' disabled={loading} onClick={fetchData} sx={{ minWidth: 150 }}>
-            {loading ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : clusterState === "active" ? (
-              "Actualizar recursos"
-            ) : (
-              "Ver Recursos"
-            )}
-          </Button>
         </Grid>
         
         <Grid item size={{ xs:6, md:8}}>
@@ -282,7 +274,7 @@ function InitializeCluster() {
               <Typography variant="body1" sx={{ mb: 2 }}>
                 <Typography component="span" fontWeight={550}>Automática:</Typography> Sideger elige recursos y sus roles, solamente debes ingresar el número de recursos a utilizar. <br/>
                 <Typography component="span" fontWeight={550}>Manual:</Typography> Tú eliges los recursos que quieras usar, así como sus roles, hazlo desde las cuadrillas inferiores. <br/>
-                <Typography component="span" fontWeight={550}>Nombre:</Typography> Ingresa un nombre para identificar tu cluster
+                <Typography component="span" fontWeight={550}>Nombre:</Typography> Ingresa un nombre para tu clúster, por favor lee el tooltip (i).
               </Typography>
             </Grid>
 
@@ -335,26 +327,50 @@ function InitializeCluster() {
                 />
               </FormGroup>
               <FormGroup sx={{ mb: 2 }}>
-                <TextField
-                  required
-                  error={Boolean(clusterNameNotFilled)}
-                  label="Nombre del clúster"
-                  variant="outlined"
-                  size="small"
-                  fullWidth
-                  value={overlayNetworkName}
-                  onChange={(e) => {
-                    setOverlayNetworkName(e.target.value);
-                    if (e.target.value.trim()) setClusterNameNotFilled(false);
-                  }}
-                />
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2}}>
+                  <TextField
+                    required
+                    error={Boolean(clusterNameNotFilled)}
+                    label="Nombre (sin espacios)"
+                    variant="outlined"
+                    size="small"
+                    fullWidth
+                    value={overlayNetworkName}
+                    onChange={(e) => {
+                      setOverlayNetworkName(e.target.value);
+                      if (e.target.value.trim()) setClusterNameNotFilled(false);
+                    }}
+                  />
+                  <Tooltip title="Sólo texto (sin ñ), números, guion (-) y guion bajo (_)." arrow>
+                    <IconButton size='medium' sx={{ ml: 1, color: "primary.main", p: 0.5 }}>
+                      <InfoOutlinedIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
               </FormGroup>
             </Grid>
           </Grid>
         </Grid>
       </Grid>
 
-      <Grid container direction="row" spacing={2} sx={{ mb: 4, alignItems: "stretch" }}>
+
+      <Button variant='contained' color='' disabled={loading} onClick={fetchData} sx={{ minWidth: 150 }}>
+        {loading ? (
+          <CircularProgress size={24} color="inherit" />
+        ) : clusterState === "active" ? (
+          "Ver nuevos recursos"
+        ) : (
+          "Ver Recursos"
+        )}
+      </Button>
+      {clusterState === "active" && (
+        <Typography variant="body1" color='gray' sx={{ mt: 2, textAlign: "center" }} >
+          Para ver recursos encendidos recientemente, ve a la sección "Recursos", realiza la búsqueda, regresa a esta sección
+          y lanza "ver nuevos recursos."
+        </Typography>
+      )}
+
+      <Grid container direction="row" spacing={2} sx={{ mt: 2, mb: 4, alignItems: "stretch" }}>
         {/* available resources */}
         <Grid item size={{ xs: 12, md: 6}}>
           <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
@@ -434,17 +450,17 @@ function InitializeCluster() {
                 disabled={checkedServers.length < 3 || checkedServers.some(s => !s.role) || deployingCluster}
                 sx={{ minWidth: 160 }}
               >
-                Inicializar Clúster
+                Inicializar clúster
               </Button>
             ) : (
               <Button
                 variant="contained"
                 color="black"
-                onClick={handleAddNodes}   // <-- Nuevo handler
+                onClick={handleAddNodes}  
                 disabled={checkedServers.some(s => !s.role)}  
                 sx={{ minWidth: 160 }}
               >
-                Agregar nodo(s)
+                Agregar nodo(s) al clúster
               </Button>
             )}
           </Box>

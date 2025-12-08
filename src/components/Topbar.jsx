@@ -15,7 +15,8 @@ function Topbar() {
   const { logout } = useAuth();
   const { clusterState, setClusterState, setClusterNodesConfig, setSubmitContainerName,
     setOverlayNetworkName, setResourcesIPs, clusterNodesConfig, currentClusterId,
-    setSessionJobsSubmitted, setCurrentClusterId, setClusterActiveInfo, setCheckedServers, setServers
+    setSessionJobsSubmitted, setCurrentClusterId, setClusterActiveInfo, setCheckedServers,
+    setServers, setSavedJobs
   } = useAppContext();
   const [anchorMenu, setAnchorMenu] = useState(null);
   const [anchorNotif, setAnchorNotif] = useState(null);
@@ -124,6 +125,7 @@ function Topbar() {
       setResourcesIPs([])
       setServers([])
       setCheckedServers([])
+      setSavedJobs([])
       setClusterActiveInfo({
         numberNodes: 0,
         createdAt: null,

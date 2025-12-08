@@ -17,6 +17,7 @@ export const AppProvider = ({ children }) => {
   const [servers, setServers] = usePersistentState("servers", []);
   const [checkedServers, setCheckedServers] = usePersistentState("checkedServers", []);
   const [swarmToken, setSwarmToken] = usePersistentState("swarmToken", "");
+  const [savedJobs, setSavedJobs] = useState([]);
   const [clusterActiveInfo, setClusterActiveInfo] = usePersistentState("clusterActiveInfo", {
     numberNodes: 0,
     createdAt: null,
@@ -42,7 +43,8 @@ export const AppProvider = ({ children }) => {
         clusterActiveInfo, setClusterActiveInfo,
         servers, setServers,
         checkedServers, setCheckedServers,
-        swarmToken, setSwarmToken
+        swarmToken, setSwarmToken,
+        savedJobs, setSavedJobs
         }}
       >
         { children }
