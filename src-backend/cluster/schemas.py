@@ -5,6 +5,13 @@ class NodeRole(BaseModel):
     ip: str
     role: str
 
+class AutoAssignRequest(BaseModel):
+    available_nodes: List[str]
+    num_nodes_to_use: int
+    resources_user: str
+
+class AutoAssignResponse(BaseModel):
+    selected_nodes: List[NodeRole]
 
 class ContainerConfig(BaseModel):
     ip: str

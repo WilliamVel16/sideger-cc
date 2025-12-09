@@ -48,6 +48,48 @@ def show_resources_specs(resources_ips: List[str], resources_user: str) -> Union
     return all_resources_info
 
 
+def get_min_specs(nodes_ips: List[str], resources_user: str) -> List[dict]:
+    '''
+    this function permits asign roles automaticaly to deploy the cluster
+    
+    params:
+        - nodes_ips (List[str]): list of the nodes that can be selected to deploy the cluster
+        - param resources_user: Descripción
+    return List[{ip:, ram:, cpu:},]: list of the nodes with the information to asign roles
+    '''
+    script_path = Path("scripts/utils/min_specs.sh")
+    if not script_path.exists():
+        raise HTTPException(status_code=404, detail=f"Script not found: {script_path}")
+
+    collected_specs = []
+
+    for ip in nodes_ips:
+        try:
+            with open(script_path, "rb") as script_file:
+                result = subprocess.run(
+                    ["ssh", f"{resources_user}@{ip}", "bash -s"],
+                    input=script_file.read(),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE
+                )
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Failed SSH to {ip}: {e}")
+
+        if result.returncode != 0:
+            raise HTTPException(status_code=500, detail=f"SSH to {ip} failed: {result.stderr.decode()}")
+
+        stdout = result.stdout.decode()
+
+        try:
+            node_specs = json.loads(stdout)
+            node_specs["ip"] = ip
+            collected_specs.append(node_specs)
+        except json.JSONDecodeError as e:
+            raise HTTPException(status_code=500, detail=f"Invalid JSON from {ip}: {stdout}")
+    return collected_specs
+
+
+
 def show_my_specs(interface_lan_name: str) -> Union[dict, str]:
     """
     This function permits getting the software and hardware characteristics

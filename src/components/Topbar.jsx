@@ -16,7 +16,7 @@ function Topbar() {
   const { clusterState, setClusterState, setClusterNodesConfig, setSubmitContainerName,
     setOverlayNetworkName, setResourcesIPs, clusterNodesConfig, currentClusterId,
     setSessionJobsSubmitted, setCurrentClusterId, setClusterActiveInfo, setCheckedServers,
-    setServers, setSavedJobs
+    setServers, setSavedJobs, setAutoAssigned
   } = useAppContext();
   const [anchorMenu, setAnchorMenu] = useState(null);
   const [anchorNotif, setAnchorNotif] = useState(null);
@@ -126,6 +126,7 @@ function Topbar() {
       setServers([])
       setCheckedServers([])
       setSavedJobs([])
+      setAutoAssigned(false)
       setClusterActiveInfo({
         numberNodes: 0,
         createdAt: null,

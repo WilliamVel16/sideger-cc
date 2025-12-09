@@ -4,6 +4,7 @@ import subprocess
 from containers.nodes import create_container_config, run_single_node
 from htcondor.daemons import start_condor_master
 from resources.onet import create_overlay_network, init_swarm_manager, get_worker_token, join_as_worker
+from resources.manage_resources import get_min_specs
 from fastapi import HTTPException
 
 def initialize_cluster(nodes: List[NodeRole], resources_user: str, onetwork_name: str) -> InitializeClusterResponse:
@@ -82,8 +83,41 @@ def initialize_cluster(nodes: List[NodeRole], resources_user: str, onetwork_name
             message=f"Container {config.container_name} with role {config.role} deployed and condor_master started.",
             config=config
         ))
-
     return { "nodes": results, "token": token }
+
+
+def auto_assign_nodes(available_nodes: List[str], num_nodes_to_use: int, resources_user: str) -> AutoAssignResponse:
+    """
+    assings the role to every node to deploy the new cluster
+
+    Args:
+        available_nodes (List[str]): A list of the resources IPs
+        num_nodes_to_use (int): The number of the resources selected by the user to use them in the cluster
+        resources_user (str): User from the remote resources to connect using ssh
+
+    returns:
+        List[{node:, role:},]: a list of the resources with the roels assigned
+
+    raises:
+        HTTPException: if there aren't the minimum resources quantity to use in the cluster
+    """
+
+    if len(available_nodes) < 2:
+        raise HTTPException(status_code=400, detail="there aren't minimum number nodes")
+    
+    # get the specs of all resources
+    specs = get_min_specs(available_nodes, resources_user)
+
+    # ordering - criteria: RAM, CPU respectively
+    ordered = sorted(specs, key=lambda n: (-n["ram_mb"], -n["cpu"], n["ip"]))
+
+    # choose CM node and EXE nodes
+    cm_node = ordered[0]
+    exe_nodes = ordered[1:num_nodes_to_use]
+
+    selected = [NodeRole(ip=cm_node["ip"], role="cm")]
+    selected.extend([NodeRole(ip=n["ip"], role=n["exe"]) for n in exe_nodes])
+    return AutoAssignResponse(selected_nodes=selected)
 
 
 def add_new_nodes(nodes: List[NodeRole], resources_user: str, onetwork_name: str, token:str, n_execute_nodes: int) -> List[ClusterNodeResult]:
@@ -142,5 +176,4 @@ def add_new_nodes(nodes: List[NodeRole], resources_user: str, onetwork_name: str
             message=f"Container {config.container_name} with role {config.role} added and condor_master started.",
             config=config
         ))
-
     return results

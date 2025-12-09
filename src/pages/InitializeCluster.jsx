@@ -10,7 +10,7 @@ import AddIcon from '@mui/icons-material/Add';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import { ToastContainer, toast } from 'react-toastify'
-import { scanLanResources, showResourcesSpecs, initializeCluster, showMySpecs, saveClusterInformation, addNewNodes } from "../utils/tauriApi";
+import { showResourcesSpecs, initializeCluster, showMySpecs, saveClusterInformation, addNewNodes, getAutomaticRoles } from "../utils/tauriApi";
 import { useAppContext } from '../context/AppContext';
 import Swal from 'sweetalert2';
 import { useNavigate } from "react-router";
@@ -20,13 +20,12 @@ function InitializeCluster() {
   const {
     resourcesIPs, resourcesUser, clusterState, setClusterState, LANname, setClusterNodesConfig,
     overlayNetworkName, setOverlayNetworkName, setSubmitContainerName, setCurrentClusterId,
-    setClusterActiveInfo, checkedServers, setCheckedServers, servers, setServers, swarmToken, setSwarmToken
+    setClusterActiveInfo, checkedServers, setCheckedServers, servers, setServers, swarmToken, setSwarmToken,
+    autoAssigned, setAutoAssigned, sysDefineAll, setSysDefineAll
   } = useAppContext();
   const [loading, setLoading] = useState(false);
   const [deployingCluster, setDeployingCluster] = useState(false)
-  const [sysDefineAll, setSysDefineAll] = useState(false);
-  const [numExecutionNodes, setNumExecutionNodes] = useState(1);
-  const [sysDefineResources, setSysDefineResources] = useState(false);
+  const [numNodesToUse, setNumNodesToUse] = useState(2);
   const [deployStatus, setDeployStatus] = useState(""); // "" | "idle" | "success" | "error"
   const [errorDeploy, setErrorDeploy] = useState("")
   const [clusterNameNotFilled, setClusterNameNotFilled] = useState(false);
@@ -107,6 +106,46 @@ function InitializeCluster() {
       console.error("Error guardando información del cluster:", err);
     }
   }
+
+  // sends the request to the system choose the cluster config automaticaly
+  const handleAutomaticAssignment = async () => {
+    try {
+      if (!sysDefineAll) return;
+
+      Swal.fire({
+        title: "Asignando roles...",
+        text: "El sistema está determinando el nodo Central Manager y los nodos Execute.",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+
+      const response = await getAutomaticRoles(servers.map(s => s.ip), numNodesToUse, resourcesUser);
+
+      const mergedSelectedNodes = response.selected_nodes.map(n => {
+        const originalNode = servers.find(s => s.ip === n.ip);
+        return { ...originalNode, role: n.role };
+      });
+
+      setCheckedServers(prev => [...prev, ...fullMerged]);
+      setServers(prev => prev.filter(s => !mergedSelectedNodes.some(f => f.ip === s.ip)));
+      setAutoAssigned(true);
+      
+      Swal.fire({
+        icon: "success",
+        title: "Asignación completada",
+        text: "Los roles fueron asignados automáticamente, inicializa el clúster",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      toast.error(`Error asignando roles automáticamente ${err}`);
+      console.error(err);
+    }
+  };
+
 
   // sends the request ([{ip, role},]) to asign roles to every selected resource
   // and start cluster
@@ -287,9 +326,11 @@ function InitializeCluster() {
                       control={
                         <Switch
                           checked={sysDefineAll}
-                          onChange={(e) => setSysDefineAll(e.target.checked)}
+                          onChange={(e) => {
+                            setSysDefineAll(e.target.checked)
+                          }}
                           size="small"
-                          disabled={sysDefineResources}
+                          disabled={sysDefineAll}
                         />
                       }
                       label="Automática"
@@ -299,9 +340,9 @@ function InitializeCluster() {
                     <Grid item xs={5}>
                       <FormControl size="small">
                         <Select
-                          value={numExecutionNodes}
+                          value={numNodesToUse}
                           size="small"
-                          onChange={(e) => setNumExecutionNodes(parseInt(e.target.value))}
+                          onChange={(e) => setNumNodesToUse(parseInt(e.target.value))}
                           fullWidth
                         >
                           {Array.from({ length: servers.length - 2 }, (_, i) => (
@@ -317,10 +358,10 @@ function InitializeCluster() {
                 <FormControlLabel
                   control={
                     <Switch
-                      checked={sysDefineResources}
-                      onChange={(e) => setSysDefineResources(e.target.checked)}
+                      checked={!sysDefineAll}
+                      onChange={(e) => setSysDefineAll(!e.target.checked)}
                       size="small"
-                      disabled={sysDefineAll}
+                      disabled={!sysDefineAll}
                     />
                   }
                   label="Manual"
@@ -443,15 +484,47 @@ function InitializeCluster() {
         <Grid item size={12} >
           <Box sx={{ mt: 3, textAlign: 'center' }}>
             {clusterState !== "active" ? (
-              <Button
-                variant="contained"
-                color="black"
-                onClick={confirmClusterDeployment}
-                disabled={checkedServers.length < 3 || checkedServers.some(s => !s.role) || deployingCluster}
-                sx={{ minWidth: 160 }}
-              >
-                Inicializar clúster
-              </Button>
+              <>
+                {/* automatic config */}
+                {sysDefineAll && !autoAssigned && (
+                  <Button
+                    variant="contained"
+                    color=""
+                    onClick={handleAutomaticAssignment}
+                    disabled={servers.length < numNodesToUse}
+                    sx={{ minWidth: 200 }}
+                  >
+                    Enviar solicitud de eleccion automatica
+                  </Button>
+                )}
+
+                {sysDefineAll && autoAssigned && (
+                  <Button
+                    variant="contained"
+                    color=""
+                    onClick={confirmClusterDeployment}
+                    sx={{ minWidth: 200 }}
+                  >
+                    Inicializar clúster
+                  </Button>
+                )}
+
+                {/* manual config */}
+                {!sysDefineAll && (
+                  <Button
+                    variant="contained"
+                    color=""
+                    onClick={confirmClusterDeployment}
+                    disabled={
+                      checkedServers.length < 3 ||
+                      checkedServers.some((s) => !s.role)
+                    }
+                    sx={{ minWidth: 200 }}
+                  >
+                    Inicializar clúster
+                  </Button>
+                )}
+              </>
             ) : (
               <Button
                 variant="contained"

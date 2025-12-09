@@ -15,16 +15,3 @@ def specs_all(req: ResourcesDataRequest):
 def specs_self(interface_lan_name: str):
     return show_my_specs(interface_lan_name)
 
-"""
-@router.post("/create-onet", response_model=str)
-def create_onet(manager_ip: str, user: str, onet_name: str) -> str:
-    return create_overlay_network(manager_ip, user, onet_name)
-
-@router.post("/remove-onet", response_model=str)
-def remoeve_onet(container_config: ContainerConfig) -> str:
-    return remove_overlay_network(container_config)
-
-@router.post("/leave-swarm", response_model=str)
-def leave_swarm(container_config: ContainerConfig) -> str:
-    return leave_swarm(container_config)
-    """

@@ -2,9 +2,9 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
-from cluster.schemas import NodeRole, ShutdownRequest, ShutdownNodeResult, ClusterInitRequest, ClusterSaveData, \
-    ClusterAddNodes, InitializeClusterResponse, ClusterNodeResult
-from cluster.deploy import initialize_cluster, add_new_nodes
+from cluster.schemas import ShutdownRequest, ShutdownNodeResult, ClusterInitRequest, ClusterSaveData, \
+    ClusterAddNodes, InitializeClusterResponse, ClusterNodeResult, AutoAssignRequest, AutoAssignResponse
+from cluster.deploy import initialize_cluster, add_new_nodes, auto_assign_nodes
 from cluster.shutdown import shutdown_cluster, update_shutdown_field
 from user_data.models import Cluster
 from core import security, database
@@ -12,6 +12,15 @@ from datetime import datetime
 import pytz
 
 router = APIRouter()
+
+@router.post("/auto-assign-nodes", response_model=AutoAssignResponse)
+async def auto_assign_nodes_endpoint(req: AutoAssignRequest):
+    try:
+        result = auto_assign_nodes(req.available_nodes, req.num_nodes_to_use, req.resources_user)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error auto-assigning nodes: {str(e)}")
+
 
 @router.post("/initialize", response_model=InitializeClusterResponse)
 async def initialize_cluster_endpoint(req: ClusterInitRequest):
@@ -48,7 +57,7 @@ async def shutdown_cluster_endpoint(request: ShutdownRequest, db: Session = Depe
     try:
         result = shutdown_cluster(request.nodes)
         save_result = update_shutdown_field(request.cluster_id, db)
-        print("SHUTDOWN AND SAVE RESULT",result, save_result)
+        print("shutdown and save result:", result, save_result)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
