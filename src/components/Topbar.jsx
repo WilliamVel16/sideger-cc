@@ -53,8 +53,8 @@ function Topbar() {
       showCancelButton: true,
       confirmButtonText: "Sí, cerrar sesión",
       cancelButtonText: "Cancelar acción",
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
+      confirmButtonColor: "#0a913dff",
+      cancelButtonColor: "#b61010ff",
     });
 
     if (result.isConfirmed) {
@@ -183,7 +183,7 @@ function Topbar() {
     title: "Acción no permitida",
     text: `${msg} Por favor, da de baja el clúster antes de continuar.`,
     confirmButtonText: "Entendido",
-    confirmButtonColor: "#3085d6",
+    confirmButtonColor: "#0a913dff",
   });
 };
 

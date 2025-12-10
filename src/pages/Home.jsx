@@ -36,7 +36,7 @@ export default function HomePage() {
   const [openHotToUse, setOpenHowToUse] = useState(false);
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState([]);
-  let navigate = useNavigate();
+  const navigate = useNavigate();
 
 
   useEffect(() => {
@@ -213,7 +213,7 @@ export default function HomePage() {
                   variant="contained"
                   size="small"
                   color=""
-                  onClick={() => (toast.success("yendo a new job..."))}
+                  onClick={() => navigate("/jobs/new")}
                 >
                   Enviar trabajo
                 </Button>
@@ -223,7 +223,7 @@ export default function HomePage() {
                   variant="contained"
                   size="small"
                   color=""
-                  onClick={() => (toast.success("yendo a jobs en cola..."))}
+                  onClick={() => navigate("/jobs/queue")}
                 >
                   Ver jobs en cola
                 </Button>
@@ -235,7 +235,7 @@ export default function HomePage() {
               variant="contained"
               size="small"
               color=""
-              onClick={() => navigate("registers/jobs")}
+              onClick={() => navigate("/registers/jobs")}
             >
               Ver historial de clusters
             </Button>

@@ -12,6 +12,7 @@ import { useAppContext } from "../context/AppContext";
 import { jobsQueue, getJobInformation, removeSpecificJob, removeBatch } from "../utils/tauriApi";
 import { toast } from "react-toastify";
 import Swal from 'sweetalert2';
+import { useNavigate } from "react-router";
 
 function JobQueue() {
   const { clusterNodesConfig, sessionJobsSubmitted, setSessionJobsSubmitted, submitContainerName, setClusterActiveInfo, clusterState } = useAppContext();
@@ -19,6 +20,7 @@ function JobQueue() {
   const [batchName, setBatchName] = useState("");
   const [jobInfo, setJobInfo] = useState(null);
   const intervalRef = useRef(null)
+  const navigate = useNavigate()
   const [jobsData, setJobsData] = useState({
     timerequest: null,
     batches: [],
@@ -196,7 +198,7 @@ function JobQueue() {
         Estado de la Cola de Trabajos
       </Typography>
 
-      {jobsData.totals.total === 0 && (
+      {jobsData.totals.total_jobs === 0 && (
         <Paper
           elevation={2}
           sx={{ p: 3, textAlign: "center", mt: 3 }}
@@ -213,7 +215,7 @@ function JobQueue() {
               <Button
                 variant="contained"
                 color=""
-                onClick={() => window.location.href = "/jobs/new"}
+                onClick={() => navigate("/jobs/new")}
               >
                 Enviar trabajos
               </Button>
@@ -226,7 +228,7 @@ function JobQueue() {
               <Button
                 variant="contained"
                 color=""
-                onClick={() => window.location.href = "/initialize-cluster"}
+                onClick={() => navigate("/initialize-cluster")}
               >
                 Desplegar clúster
               </Button>

@@ -55,8 +55,13 @@ function InitializeCluster() {
     try {
       const resourcesData = await showResourcesSpecs(resourcesIPs, resourcesUser);
       const myData = await showMySpecs(LANname);
-      setServers(resourcesData);
-      setCheckedServers([...checkedServers, {...myData, role: "sub"}]);
+      setServers(resourcesData.filter(r =>
+        !checkedServers.some(c => c.ip === r.ip)
+      ));
+      setCheckedServers(prev => {
+        const alreadyHasSubmit = prev.some(s => s.role === "sub");
+        return alreadyHasSubmit ? prev : [...prev, { ...myData, role: "sub" }];
+      });
     } catch (err) {
       console.error("Script error showResourcesSpecs: ", err);
     }
@@ -122,6 +127,7 @@ function InitializeCluster() {
         },
       });
 
+      console.log(servers.map(s => s.ip))
       const response = await getAutomaticRoles(servers.map(s => s.ip), numNodesToUse, resourcesUser);
 
       const mergedSelectedNodes = response.selected_nodes.map(n => {
@@ -129,7 +135,7 @@ function InitializeCluster() {
         return { ...originalNode, role: n.role };
       });
 
-      setCheckedServers(prev => [...prev, ...fullMerged]);
+      setCheckedServers(prev => [...prev, ...mergedSelectedNodes]);
       setServers(prev => prev.filter(s => !mergedSelectedNodes.some(f => f.ip === s.ip)));
       setAutoAssigned(true);
       
@@ -159,7 +165,7 @@ function InitializeCluster() {
       setClusterNodesConfig(initializeResponse.nodes.map(node => node.config));
       setSwarmToken(initializeResponse.token);
 
-      const submitContainer = initializeResponse
+      const submitContainer = initializeResponse.nodes
         .filter(node => node.config.container_name.startsWith("sub_"))
         .map(node => node.config.container_name);
 
@@ -247,7 +253,7 @@ function InitializeCluster() {
     try {
       const newNodes = checkedServers.filter(n => n.isNew && n.role && n.role.trim() !== "");
       if (newNodes.length === 0) {
-        toast.info("No hay nodos nuevos para agregar.");
+        toast.info(`No hay nodos nuevos en "Recursos a usar"`);
         return;
       }
 
@@ -265,12 +271,30 @@ function InitializeCluster() {
         didOpen: () => Swal.showLoading(),
       });
 
-      const addNodesResponse = await addNewNodes(newNodes, resourcesUser, overlayNetworkName, swarmToken, numberExecuteNodesUp);
+      const payloadNewNodes = newNodes.map(n => ({
+        ip: n.ip,
+        role: n.role
+      }));
+
+      const cmNode = checkedServers.find(n => n.role === "cm");
+      const payloadCmNode = cmNode ? { ip: cmNode.ip, role: cmNode.role } : null;
+
+      const payload = payloadCmNode
+      ? [payloadCmNode, ...payloadNewNodes]
+      : payloadNewNodes;
+
+      console.log("Payload enviado a addNewNodes:", payload);
+
+      const addNodesResponse = await addNewNodes(payload, resourcesUser, overlayNetworkName, swarmToken, numberExecuteNodesUp);
       console.log(addNodesResponse)
       setClusterNodesConfig(prev => [
         ...prev,
         ...addNodesResponse.map(n => n.config)
       ]);
+      setClusterActiveInfo(prev => ({
+        ...prev,                     
+        numberNodes: checkedServers.length,
+      }))
       Swal.close();
 
       await Swal.fire({
@@ -311,7 +335,7 @@ function InitializeCluster() {
           <Grid container spacing={2}>
             <Grid item size={{ xs:6, md:6.5}}>
               <Typography variant="body1" sx={{ mb: 2 }}>
-                <Typography component="span" fontWeight={550}>Automática:</Typography> Sideger elige recursos y sus roles, solamente debes ingresar el número de recursos a utilizar. <br/>
+                <Typography component="span" fontWeight={550}>Automática:</Typography> Sideger elige recursos y sus roles, sólo debes elegir el número de recursos disponibles a utilizar. <br/>
                 <Typography component="span" fontWeight={550}>Manual:</Typography> Tú eliges los recursos que quieras usar, así como sus roles, hazlo desde las cuadrillas inferiores. <br/>
                 <Typography component="span" fontWeight={550}>Nombre:</Typography> Ingresa un nombre para tu clúster, por favor lee el tooltip (i).
               </Typography>
@@ -345,7 +369,7 @@ function InitializeCluster() {
                           onChange={(e) => setNumNodesToUse(parseInt(e.target.value))}
                           fullWidth
                         >
-                          {Array.from({ length: servers.length - 2 }, (_, i) => (
+                          {Array.from({ length: servers.length }, (_, i) => (
                             <MenuItem key={i + 1} value={i + 1}> {i + 1} </MenuItem>
                           ))}
                         </Select>

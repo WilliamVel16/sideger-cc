@@ -107,16 +107,20 @@ def auto_assign_nodes(available_nodes: List[str], num_nodes_to_use: int, resourc
     
     # get the specs of all resources
     specs = get_min_specs(available_nodes, resources_user)
+    print(specs)
 
     # ordering - criteria: RAM, CPU respectively
     ordered = sorted(specs, key=lambda n: (-n["ram_mb"], -n["cpu"], n["ip"]))
+    print(ordered)
 
     # choose CM node and EXE nodes
     cm_node = ordered[0]
+    print("cm node: ", cm_node)
     exe_nodes = ordered[1:num_nodes_to_use]
+    print("exe nodes: ", exe_nodes)
 
     selected = [NodeRole(ip=cm_node["ip"], role="cm")]
-    selected.extend([NodeRole(ip=n["ip"], role=n["exe"]) for n in exe_nodes])
+    selected.extend([NodeRole(ip=n["ip"], role="exe") for n in exe_nodes])
     return AutoAssignResponse(selected_nodes=selected)
 
 
@@ -156,24 +160,25 @@ def add_new_nodes(nodes: List[NodeRole], resources_user: str, onetwork_name: str
     print("Adding node(s) with role 'execute'...")
     results = []
     for node in nodes:
-        n_execute_nodes += 1
-        hostname = f"{node.role}{n_execute_nodes}"
-        config = create_container_config(
-            ip=node.ip,
-            role=node.role,
-            onetwork_name=onetwork_name,
-            hostname=hostname,
-            user=resources_user
-        )
+        if node.ip != cm_node.ip:
+            n_execute_nodes += 1
+            hostname = f"{node.role}{n_execute_nodes}"
+            config = create_container_config(
+                ip=node.ip,
+                role=node.role,
+                onetwork_name=onetwork_name,
+                hostname=hostname,
+                user=resources_user
+            )
 
-        run_result = run_single_node(config)
-        print(f"[OK] (in run) {run_result}")
+            run_result = run_single_node(config)
+            print(f"[OK] (in run) {run_result}")
 
-        condor_result = start_condor_master(config)
-        print(f"[OK] (in condor): {condor_result}")
+            condor_result = start_condor_master(config)
+            print(f"[OK] (in condor): {condor_result}")
 
-        results.append(ClusterNodeResult(
-            message=f"Container {config.container_name} with role {config.role} added and condor_master started.",
-            config=config
-        ))
+            results.append(ClusterNodeResult(
+                message=f"Container {config.container_name} with role {config.role} added and condor_master started.",
+                config=config
+            ))
     return results
