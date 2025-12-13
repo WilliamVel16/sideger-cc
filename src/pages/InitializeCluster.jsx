@@ -200,8 +200,7 @@ function InitializeCluster() {
     } catch (err) {
       Swal.close();
       console.error("Error deploying:", err);
-      setErrorDeploy(err.message || "Error no resulto al desplegar el clúster");
-      toast.error(err.message || "Error no resulto al desplegar el clúster");
+      toast.error(err.message || "Error no resuelto al desplegar el clúster");
     } finally {
       setDeployingCluster(false);
     }
@@ -249,7 +248,7 @@ function InitializeCluster() {
     }
   };
 
-  const handleAddNodes = async () => {
+  const handleAddNodesToActiveCluster = async () => {
     try {
       const newNodes = checkedServers.filter(n => n.isNew && n.role && n.role.trim() !== "");
       if (newNodes.length === 0) {
@@ -383,7 +382,10 @@ function InitializeCluster() {
                   control={
                     <Switch
                       checked={!sysDefineAll}
-                      onChange={(e) => setSysDefineAll(!e.target.checked)}
+                      onChange={(e) => {
+                        setSysDefineAll(!e.target.checked)
+                        setAutoAssigned(false)
+                      }}
                       size="small"
                       disabled={!sysDefineAll}
                     />
@@ -527,6 +529,9 @@ function InitializeCluster() {
                     variant="contained"
                     color=""
                     onClick={confirmClusterDeployment}
+                    disabled={
+                      checkedServers.some((s) => !s.role)
+                    }
                     sx={{ minWidth: 200 }}
                   >
                     Inicializar clúster
@@ -553,7 +558,7 @@ function InitializeCluster() {
               <Button
                 variant="contained"
                 color="black"
-                onClick={handleAddNodes}  
+                onClick={handleAddNodesToActiveCluster}  
                 disabled={checkedServers.some(s => !s.role)}  
                 sx={{ minWidth: 160 }}
               >

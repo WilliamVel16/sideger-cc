@@ -198,7 +198,7 @@ function JobQueue() {
         Estado de la Cola de Trabajos
       </Typography>
 
-      {jobsData.totals.total_jobs === 0 && (
+      {jobsData.totals.total === 0 && (
         <Paper
           elevation={2}
           sx={{ p: 3, textAlign: "center", mt: 3 }}
@@ -237,7 +237,7 @@ function JobQueue() {
         </Paper>
       )}
 
-      {jobsData.totals.total_jobs > 0 && (
+      {jobsData.totals.total > 0 && (
         <>
           {jobsData.timerequest && (
             <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>

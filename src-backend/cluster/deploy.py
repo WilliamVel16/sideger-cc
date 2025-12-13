@@ -40,7 +40,7 @@ def initialize_cluster(nodes: List[NodeRole], resources_user: str, onetwork_name
 
     # step 2: get the worker join token to connect Workers to the Swarm Manager 
     token = get_worker_token(cm_node.ip, resources_user)
-    print(f"this is the token: {token}")
+    print(f"token: {token}")
 
     # step 3: connects all the workers(submit or execute from condor) to Swarm Manager
     for node in nodes:
