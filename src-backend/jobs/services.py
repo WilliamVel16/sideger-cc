@@ -224,6 +224,7 @@ async def remove_job_service(job_id: str, submit_container_name: str):
     if process.returncode != 0:
         raise HTTPException(status_code=500, detail=f"Error trying delete the job: {stderr.decode().strip()}")
 
+    print({"message": f"Trabajo {job_id} eliminado correctamente", "stdout": stdout.decode().strip()})
     return {"message": f"Trabajo {job_id} eliminado correctamente", "stdout": stdout.decode().strip()}
 
 
@@ -242,4 +243,5 @@ async def remove_batch_service(batch_name: str, submit_container_name: str):
     if process.returncode != 0:
         raise HTTPException(status_code=500, detail=f"Error al eliminar lote: {stderr.decode().strip()}")
 
+    print({"message": f"Lote {batch_name} eliminado correctamente", "stdout": stdout.decode().strip()})
     return {"message": f"Lote {batch_name} eliminado correctamente", "stdout": stdout.decode().strip()}

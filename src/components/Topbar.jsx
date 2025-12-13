@@ -15,17 +15,14 @@ function Topbar() {
   const { logout } = useAuth();
   const { clusterState, setClusterState, setClusterNodesConfig, setSubmitContainerName,
     setOverlayNetworkName, setResourcesIPs, clusterNodesConfig, currentClusterId,
-    setSessionJobsSubmitted, setCurrentClusterId, setClusterActiveInfo
+    setSessionJobsSubmitted, setCurrentClusterId, setClusterActiveInfo, setCheckedServers,
+    setServers, setSavedJobs, setAutoAssigned
   } = useAppContext();
   const [anchorMenu, setAnchorMenu] = useState(null);
   const [anchorNotif, setAnchorNotif] = useState(null);
   const [lastNotification, setLastNotification] = useState("Notificación de prueba");
   const [showNotifText, setShowNotifText] = useState(true);
-  const [notifications] = useState([
-    "Cluster iniciado correctamente.",
-    "Nuevo trabajo en cola",
-    "3 trabajos finalizados."
-  ]);
+  const [notifications] = useState([]);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowNotifText(false), 6000);
@@ -56,8 +53,8 @@ function Topbar() {
       showCancelButton: true,
       confirmButtonText: "Sí, cerrar sesión",
       cancelButtonText: "Cancelar acción",
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
+      confirmButtonColor: "#0a913dff",
+      cancelButtonColor: "#b61010ff",
     });
 
     if (result.isConfirmed) {
@@ -126,6 +123,10 @@ function Topbar() {
       setOverlayNetworkName("")
       setSessionJobsSubmitted([])
       setResourcesIPs([])
+      setServers([])
+      setCheckedServers([])
+      setSavedJobs([])
+      setAutoAssigned(false)
       setClusterActiveInfo({
         numberNodes: 0,
         createdAt: null,
@@ -182,7 +183,7 @@ function Topbar() {
     title: "Acción no permitida",
     text: `${msg} Por favor, da de baja el clúster antes de continuar.`,
     confirmButtonText: "Entendido",
-    confirmButtonColor: "#3085d6",
+    confirmButtonColor: "#0a913dff",
   });
 };
 
@@ -199,7 +200,7 @@ function Topbar() {
       {/* center */}
       <div style={{ flexGrow: 1 }} />
 
-      {/* last notifiaction field */}
+      {/* last notifiaction field 
       {showNotifText && (
         <div className="last-notif">
           <span>{lastNotification}</span>
@@ -212,9 +213,10 @@ function Topbar() {
             <CloseIcon fontSize="small" />
           </IconButton>
         </div>
-      )}
+        
+      )} */}
 
-      {/* notifications */}
+      {/* notifications 
       <Tooltip title="Notificaciones">
         <IconButton className="topbar-icon" color="inherit" onClick={handleNotifClick} >
           <NotificationsIcon />
@@ -225,6 +227,7 @@ function Topbar() {
           <MenuItem key={index}>{note}</MenuItem>
         ))}
       </Menu>
+      */}
 
       {/* burguer menu */}
       <Tooltip title="Menú">

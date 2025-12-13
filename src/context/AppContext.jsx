@@ -11,9 +11,15 @@ export const AppProvider = ({ children }) => {
 	const [LANname, setLANname] = usePersistentState("LANname", "");
 	const [clusterNodesConfig, setClusterNodesConfig] =  usePersistentState("clusterNodesConfig", null);
 	const [overlayNetworkName, setOverlayNetworkName] = usePersistentState("overlayNetworkName", "");
-  const [sessionJobsSubmitted, setSessionJobsSubmitted] = usePersistentState("sessionJobsSubmitted", [])
-  const [submitContainerName, setSubmitContainerName] = usePersistentState("submitContainerName", "")
-  const [currentClusterId, setCurrentClusterId] = usePersistentState("currentClusterId", "")
+  const [sessionJobsSubmitted, setSessionJobsSubmitted] = usePersistentState("sessionJobsSubmitted", []);
+  const [submitContainerName, setSubmitContainerName] = usePersistentState("submitContainerName", "");
+  const [currentClusterId, setCurrentClusterId] = usePersistentState("currentClusterId", "");
+  const [servers, setServers] = usePersistentState("servers", []);
+  const [checkedServers, setCheckedServers] = usePersistentState("checkedServers", []);
+  const [swarmToken, setSwarmToken] = usePersistentState("swarmToken", "");
+  const [savedJobs, setSavedJobs] = usePersistentState("savedJobs", []);
+  const [autoAssigned, setAutoAssigned] = usePersistentState("autoAssigned", false);
+  const [sysDefineAll, setSysDefineAll] = usePersistentState("sysDefineAll", false);
   const [clusterActiveInfo, setClusterActiveInfo] = usePersistentState("clusterActiveInfo", {
     numberNodes: 0,
     createdAt: null,
@@ -36,7 +42,13 @@ export const AppProvider = ({ children }) => {
         sessionJobsSubmitted, setSessionJobsSubmitted,
         submitContainerName, setSubmitContainerName,
         currentClusterId, setCurrentClusterId,
-        clusterActiveInfo, setClusterActiveInfo
+        clusterActiveInfo, setClusterActiveInfo,
+        servers, setServers,
+        checkedServers, setCheckedServers,
+        swarmToken, setSwarmToken,
+        savedJobs, setSavedJobs,
+        autoAssigned, setAutoAssigned,
+        sysDefineAll, setSysDefineAll
         }}
       >
         { children }

@@ -10,13 +10,17 @@ import {
 import { useState, useEffect, useRef } from "react";
 import { useAppContext } from "../context/AppContext";
 import { jobsQueue, getJobInformation, removeSpecificJob, removeBatch } from "../utils/tauriApi";
+import { toast } from "react-toastify";
+import Swal from 'sweetalert2';
+import { useNavigate } from "react-router";
 
 function JobQueue() {
-  const { clusterNodesConfig, sessionJobsSubmitted, setSessionJobsSubmitted, submitContainerName, setClusterActiveInfo } = useAppContext();
+  const { clusterNodesConfig, sessionJobsSubmitted, setSessionJobsSubmitted, submitContainerName, setClusterActiveInfo, clusterState } = useAppContext();
   const [jobId, setJobId] = useState("");
   const [batchName, setBatchName] = useState("");
   const [jobInfo, setJobInfo] = useState(null);
   const intervalRef = useRef(null)
+  const navigate = useNavigate()
   const [jobsData, setJobsData] = useState({
     timerequest: null,
     batches: [],
@@ -24,7 +28,6 @@ function JobQueue() {
   });
   
   useEffect(() => {
-    //let interval;
     const fetchJobs = async () => {
       try {
         const jobs = await jobsQueue(submitContainerName, sessionJobsSubmitted);
@@ -53,14 +56,7 @@ function JobQueue() {
                 : job
             )
           );
-        } // else {
-        //   console.log("without sessionJobsSubmitted (empty)")
-        // }
-
-        // if (jobs.totals.total_jobs === 0 && interval) {
-        //   clearInterval(interval);
-        //   interval = null;
-        // }
+        }
       } catch (err) {
         console.error("[JobQueue] Error getting jobs:",err);
       }
@@ -72,57 +68,78 @@ function JobQueue() {
     }
 
     fetchJobs();
-    intervalRef.current = setInterval(fetchJobs, 15000);
-    //interval = setInterval(fetchJobs, 15000); // then try with webSockets
+    intervalRef.current = setInterval(fetchJobs, 15000); // then try with webSockets
     return () => clearInterval(intervalRef.current);
   }, [clusterNodesConfig]); // REVIEW THIS ----------------------------------------------
 
   // manage remove a specif job from a batch
   const handleDeleteJob = async () => {
     if (!jobId.trim()) {
-      alert("Ingrese un ID de trabajo válido (ejemplo: 3.2)");
+      toast.info("Ingrese un ID de trabajo válido (ejemplo: 3.2)");
       return;
     }
 
     const validFormat = /^\d+\.\d+$/.test(jobId.trim());
     if (!validFormat) {
-      alert("El ID debe tener el formato lote.trabajo (ejemplo: 3.2)");
+      toast.info("El ID debe tener el formato lote.trabajo (ejemplo: 3.2)");
       return;
     }
 
     if (!submitContainerName) {
-      alert("No se encontró el nodo submit para eliminar el trabajo.");
+      toast.error("No se encontró el nodo submit para eliminar el trabajo.");
       return;
     }
 
-    if (!window.confirm(`¿Seguro que desea eliminar el trabajo ${jobId}?`)) return;
+    const result = await Swal.fire({
+      title: "Eliminar trabajo",
+      text: `¿Seguro que desea eliminar el trabajo "${jobId}" de la cola de trabajos?`,
+      icon: "question",
+      confirmButtonColor: "#0a913dff",
+      cancelButtonColor: '#b61010ff',
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar',
+    })
 
-    try {
-      const response = await removeSpecificJob(jobId.trim(), submitContainerName);
-      alert(response.message || `Trabajo ${jobId} eliminado correctamente.`);
-      setJobId("");
-      setJobInfo(null);
-    } catch (err) {
-      console.error(err);
-      alert(`Error al eliminar el trabajo: ${err.message}`);
+    if (result.isConfirmed) {
+      try {
+        const response = await removeSpecificJob(jobId.trim(), submitContainerName);
+        console.log(response.message)
+        toast.success(`Trabajo ${jobId} eliminado correctamente.`);
+        setJobId("");
+        setJobInfo(null);
+      } catch (err) {
+        console.error(err);
+        toast.error(`Error al eliminar el trabajo: ${err.message}`);
+      }
     }
   };
 
   // remove all jobs from a batch
   const handleDeleteBatch = async () => {
     if (!submitContainerName) {
-      alert("No se encontró el nodo submit.");
+      toast.error("No se encontró el nodo submit.");
       return;
     }
 
-    if (!window.confirm(`¿Eliminar todos los trabajos del lote "${batchName}"?`)) return;
+    const result = await Swal.fire({
+      title: "Eliminar lote",
+      text: `¿Seguro que desea eliminar el lote "${batchName}" de la cola de trabajos?`,
+      icon: "question",
+      confirmButtonColor: "#0a913dff",
+      cancelButtonColor: '#b61010ff',
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar',
+    })
 
-    try {
-      const response = await removeBatch(batchName, submitContainerName)
-      alert(response.message || `Lote ${batchName} eliminado correctamente.`);
-      setBatchName("");
-    } catch (err) {
-      alert(`Error al eliminar el lote: ${err.message}`);
+    if (result.isConfirmed) {
+      try {
+        const response = await removeBatch(batchName, submitContainerName)
+        console.log(response.message)
+        toast.success(`Lote ${batchName} eliminado correctamente.`);
+        setBatchName("");
+      } catch (err) {
+        toast.error(`Error al eliminar el lote: ${err.message}`);
+      }
     }
   };
 
@@ -181,17 +198,106 @@ function JobQueue() {
         Estado de la Cola de Trabajos
       </Typography>
 
-      {jobsData.timerequest && (
-        <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-          Ultima actualización: {new Date(jobsData.timerequest).toLocaleString()}
-        </Typography>
+      {jobsData.totals.total === 0 && (
+        <Paper
+          elevation={2}
+          sx={{ p: 3, textAlign: "center", mt: 3 }}
+        >
+          <Typography variant="h6" gutterBottom>
+            Actualmente no hay trabajos en la cola
+          </Typography>
+
+          {clusterState === "active" ? (
+            <>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                Puedes enviar nuevos trabajos cuando quieras.
+              </Typography>
+              <Button
+                variant="contained"
+                color=""
+                onClick={() => navigate("/jobs/new")}
+              >
+                Enviar trabajos
+              </Button>
+            </>
+          ) : (
+            <>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                El clúster está inactivo, actívalo para comenzar a enviar trabajos.
+              </Typography>
+              <Button
+                variant="contained"
+                color=""
+                onClick={() => navigate("/initialize-cluster")}
+              >
+                Desplegar clúster
+              </Button>
+            </>
+          )}
+        </Paper>
       )}
 
-      {/** totals */}
-      <Paper elevation={3} sx={{ p: 2, mb: 4 }}>
-        <Grid container margin={2} spacing={2} justifyContent={"center"} sx={{ display: "flex" }}>
-          {dataToShow.map((item, idx) => (
-            <Grid key={idx} item xs={12} md  sx={{ flex: 1 }}>
+      {jobsData.totals.total > 0 && (
+        <>
+          {jobsData.timerequest && (
+            <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+              Ultima actualización: {new Date(jobsData.timerequest).toLocaleString()}
+            </Typography>
+          )}
+
+          {/** totals */}
+          <Paper elevation={3} sx={{ p: 2, mb: 4 }}>
+            <Grid container margin={2} spacing={2} justifyContent={"center"} sx={{ display: "flex" }}>
+              {dataToShow.map((item, idx) => (
+                <Grid key={idx} item xs={12} md  sx={{ flex: 1 }}>
+                  <Box
+                    sx={{
+                      backgroundColor: "#fa5c5cff",
+                      color: "white",
+                      borderRadius: 1,
+                      p: 2,
+                      minHeight: 40,
+                      textAlign: "center",
+                      mb: 1,
+                    }}
+                  >
+                    <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                      {item.label}
+                    </Typography>
+                    <Typography variant="inherit" sx={{  }}>
+                      {item.data.length}
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      backgroundColor: "#f7cbcbff",
+                      borderRadius: 1,
+                      p: 1,
+                      minHeight: 200,
+                      maxHeight: 300,
+                      overflowY: "auto",
+                    }}
+                  >
+                    {item.data.map((job, jdx) => (
+                      <Box
+                        key={`${job.id}-${jdx}`}
+                        sx={{
+                          backgroundColor: "white",
+                          border: "1px solid #ccc",
+                          borderRadius: 1,
+                          p: 0.5,
+                          mb: 0.5,
+                          textAlign: "center",
+                          boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
+                          fontSize: "0.8rem",
+                        }}
+                      >
+                        {job.id}
+                      </Box>
+                    ))}
+                  </Box>
+                </Grid>
+              ))}
               <Box
                 sx={{
                   backgroundColor: "#fa5c5cff",
@@ -199,151 +305,105 @@ function JobQueue() {
                   borderRadius: 1,
                   p: 2,
                   minHeight: 40,
+                  maxHeight: 50,
                   textAlign: "center",
                   mb: 1,
                 }}
               >
                 <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                  {item.label}
+                  Total trabajos
                 </Typography>
                 <Typography variant="inherit" sx={{  }}>
-                  {item.data.length}
+                  {jobsData.totals.total_jobs || 0}
                 </Typography>
               </Box>
-              <Box
-                sx={{
-                  backgroundColor: "#f7cbcbff",
-                  borderRadius: 1,
-                  p: 1,
-                  minHeight: 200,
-                  maxHeight: 300,
-                  overflowY: "auto",
-                }}
-              >
-                {item.data.map((job, jdx) => (
-                  <Box
-                    key={`${job.id}-${jdx}`}
-                    sx={{
-                      backgroundColor: "white",
-                      border: "1px solid #ccc",
-                      borderRadius: 1,
-                      p: 0.5,
-                      mb: 0.5,
-                      textAlign: "center",
-                      boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
-                      fontSize: "0.8rem",
-                    }}
-                  >
-                    {job.id}
-                  </Box>
-                ))}
-              </Box>
             </Grid>
-          ))}
-          <Box
-            sx={{
-              backgroundColor: "#fa5c5cff",
-              color: "white",
-              borderRadius: 1,
-              p: 2,
-              minHeight: 40,
-              maxHeight: 50,
-              textAlign: "center",
-              mb: 1,
-            }}
-          >
-            <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-              Total trabajos
-            </Typography>
-            <Typography variant="inherit" sx={{  }}>
-              {jobsData.totals.total_jobs || 0}
-            </Typography>
-          </Box>
-        </Grid>
-      </Paper>
+          </Paper>
 
-      {/** all batches */}
-      <Box sx={{ mt: 4 }}>
-        <Typography variant="h6">Lotes de Trabajos</Typography>
-        {jobsData.batches.map((batch, idx) => {
-          const ids = batch.job_ids.split(',').map(id => id.trim());
-          const range_ids = ids[0];
+          {/** all batches */}
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="h6">Lotes de Trabajos</Typography>
+            {jobsData.batches.map((batch, idx) => {
+              const ids = batch.job_ids.split(',').map(id => id.trim());
+              const range_ids = ids[0];
 
-          return (
-            <Paper key={idx} sx={{ p: 2, mt: 1 }}>
-              <Typography variant="subtitle1" marginBottom={1}>
-                {batch.batch_name} - {batch.submitted} ({batch.initial_total} trabajos enviados)
-              </Typography>
-              <Typography variant="body2" marginBottom={1}>
-                IDs del lote en cola: {range_ids} {/*Zona de prueba: {batch.job_ids}*/}
-              </Typography>
-              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt:1 }}>
-                {[
-                  { label: "Total", value: batch.total, color:"#1976d2" },
-                  { label: "Ejecutando", value: batch.run, color:"#2e7d32" },
-                  { label: "Espera", value: batch.idle, color:"#ed6c02" },
-                  { label: "Retenidos", value: batch.held, color:"#6d1b7b" },
-                  { label: "Suspendidos", value: batch.suspended, color:"#fa5c5cff" },
-                ].map((item,i)=>(
-                  <Box key={i} sx={{
-                    backgroundColor:item.color,
-                    color:"white",
-                    borderRadius:1,
-                    px:1.5,
-                    py:0.5,
-                    fontSize:"0.8rem"
-                  }}>
-                    {item.label}: {item.value ?? 0}
+              return (
+                <Paper key={idx} sx={{ p: 2, mt: 1 }}>
+                  <Typography variant="subtitle1" marginBottom={1}>
+                    {batch.batch_name} - {batch.submitted} ({batch.initial_total} trabajos enviados)
+                  </Typography>
+                  <Typography variant="body2" marginBottom={1}>
+                    IDs del lote en cola: {range_ids} {/*Zona de prueba: {batch.job_ids}*/}
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt:1 }}>
+                    {[
+                      { label: "Total", value: batch.total, color:"#1976d2" },
+                      { label: "Ejecutando", value: batch.run, color:"#2e7d32" },
+                      { label: "Espera", value: batch.idle, color:"#ed6c02" },
+                      { label: "Retenidos", value: batch.held, color:"#6d1b7b" },
+                      { label: "Suspendidos", value: batch.suspended, color:"#fa5c5cff" },
+                    ].map((item,i)=>(
+                      <Box key={i} sx={{
+                        backgroundColor:item.color,
+                        color:"white",
+                        borderRadius:1,
+                        px:1.5,
+                        py:0.5,
+                        fontSize:"0.8rem"
+                      }}>
+                        {item.label}: {item.value ?? 0}
+                      </Box>
+                    ))}
                   </Box>
-                ))}
-              </Box>
+                </Paper>
+              );
+            })}
+          </Box>
+
+          {/** control panel */}
+          <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
+            Panel de Control
+          </Typography>
+
+          <Box sx={{ mt: 4 }}>
+            <TextField
+              label="ID del Trabajo"
+              size="small"
+              value={jobId}
+              onChange={(e) => setJobId(e.target.value)}
+              sx={{ mr: 4 }}
+            />
+            <Button variant="outlined" color="" onClick={handleViewInfo} sx={{ mr: 1 }}>
+              Ver más información
+            </Button>
+            <Button variant="outlined" color="error" onClick={handleDeleteJob} sx={{ mr: 1 }}>
+              Eliminar trabajo
+            </Button>
+          </Box>
+
+          <Box sx={{ mt: 4 }}>
+            <TextField
+              label="Nombre del lote"
+              size="small"
+              value={batchName}
+              onChange={(e) => setBatchName(e.target.value)}
+              sx={{ mr: 4 }}
+            />
+            <Button variant="outlined" color="error" onClick={handleDeleteBatch}>
+              Eliminar lote
+            </Button>
+          </Box>
+
+          {jobInfo && (
+            <Paper sx={{ mt: 3, p: 2 }}>
+              <Typography variant="h6">Información del Trabajo</Typography>
+              <Typography>ID: {jobInfo.id}</Typography>
+              <Typography>Estado: {jobInfo.estado}</Typography>
+              <Typography>Nodo: {jobInfo.nodo}</Typography>
+              <Typography>Descripción: {jobInfo.descripcion}</Typography>
             </Paper>
-          );
-        })}
-      </Box>
-
-      {/** control panel */}
-      <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
-        Panel de Control
-      </Typography>
-
-      <Box sx={{ mt: 4 }}>
-        <TextField
-          label="ID del Trabajo"
-          size="small"
-          value={jobId}
-          onChange={(e) => setJobId(e.target.value)}
-          sx={{ mr: 4 }}
-        />
-        <Button variant="outlined" color="" onClick={handleViewInfo} sx={{ mr: 1 }}>
-          Ver más información
-        </Button>
-        <Button variant="outlined" color="error" onClick={handleDeleteJob} sx={{ mr: 1 }}>
-          Eliminar trabajo
-        </Button>
-      </Box>
-
-      <Box sx={{ mt: 4 }}>
-        <TextField
-          label="Nombre del lote"
-          size="small"
-          value={batchName}
-          onChange={(e) => setBatchName(e.target.value)}
-          sx={{ mr: 4 }}
-        />
-        <Button variant="outlined" color="error" onClick={handleDeleteBatch}>
-          Eliminar lote
-        </Button>
-      </Box>
-
-      {jobInfo && (
-        <Paper sx={{ mt: 3, p: 2 }}>
-          <Typography variant="h6">Información del Trabajo</Typography>
-          <Typography>ID: {jobInfo.id}</Typography>
-          <Typography>Estado: {jobInfo.estado}</Typography>
-          <Typography>Nodo: {jobInfo.nodo}</Typography>
-          <Typography>Descripción: {jobInfo.descripcion}</Typography>
-        </Paper>
+          )}
+        </>
       )}
     </Container>
   );
