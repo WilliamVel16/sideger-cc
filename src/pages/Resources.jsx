@@ -14,7 +14,7 @@ import VerifiedIcon from '@mui/icons-material/Verified';
 import ErrorIcon from '@mui/icons-material/Error';
 
 function Permissions() {
-  const { resourcesIPs, setResourcesIPs, resourcesUser, setResourcesUser, LANname, setLANname } = useAppContext();
+  const { resourcesIPs, setResourcesIPs, resourcesUser, setResourcesUser, LANname, setLANname, scanStatus, setScanStatus } = useAppContext();
   const [accepted, setAccepted] = useState(false);
   const [successPermissions, setSuccessPermissions] = useState(false);
   const [errorPermissions, setErrorPermissions] = useState("");
@@ -23,7 +23,7 @@ function Permissions() {
   const [localPass, setLocalPass] = useState("");
   const [interfaces, setInterfaces] = useState([]);
   const [resourcesPass, setResourcesPass] = useState();
-  const [scanStatus, setScanStatus] = useState("idle"); // "idle" | "success" | "error"
+  
   const [errorScan, setErrorScan] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});

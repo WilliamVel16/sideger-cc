@@ -222,7 +222,7 @@ async def remove_job_service(job_id: str, submit_container_name: str):
     stdout, stderr = await process.communicate()
 
     if process.returncode != 0:
-        raise HTTPException(status_code=500, detail=f"Error trying delete the job: {stderr.decode().strip()}")
+        raise HTTPException(status_code=500, detail=f"Error al eliminar el trabajo: {stderr.decode().strip()}")
 
     print({"message": f"Trabajo {job_id} eliminado correctamente", "stdout": stdout.decode().strip()})
     return {"message": f"Trabajo {job_id} eliminado correctamente", "stdout": stdout.decode().strip()}

@@ -98,8 +98,8 @@ function NewJob() {
       text: `Se enviará el lote "${batchName}" con los datos ingresados.`,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#18b654ff',
-      cancelButtonColor: '#d33',
+      confirmButtonColor: '#0a913dff',
+      cancelButtonColor: '#b61010ff',
       confirmButtonText: 'Sí, quiero enviar',
       cancelButtonText: 'Volver y verificar',
     });

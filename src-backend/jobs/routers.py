@@ -2,7 +2,7 @@ import shutil
 from fastapi import APIRouter, Request, File, Form, UploadFile, HTTPException, status
 from fastapi.responses import FileResponse
 from typing import List
-from .schemas import JobSubmitRequest, JobResultsRequest, RemoveJobRequest, JobData
+from .schemas import JobSubmitRequest, JobResultsRequest, RemoveJobRequest, JobData, RemoveBatchRequest
 from .services import create_submit_file_service, submit_job_service, jobs_state_service, jobs_results_service, remove_job_service, remove_batch_service
 import json, shutil, os
 import tempfile
@@ -70,15 +70,13 @@ async def get_jobs_results(jobs_submitted: List[JobResultsRequest], sub_containe
 @router.post("/queue/remove-job")
 async def delete_queue_job(request: RemoveJobRequest):
     response = await remove_job_service(request.job_id, request.submit_container_name)
-    print("[JOB REMOVED]", response)
     return response
 
 
 # remove a batch of jobs
 @router.post("/queue/remove-batch")
-async def delete_batch(batch_name: str, submit_container_name: str):
-    response = await remove_batch_service(batch_name, submit_container_name)
-    print("[REMOVE BATCH]", response)
+async def delete_batch(req: RemoveBatchRequest):
+    response = await remove_batch_service(req.batch_name, req.submit_container_name)
     return response
 
 

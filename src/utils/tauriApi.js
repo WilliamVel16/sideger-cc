@@ -303,10 +303,11 @@ export const removeSpecificJob = async (job_id, submit_container_name) => {
 
 // deletes all jobs from a batch [JobQueue.jsx]
 export const removeBatch = async (batch_name, submit_container_name) => {
+  console.log(batch_name, submit_container_name)
   const token = localStorage.getItem("access_token")
   if (!token) throw new Error("No authentication token found");
 
-  const res = await fetch(`${BACKEND_URL}/queue/remove-batch`, {
+  const res = await fetch(`${BACKEND_URL}/jobs/queue/remove-batch`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -315,8 +316,8 @@ export const removeBatch = async (batch_name, submit_container_name) => {
     body: JSON.stringify({ batch_name, submit_container_name }),
   });
   if (!res.ok) throw new Error(await res.text());
-  const data = await res.json();
-  alert(data.message);
+  
+  return res.json();
 }
 
 

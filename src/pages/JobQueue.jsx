@@ -24,7 +24,7 @@ function JobQueue() {
   const [jobsData, setJobsData] = useState({
     timerequest: null,
     batches: [],
-    totals: {total: 0, done: 0, running: 0, idle: 0, held: 0, suspended: 0},
+    totals: {total_jobs: 0, done: 0, running: 0, idle: 0, held: 0, suspended: 0},
   });
   
   useEffect(() => {
@@ -109,15 +109,15 @@ function JobQueue() {
         setJobInfo(null);
       } catch (err) {
         console.error(err);
-        toast.error(`Error al eliminar el trabajo: ${err.message}`);
+        toast.error(`Revisa el ID - ${err.message}`);
       }
     }
   };
 
   // remove all jobs from a batch
   const handleDeleteBatch = async () => {
-    if (!submitContainerName) {
-      toast.error("No se encontró el nodo submit.");
+    if (!batchName.trim()) {
+      toast.info("Ingrese el nombre de un lote de trabajos válido");
       return;
     }
 
@@ -138,7 +138,7 @@ function JobQueue() {
         toast.success(`Lote ${batchName} eliminado correctamente.`);
         setBatchName("");
       } catch (err) {
-        toast.error(`Error al eliminar el lote: ${err.message}`);
+        toast.error(`Revisa el nombre - ${err.message}`);
       }
     }
   };
@@ -198,7 +198,7 @@ function JobQueue() {
         Estado de la Cola de Trabajos
       </Typography>
 
-      {jobsData.totals.total === 0 && (
+      {jobsData.totals.total_jobs === 0 && (
         <Paper
           elevation={2}
           sx={{ p: 3, textAlign: "center", mt: 3 }}
@@ -237,7 +237,7 @@ function JobQueue() {
         </Paper>
       )}
 
-      {jobsData.totals.total > 0 && (
+      {jobsData.totals.total_jobs > 0 && (
         <>
           {jobsData.timerequest && (
             <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
@@ -330,7 +330,7 @@ function JobQueue() {
               return (
                 <Paper key={idx} sx={{ p: 2, mt: 1 }}>
                   <Typography variant="subtitle1" marginBottom={1}>
-                    {batch.batch_name} - {batch.submitted} ({batch.initial_total} trabajos enviados)
+                    <strong>{batch.batch_name}</strong> - {batch.submitted} ({batch.initial_total} trabajos enviados)
                   </Typography>
                   <Typography variant="body2" marginBottom={1}>
                     IDs del lote en cola: {range_ids} {/*Zona de prueba: {batch.job_ids}*/}

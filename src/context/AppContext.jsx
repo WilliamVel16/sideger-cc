@@ -20,6 +20,7 @@ export const AppProvider = ({ children }) => {
   const [savedJobs, setSavedJobs] = usePersistentState("savedJobs", []);
   const [autoAssigned, setAutoAssigned] = usePersistentState("autoAssigned", false);
   const [sysDefineAll, setSysDefineAll] = usePersistentState("sysDefineAll", false);
+  const [scanStatus, setScanStatus] = usePersistentState("scanStatus", "idle"); // "idle" | "success" | "error"
   const [clusterActiveInfo, setClusterActiveInfo] = usePersistentState("clusterActiveInfo", {
     numberNodes: 0,
     createdAt: null,
@@ -48,7 +49,8 @@ export const AppProvider = ({ children }) => {
         swarmToken, setSwarmToken,
         savedJobs, setSavedJobs,
         autoAssigned, setAutoAssigned,
-        sysDefineAll, setSysDefineAll
+        sysDefineAll, setSysDefineAll,
+        scanStatus, setScanStatus
         }}
       >
         { children }

@@ -41,3 +41,8 @@ class JobResultsRequest(BaseModel):
 class RemoveJobRequest(BaseModel):
     job_id: str
     submit_container_name: str
+
+
+class RemoveBatchRequest(BaseModel):
+    batch_name: str
+    submit_container_name: str

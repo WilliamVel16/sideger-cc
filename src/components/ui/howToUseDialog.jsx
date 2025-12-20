@@ -9,7 +9,7 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 export default function HowToUseDialog({ open, onClose }) {
   return (
@@ -26,7 +26,7 @@ export default function HowToUseDialog({ open, onClose }) {
 
           <ListItem>
             <ListItemIcon>
-              <CheckCircleIcon color="info" />
+              <ArrowForwardIcon color="info" />
             </ListItemIcon>
             <ListItemText
               primary="1. Escanear recursos en la red"
@@ -36,7 +36,7 @@ export default function HowToUseDialog({ open, onClose }) {
 
           <ListItem>
             <ListItemIcon>
-              <CheckCircleIcon color="info" />
+              <ArrowForwardIcon color="info" />
             </ListItemIcon>
             <ListItemText
               primary="2. Seleccionar recursos y desplegar el clúster"
@@ -46,7 +46,7 @@ export default function HowToUseDialog({ open, onClose }) {
 
           <ListItem>
             <ListItemIcon>
-              <CheckCircleIcon color="info" />
+              <ArrowForwardIcon color="info" />
             </ListItemIcon>
             <ListItemText
               primary="3. Enviar trabajos de cómputo"
@@ -56,7 +56,7 @@ export default function HowToUseDialog({ open, onClose }) {
 
           <ListItem>
             <ListItemIcon>
-              <CheckCircleIcon color="info" />
+              <ArrowForwardIcon color="info" />
             </ListItemIcon>
             <ListItemText
               primary="4. Monitorear el estado de los trabajos"
@@ -66,7 +66,7 @@ export default function HowToUseDialog({ open, onClose }) {
 
           <ListItem>
             <ListItemIcon>
-              <CheckCircleIcon color="info" />
+              <ArrowForwardIcon color="info" />
             </ListItemIcon>
             <ListItemText
               primary="5. Revisar resultados de trabajos finalizados"
@@ -77,7 +77,7 @@ export default function HowToUseDialog({ open, onClose }) {
 
           <ListItem>
             <ListItemIcon>
-              <CheckCircleIcon color="info" />
+              <ArrowForwardIcon color="info" />
             </ListItemIcon>
             <ListItemText
               primary="6. Consultar clusters anteriores"

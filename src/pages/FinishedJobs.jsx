@@ -78,7 +78,7 @@ export default function FinishedJobs() {
       title: 'Trabajo Guardado',
       text: `El trabajo con nombre de lote "${batch.batch_name}" ha sido guardado`,
       icon: 'success',
-      confirmButtonColor: '#18b654ff',
+      confirmButtonColor: '#0a913dff',
       confirmButtonText: 'Entendido',
     });
 
@@ -109,7 +109,7 @@ export default function FinishedJobs() {
         title: "Error",
         text: "No se pudo determinar el tipo de salida del trabajo.",
         icon: "error",
-        confirmButtonColor: "#e53935",
+        confirmButtonColor: "#b61010ff",
         confirmButtonText: "Entendido",
       });
       console.warn("Job encontrado:", jobInfo);
@@ -141,7 +141,7 @@ export default function FinishedJobs() {
         title: "Descarga finalizada",
         text: `El archivo con los resultados de "${batchName}" ha sido guardado en el directorio de Descargas.`,
         icon: "success",
-        confirmButtonColor: "#18b654ff",
+        confirmButtonColor: "#0a913dff",
         confirmButtonText: "Entendido",
       });
     } catch (err) {
